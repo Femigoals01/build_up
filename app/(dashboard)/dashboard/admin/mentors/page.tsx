@@ -105,10 +105,13 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 
+/* ================= CONFIG ================= */
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-/* ✅ ADD PROPER TYPE */
+/* ================= TYPES ================= */
+
 type PendingMentor = {
   id: string;
   name: string;
@@ -117,6 +120,8 @@ type PendingMentor = {
   bio: string | null;
 };
 
+/* ================= PAGE ================= */
+
 export default async function AdminMentorsPage() {
   const session = await getServerSession(authOptions);
 
@@ -124,22 +129,25 @@ export default async function AdminMentorsPage() {
     redirect("/login");
   }
 
-  /* ✅ TYPE SAFE QUERY */
-  const pendingMentors: PendingMentor[] = await prisma.user.findMany({
-    where: {
-      role: { not: "MENTOR" },
-      experience: { not: null },
-      bio: { not: null },
-    },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      experience: true,
-      bio: true,
-    },
-  });
+  // 🔎 Fetch pending mentor applications
+  const pendingMentors: PendingMentor[] =
+    await prisma.user.findMany({
+      where: {
+        role: { not: "MENTOR" },
+        experience: { not: null },
+        bio: { not: null },
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        experience: true,
+        bio: true,
+      },
+    });
+
+  /* ================= SERVER ACTION ================= */
 
   async function approveMentor(mentorId: string) {
     "use server";
@@ -160,10 +168,14 @@ export default async function AdminMentorsPage() {
     });
   }
 
+  /* ================= UI ================= */
+
   return (
     <main className="p-10 space-y-8">
       <header>
-        <h1 className="text-3xl font-bold">Mentor Applications</h1>
+        <h1 className="text-3xl font-bold">
+          Mentor Applications
+        </h1>
         <p className="text-gray-600 mt-1">
           Review and approve mentor applications
         </p>
@@ -175,30 +187,40 @@ export default async function AdminMentorsPage() {
         </div>
       ) : (
         <div className="grid gap-6">
-          {pendingMentors.map((mentor: PendingMentor) => (
+          {pendingMentors.map((mentor) => (
             <div
               key={mentor.id}
               className="bg-white border rounded-2xl p-6 shadow-sm flex justify-between items-start gap-6"
             >
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold">{mentor.name}</h3>
-                <p className="text-sm text-gray-500">{mentor.email}</p>
+                <h3 className="text-xl font-semibold">
+                  {mentor.name}
+                </h3>
+
+                <p className="text-sm text-gray-500">
+                  {mentor.email}
+                </p>
 
                 {mentor.experience && (
                   <p className="text-sm">
-                    <strong>Experience:</strong> {mentor.experience} years
+                    <strong>Experience:</strong>{" "}
+                    {mentor.experience} years
                   </p>
                 )}
 
                 {mentor.bio && (
-                  <p className="text-sm text-gray-700">{mentor.bio}</p>
+                  <p className="text-sm text-gray-700">
+                    {mentor.bio}
+                  </p>
                 )}
               </div>
 
-              <form action={approveMentor.bind(null, mentor.id)}>
+              <form
+                action={approveMentor.bind(null, mentor.id)}
+              >
                 <button
                   type="submit"
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700"
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition"
                 >
                   Approve Mentor
                 </button>
