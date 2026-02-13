@@ -187,7 +187,7 @@ export default async function AdminMentorsPage() {
         </div>
       ) : (
         <div className="grid gap-6">
-          {pendingMentors.map((mentor) => (
+          {pendingMentors.map((mentor: PendingMentor) => (
             <div
               key={mentor.id}
               className="bg-white border rounded-2xl p-6 shadow-sm flex justify-between items-start gap-6"
