@@ -120,7 +120,7 @@ type PendingMentor = {
   bio: string | null;
 };
 
-/* ================= PAGE ================= */
+/* ================= PAGE ============= */
 
 export default async function AdminMentorsPage() {
   const session = await getServerSession(authOptions);
