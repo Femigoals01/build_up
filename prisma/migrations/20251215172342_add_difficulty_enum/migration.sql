@@ -1,0 +1,2 @@
+-- CreateEnum
+CREATE TYPE "Difficulty" AS ENUM ('BEGINNER', 'INTERMEDIATE', 'ADVANCED');

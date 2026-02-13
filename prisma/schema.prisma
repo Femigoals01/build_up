@@ -1,0 +1,342 @@
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/**
+ * =======================
+ * USER
+ * =======================
+ */
+model User {
+  id                 String   @id @default(cuid())
+  lastActivitySeenAt DateTime @default(now())
+
+  name     String
+  username String @unique
+  email    String @unique
+  password String
+  role     Role
+
+  // Mentor approval workflow
+  mentorStatus MentorStatus?
+
+  // Profile
+  skills     String?
+  experience String?
+  bio        String?
+
+  // Ratings
+  rating      Float @default(0)
+  ratingCount Int   @default(0)
+
+  createdAt DateTime @default(now())
+
+  // =======================
+  // Relations
+  // =======================
+
+  // Organization
+  projects Project[] @relation("OrganizationProjects")
+
+  // Mentor
+  mentoredProjects Project[] @relation("MentorProjects")
+
+  // Volunteer
+  applications Application[] @relation("VolunteerApplications")
+
+  // Mentorship requests
+  mentorRequests    MentorshipRequest[] @relation("MentorRequests")
+  volunteerRequests MentorshipRequest[] @relation("VolunteerRequests")
+
+  // Chat
+  sentMessages ChatMessage[]
+
+  // Shared
+  notifications   Notification[]
+  reviewsReceived Review[]        @relation("VolunteerReviews")
+  reviewsGiven    Review[]        @relation("OrganizationReviews")
+  portfolio       PortfolioItem[]
+  badges          Badge[]
+
+
+  
+  // ✅ ADD THIS (READ RECEIPTS)
+  messageReads ChatMessageRead[]
+}
+
+/**
+ * =======================
+ * PROJECT
+ * =======================
+ */
+model Project {
+  id           String        @id @default(cuid())
+  title        String
+  description  String
+  requirements String?
+  difficulty   Difficulty
+  skills       String[]
+  status       ProjectStatus @default(OPEN)
+  createdAt    DateTime      @default(now())
+
+  // Organization
+  organization   User   @relation("OrganizationProjects", fields: [organizationId], references: [id])
+  organizationId String
+
+  // Mentor (assigned after acceptance)
+  mentor   User?   @relation("MentorProjects", fields: [mentorId], references: [id])
+  mentorId String?
+
+  // Relations
+  applications       Application[]
+  reviews            Review[]
+  portfolioItems     PortfolioItem[]
+  mentorshipRequests MentorshipRequest[]
+
+  // ✅ ONE CHAT PER PROJECT
+  chat ProjectChat?
+}
+
+/**
+ * =======================
+ * APPLICATION
+ * =======================
+ */
+model Application {
+  id        String            @id @default(cuid())
+  status    ApplicationStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+
+  volunteer   User   @relation("VolunteerApplications", fields: [volunteerId], references: [id])
+  volunteerId String
+
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String
+
+  @@unique([volunteerId, projectId])
+}
+
+/**
+ * =======================
+ * MENTORSHIP REQUEST
+ * =======================
+ */
+model MentorshipRequest {
+  id String @id @default(cuid())
+
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String
+
+  mentor   User   @relation("MentorRequests", fields: [mentorId], references: [id])
+  mentorId String
+
+  volunteer   User?   @relation("VolunteerRequests", fields: [volunteerId], references: [id])
+  volunteerId String?
+
+  senderRole MentorshipSender
+  status     MentorshipStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, mentorId, volunteerId])
+}
+
+/**
+ * =======================
+ * PROJECT CHAT
+ * =======================
+ */
+model ProjectChat {
+  id String @id @default(cuid())
+
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String  @unique   // ✅ exactly one chat per project
+
+  messages ChatMessage[]
+
+  createdAt DateTime @default(now())
+}
+
+/**
+ * =======================
+ * CHAT MESSAGE
+ * =======================
+ */
+model ChatMessage {
+  id String @id @default(cuid())
+
+  chat   ProjectChat @relation(fields: [chatId], references: [id])
+  chatId String
+
+  sender   User?   @relation(fields: [senderId], references: [id])
+  senderId String?
+
+  content String?
+  audioUrl  String?
+  isSystem Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+   reads ChatMessageRead[]
+}
+
+
+model ChatMessageRead {
+  id        String   @id @default(cuid())
+
+  message   ChatMessage @relation(fields: [messageId], references: [id])
+  messageId String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  readAt DateTime @default(now())
+
+  @@unique([messageId, userId])
+}
+
+
+
+/**
+ * =======================
+ * NOTIFICATION
+ * =======================
+ */
+model Notification {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  title   String
+  message String
+  type    NotificationType
+  link    String?
+  isRead  Boolean          @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+/**
+ * =======================
+ * REVIEW
+ * =======================
+ */
+model Review {
+  id String @id @default(cuid())
+
+  volunteer   User   @relation("VolunteerReviews", fields: [volunteerId], references: [id])
+  volunteerId String
+
+  organization   User   @relation("OrganizationReviews", fields: [organizationId], references: [id])
+  organizationId String
+
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String
+
+  rating  Int
+  comment String
+
+  createdAt DateTime @default(now())
+
+  portfolioItem PortfolioItem?
+}
+
+/**
+ * =======================
+ * PORTFOLIO ITEM
+ * =======================
+ */
+model PortfolioItem {
+  id String @id @default(cuid())
+
+  volunteer   User   @relation(fields: [volunteerId], references: [id])
+  volunteerId String
+
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String
+
+  review   Review? @relation(fields: [reviewId], references: [id])
+  reviewId String? @unique
+
+  createdAt DateTime @default(now())
+}
+
+/**
+ * =======================
+ * BADGE
+ * =======================
+ */
+model Badge {
+  id          String @id @default(cuid())
+  name        String
+  description String
+  icon        String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  createdAt DateTime @default(now())
+}
+
+/**
+ * =======================
+ * ENUMS
+ * =======================
+ */
+enum Role {
+  VOLUNTEER
+  ORGANIZATION
+  MENTOR
+  ADMIN
+}
+
+enum MentorStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MentorshipSender {
+  VOLUNTEER
+  MENTOR
+}
+
+enum MentorshipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum NotificationType {
+  APPLICATION
+  PROJECT
+  REVIEW
+  BADGE
+  SYSTEM
+}
+
+enum ProjectStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  COMPLETED
+  REJECTED
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
