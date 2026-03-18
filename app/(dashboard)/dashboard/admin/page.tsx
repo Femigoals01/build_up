@@ -97,10 +97,102 @@
 
 
 
+
+
+
+// import { getServerSession } from "next-auth";
+// import { redirect } from "next/navigation";
+// import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+// import { prisma } from "@/lib/prisma";
+
+// export default async function AdminDashboard() {
+//   const session = await getServerSession(authOptions);
+
+//   if (!session || session.user.role !== "ADMIN") {
+//     redirect("/login");
+//   }
+
+//   const mentors = await prisma.user.findMany({
+//     where: { role: "MENTOR" },
+//     orderBy: { createdAt: "desc" },
+//   });
+
+//   const volunteers = await prisma.user.count({
+//     where: { role: "VOLUNTEER" },
+//   });
+
+//   const organizations = await prisma.user.count({
+//     where: { role: "ORGANIZATION" },
+//   });
+
+//   return (
+//     <main className="p-10 space-y-10 bg-gray-50 min-h-screen">
+//       <header>
+//         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+//         <p className="text-gray-600 mt-1">
+//           Manage mentors, users, and platform activity
+//         </p>
+//       </header>
+
+//       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+//         <Stat title="Volunteers" value={volunteers} />
+//         <Stat title="Organizations" value={organizations} />
+//         <Stat title="Mentors" value={mentors.length} />
+//       </section>
+
+//       <section className="bg-white rounded-xl border p-6">
+//         <h2 className="text-xl font-semibold mb-4">Approved Mentors</h2>
+
+//         {mentors.length === 0 ? (
+//           <p className="text-gray-600">No mentors yet.</p>
+//         ) : (
+//           <div className="space-y-4">
+//             {mentors.map((mentor) => (
+//               <div
+//                 key={mentor.id}
+//                 className="flex justify-between items-center border rounded-lg p-4"
+//               >
+//                 <div>
+//                   <p className="font-semibold">{mentor.name}</p>
+//                   <p className="text-sm text-gray-600">{mentor.email}</p>
+//                 </div>
+
+//                 <span className="text-sm font-medium text-green-600">
+//                   Approved
+//                 </span>
+//               </div>
+//             ))}
+//           </div>
+//         )}
+//       </section>
+//     </main>
+//   );
+// }
+
+// function Stat({ title, value }: { title: string; value: number }) {
+//   return (
+//     <div className="bg-white border rounded-xl p-6">
+//       <p className="text-sm text-gray-500">{title}</p>
+//       <p className="text-3xl font-bold mt-2">{value}</p>
+//     </div>
+//   );
+// }
+
+
+
+
+
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
+import { Role } from "@prisma/client";
+
+type Mentor = {
+  id: string;
+  name: string;
+  email: string;
+};
 
 export default async function AdminDashboard() {
   const session = await getServerSession(authOptions);
@@ -109,17 +201,22 @@ export default async function AdminDashboard() {
     redirect("/login");
   }
 
-  const mentors = await prisma.user.findMany({
-    where: { role: "MENTOR" },
+  const mentors: Mentor[] = await prisma.user.findMany({
+    where: { role: Role.MENTOR },
     orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
   });
 
   const volunteers = await prisma.user.count({
-    where: { role: "VOLUNTEER" },
+    where: { role: Role.VOLUNTEER },
   });
 
   const organizations = await prisma.user.count({
-    where: { role: "ORGANIZATION" },
+    where: { role: Role.ORGANIZATION },
   });
 
   return (
@@ -144,7 +241,7 @@ export default async function AdminDashboard() {
           <p className="text-gray-600">No mentors yet.</p>
         ) : (
           <div className="space-y-4">
-            {mentors.map((mentor) => (
+            {mentors.map((mentor: Mentor) => (
               <div
                 key={mentor.id}
                 className="flex justify-between items-center border rounded-lg p-4"
