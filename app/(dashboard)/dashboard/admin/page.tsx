@@ -186,7 +186,6 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
-import { Role } from "@prisma/client";
 
 type Mentor = {
   id: string;
@@ -202,7 +201,7 @@ export default async function AdminDashboard() {
   }
 
   const mentors: Mentor[] = await prisma.user.findMany({
-    where: { role: Role.MENTOR },
+    where: { role: "MENTOR" },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -212,11 +211,11 @@ export default async function AdminDashboard() {
   });
 
   const volunteers = await prisma.user.count({
-    where: { role: Role.VOLUNTEER },
+    where: { role: "VOLUNTEER" },
   });
 
   const organizations = await prisma.user.count({
-    where: { role: Role.ORGANIZATION },
+    where: { role: "ORGANIZATION" },
   });
 
   return (
