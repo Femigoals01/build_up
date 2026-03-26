@@ -265,6 +265,11 @@ model PortfolioItem {
   review   Review? @relation(fields: [reviewId], references: [id])
   reviewId String? @unique
 
+  order Int @default(0)
+  contribution String?
+  imageUrl String?
+  proofUrl String?
+
   createdAt DateTime @default(now())
 }
 
