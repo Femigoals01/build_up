@@ -1,13 +1,33 @@
 
 
 
-
+// import Image from "next/image";
+// import Link from "next/link";
 // import { notFound } from "next/navigation";
 // import { prisma } from "@/lib/prisma";
-// import StarRating from "@/components/StarRating";
 
 // export const dynamic = "force-dynamic";
 // export const revalidate = 0;
+
+// function getRatingLabel(rating: number) {
+//   if (rating >= 4.5) return "Excellent";
+//   if (rating >= 4) return "Strong";
+//   if (rating >= 3) return "Good";
+//   if (rating > 0) return "Growing";
+//   return "No ratings yet";
+// }
+
+// function parseSkills(skills: string | null) {
+//   if (!skills) return [];
+//   return skills
+//     .split(",")
+//     .map((skill) => skill.trim())
+//     .filter(Boolean);
+// }
+
+// function getInitial(name?: string | null) {
+//   return name?.trim()?.charAt(0)?.toUpperCase() || "U";
+// }
 
 // export default async function PublicPortfolioPage({
 //   params,
@@ -16,581 +36,2194 @@
 // }) {
 //   const { username } = await params;
 
-//   if (!username) {
-//     notFound();
-//   }
-
-//   const user = await prisma.user.findUnique({
+//   const user = await prisma.user.findFirst({
 //     where: { username },
 //     select: {
 //       id: true,
 //       name: true,
 //       username: true,
+//       bio: true,
+//       skills: true,
+//       experience: true,
+//       country: true,
+//       profileImageUrl: true,
+//       rating: true,
+//       ratingCount: true,
+//       isPortfolioPublic: true,
+//       showCountryPublicly: true,
+//       showBioPublicly: true,
+//       showSkillsPublicly: true,
+//       showReviewsPublicly: true,
+//       showBadgesPublicly: true,
 //     },
 //   });
 
-//   if (!user) {
+//   if (!user || !user.isPortfolioPublic) {
 //     notFound();
 //   }
 
-//   const portfolioItems = await prisma.portfolioItem.findMany({
-//     where: { volunteerId: user.id },
-//     include: {
-//       project: {
-//         include: {
-//           organization: { select: { name: true } },
+//   const [badges, portfolioItems] = await Promise.all([
+//     user.showBadgesPublicly
+//       ? prisma.badge.findMany({
+//           where: { userId: user.id },
+//           orderBy: { createdAt: "asc" },
+//         })
+//       : Promise.resolve([]),
+
+//     prisma.portfolioItem.findMany({
+//       where: { volunteerId: user.id },
+//       include: {
+//         project: {
+//           include: {
+//             organization: {
+//               select: { name: true },
+//             },
+//           },
 //         },
+//         review: true,
 //       },
-//       review: true,
-//     },
-//     orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-//   });
+//       orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+//     }),
+//   ]);
 
-//   const reviews = await prisma.review.findMany({
-//     where: { volunteerId: user.id },
-//     orderBy: { createdAt: "desc" },
-//   });
-
-//   const completedProjectsCount = portfolioItems.length;
-
-//   const averageRating =
-//     reviews.length === 0
-//       ? 0
-//       : reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+//   const skills = user.showSkillsPublicly ? parseSkills(user.skills) : [];
 
 //   return (
-//     <div className="min-h-screen bg-gray-50">
-//       <section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-//         <div className="max-w-6xl mx-auto px-8 py-14">
-//           <h1 className="text-4xl font-bold">{user.name}</h1>
+//     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
+//       <section className="border-b border-slate-200 bg-white/80 backdrop-blur">
+//         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+//           <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+//             <div>
+//               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+//                 <span className="h-2 w-2 rounded-full bg-blue-600" />
+//                 Public Portfolio
+//               </div>
 
-//           <p className="text-blue-100 mt-2 max-w-2xl">
-//             Verified volunteer with real-world project experience.
-//           </p>
+//               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+//                 <div className="relative h-16 w-16 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+//                   {user.profileImageUrl ? (
+//                     <Image
+//                       src={user.profileImageUrl}
+//                       alt={user.name || "Profile image"}
+//                       fill
+//                       className="object-cover"
+//                       sizes="64px"
+//                     />
+//                   ) : (
+//                     <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-600 text-2xl font-bold text-white">
+//                       {getInitial(user.name)}
+//                     </div>
+//                   )}
+//                 </div>
 
-//           <div className="mt-6 flex items-center gap-4">
-//             <StarRating rating={averageRating} />
-//             <span className="text-lg font-semibold">
-//               {averageRating.toFixed(1)} / 5
-//             </span>
-//             <span className="text-blue-200 text-sm">
-//               ({reviews.length} reviews)
-//             </span>
+//                 <div>
+//                   <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+//                     {user.name}
+//                   </h1>
+//                   <p className="mt-1 text-sm font-medium text-slate-500">
+//                     @{user.username}
+//                   </p>
+//                 </div>
+//               </div>
+
+//               {user.showBioPublicly && user.bio && (
+//                 <p className="mt-5 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
+//                   {user.bio}
+//                 </p>
+//               )}
+
+//               <div className="mt-6 flex flex-wrap gap-3">
+//                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+//                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+//                     Rating
+//                   </p>
+//                   <p className="mt-1 text-lg font-bold text-slate-900">
+//                     ⭐ {user.rating.toFixed(1)}
+//                   </p>
+//                   <p className="text-xs text-slate-500">
+//                     {user.ratingCount} review{user.ratingCount === 1 ? "" : "s"}
+//                   </p>
+//                 </div>
+
+//                 <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+//                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+//                     Portfolio Items
+//                   </p>
+//                   <p className="mt-1 text-lg font-bold text-slate-900">
+//                     {portfolioItems.length}
+//                   </p>
+//                   <p className="text-xs text-slate-500">Published work</p>
+//                 </div>
+
+//                 <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+//                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+//                     Experience
+//                   </p>
+//                   <p className="mt-1 text-lg font-bold text-slate-900">
+//                     {user.experience || "N/A"}
+//                   </p>
+//                   <p className="text-xs text-slate-500">
+//                     {getRatingLabel(user.rating)}
+//                   </p>
+//                 </div>
+//               </div>
+//             </div>
+
+//             <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+//               <h2 className="text-lg font-semibold text-slate-900">
+//                 Profile Snapshot
+//               </h2>
+
+//               {user.showSkillsPublicly && (
+//                 <div className="mt-5">
+//                   <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                     Skills
+//                   </p>
+
+//                   {skills.length > 0 ? (
+//                     <div className="flex flex-wrap gap-2">
+//                       {skills.map((skill: string) => (
+//                         <span
+//                           key={skill}
+//                           className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700"
+//                         >
+//                           {skill}
+//                         </span>
+//                       ))}
+//                     </div>
+//                   ) : (
+//                     <p className="text-sm text-slate-500">No skills added yet.</p>
+//                   )}
+//                 </div>
+//               )}
+
+//               {user.showCountryPublicly && (
+//                 <div className="mt-6">
+//                   <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                     Country
+//                   </p>
+
+//                   {user.country ? (
+//                     <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
+//                       🌍 {user.country}
+//                     </div>
+//                   ) : (
+//                     <p className="text-sm text-slate-500">No country added yet.</p>
+//                   )}
+//                 </div>
+//               )}
+
+//               {user.showBadgesPublicly && (
+//                 <div className="mt-6">
+//                   <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                     Badges
+//                   </p>
+
+//                   {badges.length > 0 ? (
+//                     <div className="flex flex-wrap gap-3">
+//                       {badges.map((badge) => (
+//                         <div
+//                           key={badge.id}
+//                           title={`${badge.name} — ${badge.description}`}
+//                           className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2"
+//                         >
+//                           <span className="text-lg">{badge.icon}</span>
+//                           <span className="text-xs font-medium text-slate-700">
+//                             {badge.name}
+//                           </span>
+//                         </div>
+//                       ))}
+//                     </div>
+//                   ) : (
+//                     <p className="text-sm text-slate-500">No badges yet.</p>
+//                   )}
+//                 </div>
+//               )}
+
+//               <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+//                 <p className="text-sm font-semibold text-slate-900">
+//                   Portfolio Signal
+//                 </p>
+//                 <p className="mt-1 text-sm leading-6 text-slate-500">
+//                   This page showcases real completed work, contributions, review
+//                   feedback, and public proof where available.
+//                 </p>
+//               </div>
+//             </div>
 //           </div>
 //         </div>
 //       </section>
 
-//       <main className="max-w-6xl mx-auto px-8 py-12 space-y-14">
-//         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//           <Stat label="Portfolio Projects" value={completedProjectsCount} />
-//           <Stat label="Total Reviews" value={reviews.length} />
-//           <Stat label="Average Rating" value={averageRating.toFixed(1)} />
+//       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+//         <div className="mb-6">
+//           <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+//             Featured Work
+//           </h2>
+//           <p className="mt-1 text-sm text-slate-500">
+//             Completed projects, contributions, and proof of work.
+//           </p>
+//         </div>
+
+//         {portfolioItems.length === 0 ? (
+//           <div className="rounded-[28px] border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
+//             <div className="mx-auto max-w-md">
+//               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100 text-3xl">
+//                 🌍
+//               </div>
+//               <h3 className="text-xl font-semibold text-slate-900">
+//                 No portfolio items yet
+//               </h3>
+//               <p className="mt-2 text-sm leading-6 text-slate-500">
+//                 This volunteer has not published any completed work to their
+//                 public portfolio yet.
+//               </p>
+//             </div>
+//           </div>
+//         ) : (
+//           <div className="grid gap-6">
+//             {portfolioItems.map((item, index) => (
+//               <article
+//                 key={item.id}
+//                 className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)]"
+//               >
+//                 <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
+//                   <div className="p-6 md:p-7">
+//                     <div className="mb-5 flex flex-wrap items-start gap-3">
+//                       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-lg text-white shadow-sm">
+//                         📁
+//                       </div>
+
+//                       <div className="min-w-0 flex-1">
+//                         <div className="flex flex-wrap items-center gap-3">
+//                           <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+//                             Featured #{index + 1}
+//                           </span>
+
+//                           {user.showReviewsPublicly && item.review && (
+//                             <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+//                               ⭐ {item.review.rating}/5
+//                             </span>
+//                           )}
+//                         </div>
+
+//                         <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">
+//                           {item.project.title}
+//                         </h3>
+
+//                         <p className="mt-2 text-sm text-slate-500">
+//                           Organization: {item.project.organization?.name || "Unknown"}
+//                         </p>
+//                       </div>
+//                     </div>
+
+//                     {item.contribution ? (
+//                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+//                         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                           Contribution
+//                         </p>
+//                         <p className="text-sm leading-7 text-slate-700">
+//                           {item.contribution}
+//                         </p>
+//                       </div>
+//                     ) : (
+//                       <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5">
+//                         <p className="text-sm text-slate-500">
+//                           No contribution summary added yet.
+//                         </p>
+//                       </div>
+//                     )}
+
+//                     {user.showReviewsPublicly && item.review && (
+//                       <div className="mt-5 rounded-2xl border border-amber-100 bg-amber-50 p-5">
+//                         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+//                           Review Feedback
+//                         </p>
+//                         <p className="text-sm italic leading-7 text-slate-700">
+//                           “{item.review.comment}”
+//                         </p>
+//                       </div>
+//                     )}
+//                   </div>
+
+//                   <div className="border-t border-slate-200 bg-slate-50/70 p-6 md:p-7 lg:border-l lg:border-t-0">
+//                     <div className="space-y-5">
+//                       <div className="rounded-2xl border border-slate-200 bg-white p-4">
+//                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                           Project Status
+//                         </p>
+//                         <p className="mt-2 text-sm font-semibold text-emerald-700">
+//                           Completed
+//                         </p>
+//                       </div>
+
+//                       <div className="rounded-2xl border border-slate-200 bg-white p-4">
+//                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                           Public Proof
+//                         </p>
+
+//                         <div className="mt-3 space-y-2">
+//                           {item.proofUrl ? (
+//                             <a
+//                               href={item.proofUrl}
+//                               target="_blank"
+//                               rel="noopener noreferrer"
+//                               className="block text-sm font-semibold text-blue-600 hover:underline"
+//                             >
+//                               View Proof Link →
+//                             </a>
+//                           ) : (
+//                             <p className="text-sm text-slate-500">
+//                               No proof link added.
+//                             </p>
+//                           )}
+
+//                           {item.imageUrl ? (
+//                             <a
+//                               href={item.imageUrl}
+//                               target="_blank"
+//                               rel="noopener noreferrer"
+//                               className="block text-sm font-semibold text-blue-600 hover:underline"
+//                             >
+//                               View Project Image →
+//                             </a>
+//                           ) : (
+//                             <p className="text-sm text-slate-500">
+//                               No project image added.
+//                             </p>
+//                           )}
+//                         </div>
+//                       </div>
+
+//                       <div className="rounded-2xl border border-slate-200 bg-white p-4">
+//                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                           Showcase Value
+//                         </p>
+//                         <p className="mt-2 text-sm leading-6 text-slate-600">
+//                           This project is part of a public, proof-based portfolio
+//                           showing real completed work and contribution.
+//                         </p>
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </div>
+//               </article>
+//             ))}
+//           </div>
+//         )}
+
+//         <section className="mt-10 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+//           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+//             <div>
+//               <h3 className="text-xl font-semibold tracking-tight text-slate-900">
+//                 Looking for proof-based talent?
+//               </h3>
+//               <p className="mt-1 text-sm leading-6 text-slate-500">
+//                 BuildUp helps organizations discover volunteers with visible,
+//                 real-world project experience.
+//               </p>
+//             </div>
+
+//             <Link
+//               href="/register/organization"
+//               className="inline-flex h-11 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+//             >
+//               Join BuildUp
+//             </Link>
+//           </div>
 //         </section>
+//       </section>
+//     </main>
+//   );
+// }
 
-//         <section>
-//           <h2 className="text-2xl font-semibold mb-6">Featured Work</h2>
 
-//           {portfolioItems.length === 0 ? (
-//             <p className="text-gray-600">No portfolio projects added yet.</p>
-//           ) : (
-//             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-//               {portfolioItems.map((item) => (
-//                 <div
-//                   key={item.id}
-//                   className="bg-white border rounded-2xl p-6 hover:shadow-md transition"
-//                 >
-//                   <h3 className="text-lg font-semibold">{item.project.title}</h3>
 
-//                   <p className="text-sm text-gray-500 mt-1">
-//                     {item.project.organization.name}
-//                   </p>
 
-//                   {item.review && (
-//                     <div className="mt-4 flex items-center gap-2">
-//                       <StarRating rating={item.review.rating} />
-//                       <span className="text-sm text-gray-600">
-//                         {item.review.rating}/5
-//                       </span>
+// import Image from "next/image";
+// import Link from "next/link";
+// import { notFound } from "next/navigation";
+// import { prisma } from "@/lib/prisma";
+// import { calculateProfileStrength } from "@/lib/profileStrength";
+// import { getProfileLevel, getNextProfileLevel } from "@/lib/profileLevel";
+
+// export const dynamic = "force-dynamic";
+// export const revalidate = 0;
+
+// function getRatingLabel(rating: number) {
+//   if (rating >= 4.5) return "Excellent";
+//   if (rating >= 4) return "Strong";
+//   if (rating >= 3) return "Good";
+//   if (rating > 0) return "Growing";
+//   return "No ratings yet";
+// }
+
+// function parseSkills(skills: string | null) {
+//   if (!skills) return [];
+//   return skills
+//     .split(",")
+//     .map((skill) => skill.trim())
+//     .filter(Boolean);
+// }
+
+// function getInitial(name?: string | null) {
+//   return name?.trim()?.charAt(0)?.toUpperCase() || "U";
+// }
+
+// export default async function PublicPortfolioPage({
+//   params,
+// }: {
+//   params: Promise<{ username: string }>;
+// }) {
+//   const { username } = await params;
+
+//   const user = await prisma.user.findFirst({
+//     where: { username },
+//     select: {
+//       id: true,
+//       name: true,
+//       username: true,
+//       bio: true,
+//       skills: true,
+//       experience: true,
+//       country: true,
+//       countryCode: true,
+//       mobileNumber: true,
+//       profileImageUrl: true,
+//       rating: true,
+//       ratingCount: true,
+//       isPortfolioPublic: true,
+//       showCountryPublicly: true,
+//       showBioPublicly: true,
+//       showSkillsPublicly: true,
+//       showReviewsPublicly: true,
+//       showBadgesPublicly: true,
+//     },
+//   });
+
+//   if (!user || !user.isPortfolioPublic) {
+//     notFound();
+//   }
+
+//   const [badges, portfolioItems] = await Promise.all([
+//     user.showBadgesPublicly
+//       ? prisma.badge.findMany({
+//           where: { userId: user.id },
+//           orderBy: { createdAt: "asc" },
+//         })
+//       : Promise.resolve([]),
+
+//     prisma.portfolioItem.findMany({
+//       where: { volunteerId: user.id },
+//       include: {
+//         project: {
+//           include: {
+//             organization: {
+//               select: { name: true },
+//             },
+//           },
+//         },
+//         review: true,
+//       },
+//       orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+//     }),
+//   ]);
+
+//   const skills = user.showSkillsPublicly ? parseSkills(user.skills) : [];
+
+//   const profileStrength = calculateProfileStrength({
+//     username: user.username,
+//     bio: user.bio,
+//     skills: user.skills,
+//     experience: user.experience,
+//     country: user.country,
+//     countryCode: user.countryCode,
+//     mobileNumber: user.mobileNumber,
+//     profileImageUrl: user.profileImageUrl,
+//     portfolioCount: portfolioItems.length,
+//   });
+
+//   const profileLevel = getProfileLevel(profileStrength.score);
+//   const nextProfileLevel = getNextProfileLevel(profileStrength.score);
+
+//   const totalProjects = portfolioItems.length;
+// const totalReviews = user.ratingCount;
+// const totalBadges = badges.length;
+
+//   return (
+//     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
+//       <section className="border-b border-slate-200 bg-white/80 backdrop-blur">
+//         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+//           <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+//             <div>
+//               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+//                 <span className="h-2 w-2 rounded-full bg-blue-600" />
+//                 Public Portfolio
+//               </div>
+
+//               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+//                 <div className="relative h-16 w-16 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+//                   {user.profileImageUrl ? (
+//                     <Image
+//                       src={user.profileImageUrl}
+//                       alt={user.name || "Profile image"}
+//                       fill
+//                       className="object-cover"
+//                       sizes="64px"
+//                     />
+//                   ) : (
+//                     <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-600 text-2xl font-bold text-white">
+//                       {getInitial(user.name)}
 //                     </div>
 //                   )}
+//                 </div>
 
-//                   {item.review?.comment && (
-//                     <p className="mt-4 text-sm italic text-gray-600 leading-relaxed">
-//                       “{item.review.comment}”
+//                 <div>
+//                   <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+//                     {user.name}
+//                   </h1>
+//                   <p className="mt-1 text-sm font-medium text-slate-500">
+//                     @{user.username}
+//                   </p>
+
+//                   <div className="mt-3 flex flex-wrap items-center gap-2">
+//                     <span
+//                       className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${profileLevel.borderClass} ${profileLevel.bgClass} ${profileLevel.colorClass}`}
+//                     >
+//                       <span>{profileLevel.icon}</span>
+//                       {profileLevel.name}
+//                     </span>
+
+//                     <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+//                       Profile Strength {profileStrength.score}%
+//                     </span>
+//                   </div>
+//                 </div>
+//               </div>
+
+//               {user.showBioPublicly && user.bio && (
+//                 <p className="mt-5 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
+//                   {user.bio}
+//                 </p>
+//               )}
+
+//               <div className="mt-6 flex flex-wrap gap-3">
+//                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+//                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+//                     Rating
+//                   </p>
+//                   <p className="mt-1 text-lg font-bold text-slate-900">
+//                     ⭐ {user.rating.toFixed(1)}
+//                   </p>
+//                   <p className="text-xs text-slate-500">
+//                     {user.ratingCount} review{user.ratingCount === 1 ? "" : "s"}
+//                   </p>
+//                 </div>
+
+//                 <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+//                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+//                     Portfolio Items
+//                   </p>
+//                   <p className="mt-1 text-lg font-bold text-slate-900">
+//                     {portfolioItems.length}
+//                   </p>
+//                   <p className="text-xs text-slate-500">Published work</p>
+//                 </div>
+
+//                 <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+//                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+//                     Experience
+//                   </p>
+//                   <p className="mt-1 text-lg font-bold text-slate-900">
+//                     {user.experience || "N/A"}
+//                   </p>
+//                   <p className="text-xs text-slate-500">
+//                     {getRatingLabel(user.rating)}
+//                   </p>
+//                 </div>
+//               </div>
+//             </div>
+
+//             <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+//               <h2 className="text-lg font-semibold text-slate-900">
+//                 Profile Snapshot
+//               </h2>
+
+//               <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+//                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                   BuildUp Profile Level
+//                 </p>
+//                 <p className="mt-2 text-xl font-bold text-slate-900">
+//                   {profileLevel.icon} {profileLevel.name}
+//                 </p>
+//                 <p className="mt-2 text-sm leading-6 text-slate-500">
+//                   This level reflects how complete and presentation-ready this
+//                   BuildUp profile is.
+//                 </p>
+
+//                 <div className="mt-4">
+//                   <div className="mb-2 flex items-center justify-between text-sm">
+//                     <span className="text-slate-600">Profile strength</span>
+//                     <span className="font-semibold text-blue-600">
+//                       {profileStrength.score}%
+//                     </span>
+//                   </div>
+
+//                   <div className="h-3 overflow-hidden rounded-full bg-slate-200">
+//                     <div
+//                       className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
+//                       style={{ width: `${profileStrength.score}%` }}
+//                     />
+//                   </div>
+
+//                   {nextProfileLevel ? (
+//                     <p className="mt-3 text-sm text-slate-500">
+//                       Next milestone:{" "}
+//                       <span className="font-semibold text-slate-700">
+//                         {nextProfileLevel.name}
+//                       </span>{" "}
+//                       at{" "}
+//                       <span className="font-semibold text-slate-700">
+//                         {nextProfileLevel.min}%
+//                       </span>
+//                       .
+//                     </p>
+//                   ) : (
+//                     <p className="mt-3 text-sm font-semibold text-emerald-600">
+//                       Highest level reached.
 //                     </p>
 //                   )}
 //                 </div>
-//               ))}
+//               </div>
+
+//               {user.showSkillsPublicly && (
+//                 <div className="mt-5">
+//                   <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                     Skills
+//                   </p>
+
+//                   {skills.length > 0 ? (
+//                     <div className="flex flex-wrap gap-2">
+//                       {skills.map((skill: string) => (
+//                         <span
+//                           key={skill}
+//                           className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700"
+//                         >
+//                           {skill}
+//                         </span>
+//                       ))}
+//                     </div>
+//                   ) : (
+//                     <p className="text-sm text-slate-500">No skills added yet.</p>
+//                   )}
+//                 </div>
+//               )}
+
+//               {user.showCountryPublicly && (
+//                 <div className="mt-6">
+//                   <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                     Country
+//                   </p>
+
+//                   {user.country ? (
+//                     <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
+//                       🌍 {user.country}
+//                     </div>
+//                   ) : (
+//                     <p className="text-sm text-slate-500">No country added yet.</p>
+//                   )}
+//                 </div>
+//               )}
+
+//               {user.showBadgesPublicly && (
+//                 <div className="mt-6">
+//                   <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                     Badges
+//                   </p>
+
+//                   {badges.length > 0 ? (
+//                     <div className="flex flex-wrap gap-3">
+//                       {badges.map((badge) => (
+//                         <div
+//                           key={badge.id}
+//                           title={`${badge.name} — ${badge.description}`}
+//                           className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2"
+//                         >
+//                           <span className="text-lg">{badge.icon}</span>
+//                           <span className="text-xs font-medium text-slate-700">
+//                             {badge.name}
+//                           </span>
+//                         </div>
+//                       ))}
+//                     </div>
+//                   ) : (
+//                     <p className="text-sm text-slate-500">No badges yet.</p>
+//                   )}
+//                 </div>
+//               )}
+
+//               <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+//                 <p className="text-sm font-semibold text-slate-900">
+//                   Portfolio Signal
+//                 </p>
+//                 <p className="mt-1 text-sm leading-6 text-slate-500">
+//                   This page showcases real completed work, contributions, review
+//                   feedback, and public proof where available.
+//                 </p>
+//               </div>
 //             </div>
-//           )}
+//           </div>
+//         </div>
+//       </section>
+
+
+// <section className="border-b border-slate-200 bg-white">
+//   <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+//     <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      
+//       {/* Profile Level */}
+//       <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 text-center shadow-sm">
+//         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+//           Profile Level
+//         </p>
+//         <p className="mt-2 text-lg font-bold text-slate-900">
+//           {profileLevel.icon} {profileLevel.name}
+//         </p>
+//       </div>
+
+//       {/* Projects Completed */}
+//       <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+//         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+//           Projects
+//         </p>
+//         <p className="mt-2 text-lg font-bold text-slate-900">
+//           {totalProjects}
+//         </p>
+//         <p className="text-xs text-slate-500">Completed</p>
+//       </div>
+
+//       {/* Reviews */}
+//       <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+//         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+//           Reviews
+//         </p>
+//         <p className="mt-2 text-lg font-bold text-slate-900">
+//           ⭐ {totalReviews}
+//         </p>
+//         <p className="text-xs text-slate-500">Feedback received</p>
+//       </div>
+
+//       {/* Badges */}
+//       <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+//         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+//           Badges
+//         </p>
+//         <p className="mt-2 text-lg font-bold text-slate-900">
+//           🎖 {totalBadges}
+//         </p>
+//         <p className="text-xs text-slate-500">Achievements</p>
+//       </div>
+
+//     </div>
+//   </div>
+// </section>
+
+
+
+
+//       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+//         <div className="mb-6">
+//           <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+//             Featured Work
+//           </h2>
+//           <p className="mt-1 text-sm text-slate-500">
+//             Completed projects, contributions, and proof of work.
+//           </p>
+//         </div>
+
+//         {portfolioItems.length === 0 ? (
+//           <div className="rounded-[28px] border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
+//             <div className="mx-auto max-w-md">
+//               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100 text-3xl">
+//                 🌍
+//               </div>
+//               <h3 className="text-xl font-semibold text-slate-900">
+//                 No portfolio items yet
+//               </h3>
+//               <p className="mt-2 text-sm leading-6 text-slate-500">
+//                 This volunteer has not published any completed work to their
+//                 public portfolio yet.
+//               </p>
+//             </div>
+//           </div>
+//         ) : (
+//           <div className="grid gap-6">
+//             {portfolioItems.map((item, index) => (
+//               <article
+//                 key={item.id}
+//                 className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)]"
+//               >
+//                 <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
+//                   <div className="p-6 md:p-7">
+//                     <div className="mb-5 flex flex-wrap items-start gap-3">
+//                       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-lg text-white shadow-sm">
+//                         📁
+//                       </div>
+
+//                       <div className="min-w-0 flex-1">
+//                         <div className="flex flex-wrap items-center gap-3">
+//                           <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+//                             Featured #{index + 1}
+//                           </span>
+
+//                           {user.showReviewsPublicly && item.review && (
+//                             <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+//                               ⭐ {item.review.rating}/5
+//                             </span>
+//                           )}
+//                         </div>
+
+//                         <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">
+//                           {item.project.title}
+//                         </h3>
+
+//                         <p className="mt-2 text-sm text-slate-500">
+//                           Organization: {item.project.organization?.name || "Unknown"}
+//                         </p>
+//                       </div>
+//                     </div>
+
+//                     {item.contribution ? (
+//                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+//                         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                           Contribution
+//                         </p>
+//                         <p className="text-sm leading-7 text-slate-700">
+//                           {item.contribution}
+//                         </p>
+//                       </div>
+//                     ) : (
+//                       <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5">
+//                         <p className="text-sm text-slate-500">
+//                           No contribution summary added yet.
+//                         </p>
+//                       </div>
+//                     )}
+
+//                     {user.showReviewsPublicly && item.review && (
+//                       <div className="mt-5 rounded-2xl border border-amber-100 bg-amber-50 p-5">
+//                         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+//                           Review Feedback
+//                         </p>
+//                         <p className="text-sm italic leading-7 text-slate-700">
+//                           “{item.review.comment}”
+//                         </p>
+//                       </div>
+//                     )}
+//                   </div>
+
+//                   <div className="border-t border-slate-200 bg-slate-50/70 p-6 md:p-7 lg:border-l lg:border-t-0">
+//                     <div className="space-y-5">
+//                       <div className="rounded-2xl border border-slate-200 bg-white p-4">
+//                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                           Project Status
+//                         </p>
+//                         <p className="mt-2 text-sm font-semibold text-emerald-700">
+//                           Completed
+//                         </p>
+//                       </div>
+
+//                       <div className="rounded-2xl border border-slate-200 bg-white p-4">
+//                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                           Public Proof
+//                         </p>
+
+//                         <div className="mt-3 space-y-2">
+//                           {item.proofUrl ? (
+//                             <a
+//                               href={item.proofUrl}
+//                               target="_blank"
+//                               rel="noopener noreferrer"
+//                               className="block text-sm font-semibold text-blue-600 hover:underline"
+//                             >
+//                               View Proof Link →
+//                             </a>
+//                           ) : (
+//                             <p className="text-sm text-slate-500">
+//                               No proof link added.
+//                             </p>
+//                           )}
+
+//                           {item.imageUrl ? (
+//                             <a
+//                               href={item.imageUrl}
+//                               target="_blank"
+//                               rel="noopener noreferrer"
+//                               className="block text-sm font-semibold text-blue-600 hover:underline"
+//                             >
+//                               View Project Image →
+//                             </a>
+//                           ) : (
+//                             <p className="text-sm text-slate-500">
+//                               No project image added.
+//                             </p>
+//                           )}
+//                         </div>
+//                       </div>
+
+//                       <div className="rounded-2xl border border-slate-200 bg-white p-4">
+//                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                           Showcase Value
+//                         </p>
+//                         <p className="mt-2 text-sm leading-6 text-slate-600">
+//                           This project is part of a public, proof-based portfolio
+//                           showing real completed work and contribution.
+//                         </p>
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </div>
+//               </article>
+//             ))}
+//           </div>
+//         )}
+
+//         <section className="mt-10 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+//           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+//             <div>
+//               <h3 className="text-xl font-semibold tracking-tight text-slate-900">
+//                 Looking for proof-based talent?
+//               </h3>
+//               <p className="mt-1 text-sm leading-6 text-slate-500">
+//                 BuildUp helps organizations discover volunteers with visible,
+//                 real-world project experience.
+//               </p>
+//             </div>
+
+//             <Link
+//               href="/register/organization"
+//               className="inline-flex h-11 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+//             >
+//               Join BuildUp
+//             </Link>
+//           </div>
 //         </section>
+//       </section>
+//     </main>
+//   );
+// }
 
-//         <section>
-//           <h2 className="text-2xl font-semibold mb-6">What Clients Say</h2>
 
-//           {reviews.length === 0 ? (
-//             <p className="text-gray-600">No reviews yet.</p>
-//           ) : (
-//             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-//               {reviews.slice(0, 6).map((review) => (
-//                 <div key={review.id} className="space-y-3">
-//                   <StarRating rating={review.rating} />
-//                   <p className="italic text-gray-800 leading-relaxed">
-//                     “{review.comment}”
+
+
+
+// import Image from "next/image";
+// import Link from "next/link";
+// import { notFound } from "next/navigation";
+// import { prisma } from "@/lib/prisma";
+// import { calculateProfileStrength } from "@/lib/profileStrength";
+// import { getProfileLevel, getNextProfileLevel } from "@/lib/profileLevel";
+
+// export const dynamic = "force-dynamic";
+// export const revalidate = 0;
+
+// function getRatingLabel(rating: number) {
+//   if (rating >= 4.5) return "Excellent";
+//   if (rating >= 4) return "Strong";
+//   if (rating >= 3) return "Good";
+//   if (rating > 0) return "Growing";
+//   return "No ratings yet";
+// }
+
+// function parseSkills(skills: string | null) {
+//   if (!skills) return [];
+//   return skills
+//     .split(",")
+//     .map((skill) => skill.trim())
+//     .filter(Boolean);
+// }
+
+// function getInitial(name?: string | null) {
+//   return name?.trim()?.charAt(0)?.toUpperCase() || "U";
+// }
+
+// export default async function PublicPortfolioPage({
+//   params,
+// }: {
+//   params: Promise<{ username: string }>;
+// }) {
+//   const { username } = await params;
+
+//   const user = await prisma.user.findFirst({
+//     where: { username },
+//     select: {
+//       id: true,
+//       name: true,
+//       username: true,
+//       bio: true,
+//       skills: true,
+//       experience: true,
+//       country: true,
+//       countryCode: true,
+//       mobileNumber: true,
+//       profileImageUrl: true,
+//       rating: true,
+//       ratingCount: true,
+//       isPortfolioPublic: true,
+//       showCountryPublicly: true,
+//       showBioPublicly: true,
+//       showSkillsPublicly: true,
+//       showReviewsPublicly: true,
+//       showBadgesPublicly: true,
+//     },
+//   });
+
+//   if (!user || !user.isPortfolioPublic) {
+//     notFound();
+//   }
+
+//   const [badges, portfolioItems] = await Promise.all([
+//     user.showBadgesPublicly
+//       ? prisma.badge.findMany({
+//           where: { userId: user.id },
+//           orderBy: { createdAt: "asc" },
+//         })
+//       : Promise.resolve([]),
+
+//     prisma.portfolioItem.findMany({
+//       where: { volunteerId: user.id },
+//       include: {
+//         project: {
+//           include: {
+//             organization: {
+//               select: { name: true },
+//             },
+//           },
+//         },
+//         review: true,
+//       },
+//       orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+//     }),
+//   ]);
+
+//   const skills = user.showSkillsPublicly ? parseSkills(user.skills) : [];
+
+//   const profileStrength = calculateProfileStrength({
+//     username: user.username,
+//     bio: user.bio,
+//     skills: user.skills,
+//     experience: user.experience,
+//     country: user.country,
+//     countryCode: user.countryCode,
+//     mobileNumber: user.mobileNumber,
+//     profileImageUrl: user.profileImageUrl,
+//     portfolioCount: portfolioItems.length,
+//   });
+
+//   const profileLevel = getProfileLevel(profileStrength.score);
+//   const nextProfileLevel = getNextProfileLevel(profileStrength.score);
+
+//   const totalProjects = portfolioItems.length;
+//   const totalReviews = user.ratingCount;
+//   const totalBadges = badges.length;
+
+//   return (
+//     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
+//       <section className="border-b border-slate-200 bg-white/80 backdrop-blur">
+//         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+//           <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+//             <div>
+//               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+//                 <span className="h-2 w-2 rounded-full bg-blue-600" />
+//                 Public Portfolio
+//               </div>
+
+//               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+//                 <div className="relative h-16 w-16 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+//                   {user.profileImageUrl ? (
+//                     <Image
+//                       src={user.profileImageUrl}
+//                       alt={user.name || "Profile image"}
+//                       fill
+//                       className="object-cover"
+//                       sizes="64px"
+//                     />
+//                   ) : (
+//                     <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-600 text-2xl font-bold text-white">
+//                       {getInitial(user.name)}
+//                     </div>
+//                   )}
+//                 </div>
+
+//                 <div>
+//                   <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+//                     {user.name}
+//                   </h1>
+//                   <p className="mt-1 text-sm font-medium text-slate-500">
+//                     @{user.username}
+//                   </p>
+
+//                   <div className="mt-3 flex flex-wrap items-center gap-2">
+//                     <span
+//                       className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${profileLevel.borderClass} ${profileLevel.bgClass} ${profileLevel.colorClass}`}
+//                     >
+//                       <span>{profileLevel.icon}</span>
+//                       {profileLevel.name}
+//                     </span>
+
+//                     <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+//                       Profile Strength {profileStrength.score}%
+//                     </span>
+//                   </div>
+//                 </div>
+//               </div>
+
+//               {user.showBioPublicly && user.bio && (
+//                 <p className="mt-5 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
+//                   {user.bio}
+//                 </p>
+//               )}
+
+//               <div className="mt-6 flex flex-wrap gap-3">
+//                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+//                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+//                     Rating
+//                   </p>
+//                   <p className="mt-1 text-lg font-bold text-slate-900">
+//                     ⭐ {user.rating.toFixed(1)}
+//                   </p>
+//                   <p className="text-xs text-slate-500">
+//                     {user.ratingCount} review{user.ratingCount === 1 ? "" : "s"}
 //                   </p>
 //                 </div>
-//               ))}
+
+//                 <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+//                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+//                     Portfolio Items
+//                   </p>
+//                   <p className="mt-1 text-lg font-bold text-slate-900">
+//                     {portfolioItems.length}
+//                   </p>
+//                   <p className="text-xs text-slate-500">Published work</p>
+//                 </div>
+
+//                 <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+//                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+//                     Experience
+//                   </p>
+//                   <p className="mt-1 text-lg font-bold text-slate-900">
+//                     {user.experience || "N/A"}
+//                   </p>
+//                   <p className="text-xs text-slate-500">
+//                     {getRatingLabel(user.rating)}
+//                   </p>
+//                 </div>
+//               </div>
 //             </div>
-//           )}
+
+//             <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+//               <h2 className="text-lg font-semibold text-slate-900">
+//                 Profile Snapshot
+//               </h2>
+
+//               <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+//                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                   BuildUp Profile Level
+//                 </p>
+//                 <p className="mt-2 text-xl font-bold text-slate-900">
+//                   {profileLevel.icon} {profileLevel.name}
+//                 </p>
+//                 <p className="mt-2 text-sm leading-6 text-slate-500">
+//                   This level reflects how complete and presentation-ready this
+//                   BuildUp profile is.
+//                 </p>
+
+//                 <div className="mt-4">
+//                   <div className="mb-2 flex items-center justify-between text-sm">
+//                     <span className="text-slate-600">Profile strength</span>
+//                     <span className="font-semibold text-blue-600">
+//                       {profileStrength.score}%
+//                     </span>
+//                   </div>
+
+//                   <div className="h-3 overflow-hidden rounded-full bg-slate-200">
+//                     <div
+//                       className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
+//                       style={{ width: `${profileStrength.score}%` }}
+//                     />
+//                   </div>
+
+//                   {nextProfileLevel ? (
+//                     <p className="mt-3 text-sm text-slate-500">
+//                       Next milestone:{" "}
+//                       <span className="font-semibold text-slate-700">
+//                         {nextProfileLevel.name}
+//                       </span>{" "}
+//                       at{" "}
+//                       <span className="font-semibold text-slate-700">
+//                         {nextProfileLevel.min}%
+//                       </span>
+//                       .
+//                     </p>
+//                   ) : (
+//                     <p className="mt-3 text-sm font-semibold text-emerald-600">
+//                       Highest level reached.
+//                     </p>
+//                   )}
+//                 </div>
+//               </div>
+
+//               {user.showSkillsPublicly && (
+//                 <div className="mt-5">
+//                   <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                     Skills
+//                   </p>
+
+//                   {skills.length > 0 ? (
+//                     <div className="flex flex-wrap gap-2">
+//                       {skills.map((skill: string) => (
+//                         <span
+//                           key={skill}
+//                           className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700"
+//                         >
+//                           {skill}
+//                         </span>
+//                       ))}
+//                     </div>
+//                   ) : (
+//                     <p className="text-sm text-slate-500">No skills added yet.</p>
+//                   )}
+//                 </div>
+//               )}
+
+//               {user.showCountryPublicly && (
+//                 <div className="mt-6">
+//                   <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                     Country
+//                   </p>
+
+//                   {user.country ? (
+//                     <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
+//                       🌍 {user.country}
+//                     </div>
+//                   ) : (
+//                     <p className="text-sm text-slate-500">No country added yet.</p>
+//                   )}
+//                 </div>
+//               )}
+
+//               {user.showBadgesPublicly && (
+//                 <div className="mt-6">
+//                   <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                     Badges
+//                   </p>
+
+//                   {badges.length > 0 ? (
+//                     <div className="flex flex-wrap gap-3">
+//                       {badges.map((badge) => (
+//                         <div
+//                           key={badge.id}
+//                           title={`${badge.name} — ${badge.description}`}
+//                           className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2"
+//                         >
+//                           <span className="text-lg">{badge.icon}</span>
+//                           <span className="text-xs font-medium text-slate-700">
+//                             {badge.name}
+//                           </span>
+//                         </div>
+//                       ))}
+//                     </div>
+//                   ) : (
+//                     <p className="text-sm text-slate-500">No badges yet.</p>
+//                   )}
+//                 </div>
+//               )}
+
+//               <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+//                 <p className="text-sm font-semibold text-slate-900">
+//                   Portfolio Signal
+//                 </p>
+//                 <p className="mt-1 text-sm leading-6 text-slate-500">
+//                   This page showcases real completed work, contributions, review
+//                   feedback, and public proof where available.
+//                 </p>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </section>
+
+//       <section className="border-b border-slate-200 bg-white">
+//         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+//           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+//             <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 text-center shadow-sm">
+//               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+//                 Profile Level
+//               </p>
+//               <p className="mt-2 text-lg font-bold text-slate-900">
+//                 {profileLevel.icon} {profileLevel.name}
+//               </p>
+//             </div>
+
+//             <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+//               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+//                 Projects
+//               </p>
+//               <p className="mt-2 text-lg font-bold text-slate-900">
+//                 {totalProjects}
+//               </p>
+//               <p className="text-xs text-slate-500">Completed</p>
+//             </div>
+
+//             <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+//               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+//                 Reviews
+//               </p>
+//               <p className="mt-2 text-lg font-bold text-slate-900">
+//                 ⭐ {totalReviews}
+//               </p>
+//               <p className="text-xs text-slate-500">Feedback received</p>
+//             </div>
+
+//             <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+//               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+//                 Badges
+//               </p>
+//               <p className="mt-2 text-lg font-bold text-slate-900">
+//                 🎖 {totalBadges}
+//               </p>
+//               <p className="text-xs text-slate-500">Achievements</p>
+//             </div>
+//           </div>
+//         </div>
+//       </section>
+
+//       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+//         <div className="mb-6">
+//           <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+//             Featured Work
+//           </h2>
+//           <p className="mt-1 text-sm text-slate-500">
+//             Completed projects, contributions, and proof of work.
+//           </p>
+//         </div>
+
+//         {portfolioItems.length === 0 ? (
+//           <div className="rounded-[28px] border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
+//             <div className="mx-auto max-w-md">
+//               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100 text-3xl">
+//                 🌍
+//               </div>
+//               <h3 className="text-xl font-semibold text-slate-900">
+//                 No portfolio items yet
+//               </h3>
+//               <p className="mt-2 text-sm leading-6 text-slate-500">
+//                 This volunteer has not published any completed work to their
+//                 public portfolio yet.
+//               </p>
+//             </div>
+//           </div>
+//         ) : (
+//           <div className="grid gap-6">
+//             {portfolioItems.map((item, index) => (
+//               <article
+//                 key={item.id}
+//                 className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)]"
+//               >
+//                 <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
+//                   <div className="p-6 md:p-7">
+//                     <div className="mb-5 flex flex-wrap items-start gap-3">
+//                       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-lg text-white shadow-sm">
+//                         📁
+//                       </div>
+
+//                       <div className="min-w-0 flex-1">
+//                         <div className="flex flex-wrap items-center gap-3">
+//                           <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+//                             Featured #{index + 1}
+//                           </span>
+
+//                           {user.showReviewsPublicly && item.review && (
+//                             <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+//                               ⭐ {item.review.rating}/5
+//                             </span>
+//                           )}
+//                         </div>
+
+//                         <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">
+//                           {item.project.title}
+//                         </h3>
+
+//                         <p className="mt-2 text-sm text-slate-500">
+//                           Organization: {item.project.organization?.name || "Unknown"}
+//                         </p>
+//                       </div>
+//                     </div>
+
+//                     {item.contribution ? (
+//                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+//                         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                           Contribution
+//                         </p>
+//                         <p className="text-sm leading-7 text-slate-700">
+//                           {item.contribution}
+//                         </p>
+//                       </div>
+//                     ) : (
+//                       <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5">
+//                         <p className="text-sm text-slate-500">
+//                           No contribution summary added yet.
+//                         </p>
+//                       </div>
+//                     )}
+
+//                     {user.showReviewsPublicly && item.review && (
+//                       <div className="mt-5 rounded-2xl border border-amber-100 bg-amber-50 p-5">
+//                         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+//                           Review Feedback
+//                         </p>
+//                         <p className="text-sm italic leading-7 text-slate-700">
+//                           “{item.review.comment}”
+//                         </p>
+//                       </div>
+//                     )}
+//                   </div>
+
+//                   <div className="border-t border-slate-200 bg-slate-50/70 p-6 md:p-7 lg:border-l lg:border-t-0">
+//                     <div className="space-y-5">
+//                       <div className="rounded-2xl border border-slate-200 bg-white p-4">
+//                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                           Project Status
+//                         </p>
+//                         <p className="mt-2 text-sm font-semibold text-emerald-700">
+//                           Completed
+//                         </p>
+//                       </div>
+
+//                       <div className="rounded-2xl border border-slate-200 bg-white p-4">
+//                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                           Public Proof
+//                         </p>
+
+//                         <div className="mt-3 space-y-2">
+//                           {item.proofUrl ? (
+//                             <a
+//                               href={item.proofUrl}
+//                               target="_blank"
+//                               rel="noopener noreferrer"
+//                               className="block text-sm font-semibold text-blue-600 hover:underline"
+//                             >
+//                               View Proof Link →
+//                             </a>
+//                           ) : (
+//                             <p className="text-sm text-slate-500">
+//                               No proof link added.
+//                             </p>
+//                           )}
+
+//                           {item.imageUrl ? (
+//                             <a
+//                               href={item.imageUrl}
+//                               target="_blank"
+//                               rel="noopener noreferrer"
+//                               className="block text-sm font-semibold text-blue-600 hover:underline"
+//                             >
+//                               View Project Image →
+//                             </a>
+//                           ) : (
+//                             <p className="text-sm text-slate-500">
+//                               No project image added.
+//                             </p>
+//                           )}
+//                         </div>
+//                       </div>
+
+//                       <div className="rounded-2xl border border-slate-200 bg-white p-4">
+//                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                           Showcase Value
+//                         </p>
+//                         <p className="mt-2 text-sm leading-6 text-slate-600">
+//                           This project is part of a public, proof-based portfolio
+//                           showing real completed work and contribution.
+//                         </p>
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </div>
+//               </article>
+//             ))}
+//           </div>
+//         )}
+
+//         <section className="mt-10 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+//           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+//             <div>
+//               <h3 className="text-xl font-semibold tracking-tight text-slate-900">
+//                 Looking for proof-based talent?
+//               </h3>
+//               <p className="mt-1 text-sm leading-6 text-slate-500">
+//                 BuildUp helps organizations discover volunteers with visible,
+//                 real-world project experience.
+//               </p>
+//             </div>
+
+//             <Link
+//               href="/register/organization"
+//               className="inline-flex h-11 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+//             >
+//               Join BuildUp
+//             </Link>
+//           </div>
 //         </section>
-//       </main>
-//     </div>
-//   );
-// }
-
-// function Stat({ label, value }: { label: string; value: string | number }) {
-//   return (
-//     <div className="bg-white border rounded-2xl p-6 text-center">
-//       <p className="text-sm text-gray-500">{label}</p>
-//       <p className="text-3xl font-bold mt-2">{value}</p>
-//     </div>
+//       </section>
+//     </main>
 //   );
 // }
 
 
 
 
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { calculateProfileStrength } from "@/lib/profileStrength";
+import { getProfileLevel, getNextProfileLevel } from "@/lib/profileLevel";
 
-async function addToPortfolio(formData: FormData) {
-  "use server";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
+function getRatingLabel(rating: number) {
+  if (rating >= 4.5) return "Excellent";
+  if (rating >= 4) return "Strong";
+  if (rating >= 3) return "Good";
+  if (rating > 0) return "Growing";
+  return "No ratings yet";
+}
+
+function parseSkills(skills: string | null) {
+  if (!skills) return [];
+  return skills
+    .split(",")
+    .map((skill) => skill.trim())
+    .filter(Boolean);
+}
+
+function getInitial(name?: string | null) {
+  return name?.trim()?.charAt(0)?.toUpperCase() || "U";
+}
+
+export default async function PublicPortfolioPage({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}) {
+  const { username } = await params;
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.role !== "VOLUNTEER" || !session.user.id) {
-    redirect("/login");
+  const user = await prisma.user.findFirst({
+    where: { username },
+    select: {
+      id: true,
+      name: true,
+      username: true,
+      bio: true,
+      skills: true,
+      experience: true,
+      country: true,
+      countryCode: true,
+      mobileNumber: true,
+      profileImageUrl: true,
+      rating: true,
+      ratingCount: true,
+      isPortfolioPublic: true,
+      showCountryPublicly: true,
+      showBioPublicly: true,
+      showSkillsPublicly: true,
+      showReviewsPublicly: true,
+      showBadgesPublicly: true,
+    },
+  });
+
+  if (!user || !user.isPortfolioPublic) {
+    notFound();
   }
 
-  const projectId = String(formData.get("projectId") || "");
-  if (!projectId) return;
+  const [badges, portfolioItems] = await Promise.all([
+    user.showBadgesPublicly
+      ? prisma.badge.findMany({
+          where: { userId: user.id },
+          orderBy: { createdAt: "asc" },
+        })
+      : Promise.resolve([]),
 
-  const application = await prisma.application.findFirst({
-    where: {
-      volunteerId: session.user.id,
-      projectId,
-      status: "COMPLETED",
-      project: {
-        status: "COMPLETED",
+    prisma.portfolioItem.findMany({
+      where: { volunteerId: user.id },
+      include: {
+        project: {
+          include: {
+            organization: {
+              select: { name: true },
+            },
+          },
+        },
+        review: true,
       },
-    },
-  });
-
-  if (!application) return;
-
-  const existingPortfolioItem = await prisma.portfolioItem.findFirst({
-    where: {
-      volunteerId: session.user.id,
-      projectId,
-    },
-  });
-
-  if (existingPortfolioItem) return;
-
-  const review = await prisma.review.findFirst({
-    where: {
-      volunteerId: session.user.id,
-      projectId,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  const lastItem = await prisma.portfolioItem.findFirst({
-    where: { volunteerId: session.user.id },
-    orderBy: { order: "desc" },
-  });
-
-  await prisma.portfolioItem.create({
-    data: {
-      volunteerId: session.user.id,
-      projectId,
-      reviewId: review?.id,
-      order: (lastItem?.order ?? -1) + 1,
-    },
-  });
-}
-
-async function removeFromPortfolio(formData: FormData) {
-  "use server";
-
-  const session = await getServerSession(authOptions);
-
-  if (!session || session.user.role !== "VOLUNTEER" || !session.user.id) {
-    redirect("/login");
-  }
-
-  const portfolioItemId = String(formData.get("portfolioItemId") || "");
-  if (!portfolioItemId) return;
-
-  const item = await prisma.portfolioItem.findFirst({
-    where: {
-      id: portfolioItemId,
-      volunteerId: session.user.id,
-    },
-  });
-
-  if (!item) return;
-
-  await prisma.portfolioItem.delete({
-    where: { id: portfolioItemId },
-  });
-}
-
-async function movePortfolioItem(formData: FormData) {
-  "use server";
-
-  const session = await getServerSession(authOptions);
-
-  if (!session || session.user.role !== "VOLUNTEER" || !session.user.id) {
-    redirect("/login");
-  }
-
-  const portfolioItemId = String(formData.get("portfolioItemId") || "");
-  const direction = String(formData.get("direction") || "");
-
-  if (!portfolioItemId || !["up", "down"].includes(direction)) return;
-
-  const items = await prisma.portfolioItem.findMany({
-    where: { volunteerId: session.user.id },
-    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-  });
-
-  const currentIndex = items.findIndex((item) => item.id === portfolioItemId);
-  if (currentIndex === -1) return;
-
-  const swapIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-  if (swapIndex < 0 || swapIndex >= items.length) return;
-
-  const currentItem = items[currentIndex];
-  const swapItem = items[swapIndex];
-
-  await prisma.$transaction([
-    prisma.portfolioItem.update({
-      where: { id: currentItem.id },
-      data: { order: swapItem.order },
-    }),
-    prisma.portfolioItem.update({
-      where: { id: swapItem.id },
-      data: { order: currentItem.order },
+      orderBy: [{ order: "asc" }, { createdAt: "asc" }],
     }),
   ]);
-}
 
-async function savePortfolioDetails(formData: FormData) {
-  "use server";
+  const skills = user.showSkillsPublicly ? parseSkills(user.skills) : [];
 
-  const session = await getServerSession(authOptions);
-
-  if (!session || session.user.role !== "VOLUNTEER" || !session.user.id) {
-    redirect("/login");
-  }
-
-  const portfolioItemId = String(formData.get("portfolioItemId") || "");
-  const contribution = String(formData.get("contribution") || "").trim();
-  const imageUrl = String(formData.get("imageUrl") || "").trim();
-  const proofUrl = String(formData.get("proofUrl") || "").trim();
-
-  if (!portfolioItemId) return;
-
-  const item = await prisma.portfolioItem.findFirst({
-    where: {
-      id: portfolioItemId,
-      volunteerId: session.user.id,
-    },
+  const profileStrength = calculateProfileStrength({
+    username: user.username,
+    bio: user.bio,
+    skills: user.skills,
+    experience: user.experience,
+    country: user.country,
+    countryCode: user.countryCode,
+    mobileNumber: user.mobileNumber,
+    profileImageUrl: user.profileImageUrl,
+    portfolioCount: portfolioItems.length,
   });
 
-  if (!item) return;
+  const profileLevel = getProfileLevel(profileStrength.score);
+  const nextProfileLevel = getNextProfileLevel(profileStrength.score);
 
-  await prisma.portfolioItem.update({
-    where: { id: portfolioItemId },
-    data: {
-      contribution: contribution || null,
-      imageUrl: imageUrl || null,
-      proofUrl: proofUrl || null,
-    },
-  });
-}
+  const totalProjects = portfolioItems.length;
+  const totalReviews = user.ratingCount;
+  const totalBadges = badges.length;
 
-export default async function PortfolioPage() {
-  const session = await getServerSession(authOptions);
+  const isSignedIn = Boolean(session?.user);
+  const isOrganization = session?.user?.role === "ORGANIZATION";
+  const isOwner = session?.user?.username === user.username;
 
-  if (!session || session.user.role !== "VOLUNTEER" || !session.user.id) {
-    redirect("/login");
-  }
+  // const inviteHref = isSignedIn
+  //   ? `/dashboard/organization?invite=${encodeURIComponent(user.username)}`
+  //   : `/login?next=${encodeURIComponent(`/portfolio/${user.username}`)}`;
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    include: {
-      badges: true,
-    },
-  });
+  const inviteHref = isSignedIn
+  ? `/dashboard/organization/invite?username=${encodeURIComponent(user.username)}`
+  : `/login?next=${encodeURIComponent(`/portfolio/${user.username}`)}`;
 
-  if (!user) {
-    redirect("/login");
-  }
+  const messageHref = isSignedIn
+    ? `/dashboard/messages?username=${encodeURIComponent(user.username)}`
+    : `/login?next=${encodeURIComponent(`/portfolio/${user.username}`)}`;
 
-  const portfolio = await prisma.portfolioItem.findMany({
-    where: { volunteerId: session.user.id },
-    include: {
-      project: true,
-      review: true,
-    },
-    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-  });
-
-  const completedApplications = await prisma.application.findMany({
-    where: {
-      volunteerId: session.user.id,
-      status: "COMPLETED",
-      project: {
-        status: "COMPLETED",
-      },
-    },
-    include: {
-      project: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  const portfolioProjectIds = new Set(portfolio.map((item) => item.projectId));
-
-  const eligibleProjects = completedApplications.filter(
-    (app) => !portfolioProjectIds.has(app.projectId)
-  );
+  const contactHref = isSignedIn
+    ? `/dashboard/messages?username=${encodeURIComponent(user.username)}&intent=contact`
+    : `/login?next=${encodeURIComponent(`/portfolio/${user.username}`)}`;
 
   return (
-    <main className="px-6 md:px-10 py-10 bg-gray-50 min-h-screen space-y-10">
-      <section className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-bold">My Portfolio</h1>
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
+      <section className="border-b border-slate-200 bg-white/80 backdrop-blur">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+          <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+            <div>
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                <span className="h-2 w-2 rounded-full bg-blue-600" />
+                Public Portfolio
+              </div>
 
-          <p className="mt-2 text-gray-700">
-            ⭐ <span className="font-semibold">{user.rating.toFixed(1)}</span> / 5
-            <span className="ml-2 text-sm text-gray-500">
-              ({user.ratingCount} reviews)
-            </span>
-          </p>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div className="relative h-16 w-16 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+                  {user.profileImageUrl ? (
+                    <Image
+                      src={user.profileImageUrl}
+                      alt={user.name || "Profile image"}
+                      fill
+                      className="object-cover"
+                      sizes="64px"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-600 text-2xl font-bold text-white">
+                      {getInitial(user.name)}
+                    </div>
+                  )}
+                </div>
 
-          {user.badges.length > 0 && (
-            <div className="flex gap-3 mt-4 flex-wrap">
-              {user.badges.map((badge) => (
-                <span
-                  key={badge.id}
-                  title={`${badge.name} — ${badge.description}`}
-                  className="text-2xl"
-                >
-                  {badge.icon}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <a
-          href={`/portfolio/${user.username}`}
-          className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition"
-        >
-          View Public Portfolio
-        </a>
-      </section>
-
-      <section className="bg-white border rounded-2xl p-6 shadow-sm">
-        <div className="mb-5">
-          <h2 className="text-xl font-semibold">Add Completed Work</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Add completed projects to strengthen your public portfolio.
-          </p>
-        </div>
-
-        {eligibleProjects.length === 0 ? (
-          <p className="text-gray-600 text-sm">
-            No completed projects available to add right now.
-          </p>
-        ) : (
-          <div className="grid gap-4">
-            {eligibleProjects.map((app) => (
-              <div
-                key={app.id}
-                className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 rounded-xl border bg-gray-50 p-4"
-              >
                 <div>
-                  <h3 className="font-semibold text-gray-900">
-                    {app.project.title}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Completed project ready for your portfolio
+                  <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+                    {user.name}
+                  </h1>
+                  <p className="mt-1 text-sm font-medium text-slate-500">
+                    @{user.username}
+                  </p>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${profileLevel.borderClass} ${profileLevel.bgClass} ${profileLevel.colorClass}`}
+                    >
+                      <span>{profileLevel.icon}</span>
+                      {profileLevel.name}
+                    </span>
+
+                    <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                      Profile Strength {profileStrength.score}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {user.showBioPublicly && user.bio && (
+                <p className="mt-5 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
+                  {user.bio}
+                </p>
+              )}
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+                    Rating
+                  </p>
+                  <p className="mt-1 text-lg font-bold text-slate-900">
+                    ⭐ {user.rating.toFixed(1)}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {user.ratingCount} review{user.ratingCount === 1 ? "" : "s"}
                   </p>
                 </div>
 
-                <form action={addToPortfolio}>
-                  <input type="hidden" name="projectId" value={app.projectId} />
-                  <button
-                    type="submit"
-                    className="inline-flex items-center justify-center rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 transition"
-                  >
-                    Add to Portfolio
-                  </button>
-                </form>
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Portfolio Items
+                  </p>
+                  <p className="mt-1 text-lg font-bold text-slate-900">
+                    {portfolioItems.length}
+                  </p>
+                  <p className="text-xs text-slate-500">Published work</p>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Experience
+                  </p>
+                  <p className="mt-1 text-lg font-bold text-slate-900">
+                    {user.experience || "N/A"}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {getRatingLabel(user.rating)}
+                  </p>
+                </div>
               </div>
-            ))}
+
+              {!isOwner && (
+                <div className="mt-6 flex flex-wrap gap-3">
+                  {isOrganization ? (
+                    <>
+                      <Link
+                        href={inviteHref}
+                        className="inline-flex h-11 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                      >
+                        Invite to Project
+                      </Link>
+
+                      <Link
+                        href={messageHref}
+                        className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        Message
+                      </Link>
+
+                      <Link
+                        href={contactHref}
+                        className="inline-flex h-11 items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 px-5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                      >
+                        Contact
+                      </Link>
+                    </>
+                  ) : isSignedIn ? (
+                    <>
+                      <Link
+                        href={messageHref}
+                        className="inline-flex h-11 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                      >
+                        Message
+                      </Link>
+
+                      <Link
+                        href={contactHref}
+                        className="inline-flex h-11 items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 px-5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                      >
+                        Contact
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href={inviteHref}
+                        className="inline-flex h-11 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                      >
+                        Login to Invite
+                      </Link>
+
+                      <Link
+                        href={messageHref}
+                        className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        Login to Message
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-900">
+                Profile Snapshot
+              </h2>
+
+              <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                  BuildUp Profile Level
+                </p>
+                <p className="mt-2 text-xl font-bold text-slate-900">
+                  {profileLevel.icon} {profileLevel.name}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  This level reflects how complete and presentation-ready this
+                  BuildUp profile is.
+                </p>
+
+                <div className="mt-4">
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="text-slate-600">Profile strength</span>
+                    <span className="font-semibold text-blue-600">
+                      {profileStrength.score}%
+                    </span>
+                  </div>
+
+                  <div className="h-3 overflow-hidden rounded-full bg-slate-200">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
+                      style={{ width: `${profileStrength.score}%` }}
+                    />
+                  </div>
+
+                  {nextProfileLevel ? (
+                    <p className="mt-3 text-sm text-slate-500">
+                      Next milestone:{" "}
+                      <span className="font-semibold text-slate-700">
+                        {nextProfileLevel.name}
+                      </span>{" "}
+                      at{" "}
+                      <span className="font-semibold text-slate-700">
+                        {nextProfileLevel.min}%
+                      </span>
+                      .
+                    </p>
+                  ) : (
+                    <p className="mt-3 text-sm font-semibold text-emerald-600">
+                      Highest level reached.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {user.showSkillsPublicly && (
+                <div className="mt-5">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    Skills
+                  </p>
+
+                  {skills.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {skills.map((skill: string) => (
+                        <span
+                          key={skill}
+                          className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-500">No skills added yet.</p>
+                  )}
+                </div>
+              )}
+
+              {user.showCountryPublicly && (
+                <div className="mt-6">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    Country
+                  </p>
+
+                  {user.country ? (
+                    <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
+                      🌍 {user.country}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-500">No country added yet.</p>
+                  )}
+                </div>
+              )}
+
+              {user.showBadgesPublicly && (
+                <div className="mt-6">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    Badges
+                  </p>
+
+                  {badges.length > 0 ? (
+                    <div className="flex flex-wrap gap-3">
+                      {badges.map((badge) => (
+                        <div
+                          key={badge.id}
+                          title={`${badge.name} — ${badge.description}`}
+                          className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2"
+                        >
+                          <span className="text-lg">{badge.icon}</span>
+                          <span className="text-xs font-medium text-slate-700">
+                            {badge.name}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-500">No badges yet.</p>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-900">
+                  Portfolio Signal
+                </p>
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  This page showcases real completed work, contributions, review
+                  feedback, and public proof where available.
+                </p>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
       </section>
 
-      <section className="space-y-6">
-        <div>
-          <h2 className="text-xl font-semibold">Portfolio Items</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            These are the projects currently displayed in your portfolio.
+      <section className="border-b border-slate-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 text-center shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                Profile Level
+              </p>
+              <p className="mt-2 text-lg font-bold text-slate-900">
+                {profileLevel.icon} {profileLevel.name}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                Projects
+              </p>
+              <p className="mt-2 text-lg font-bold text-slate-900">
+                {totalProjects}
+              </p>
+              <p className="text-xs text-slate-500">Completed</p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                Reviews
+              </p>
+              <p className="mt-2 text-lg font-bold text-slate-900">
+                ⭐ {totalReviews}
+              </p>
+              <p className="text-xs text-slate-500">Feedback received</p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                Badges
+              </p>
+              <p className="mt-2 text-lg font-bold text-slate-900">
+                🎖 {totalBadges}
+              </p>
+              <p className="text-xs text-slate-500">Achievements</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+            Featured Work
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Completed projects, contributions, and proof of work.
           </p>
         </div>
 
-        {portfolio.length === 0 ? (
-          <div className="bg-white p-10 rounded-2xl text-center text-gray-600 border shadow-sm">
-            You haven’t added any portfolio items yet.
+        {portfolioItems.length === 0 ? (
+          <div className="rounded-[28px] border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
+            <div className="mx-auto max-w-md">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100 text-3xl">
+                🌍
+              </div>
+              <h3 className="text-xl font-semibold text-slate-900">
+                No portfolio items yet
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                This volunteer has not published any completed work to their
+                public portfolio yet.
+              </p>
+            </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            {portfolio.map((item, index) => (
-              <div
+          <div className="grid gap-6">
+            {portfolioItems.map((item, index) => (
+              <article
                 key={item.id}
-                className="bg-white border rounded-2xl p-6 shadow-sm"
+                className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)]"
               >
-                <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">
-                  <div className="flex-1">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                      Position {index + 1}
-                    </p>
-                    <h2 className="text-xl font-semibold mt-1">
-                      {item.project.title}
-                    </h2>
+                <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
+                  <div className="p-6 md:p-7">
+                    <div className="mb-5 flex flex-wrap items-start gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-lg text-white shadow-sm">
+                        📁
+                      </div>
 
-                    {item.review ? (
-                      <div className="mt-3">
-                        <p className="font-semibold text-yellow-600">
-                          ⭐ {item.review.rating} / 5
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+                            Featured #{index + 1}
+                          </span>
+
+                          {user.showReviewsPublicly && item.review && (
+                            <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                              ⭐ {item.review.rating}/5
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">
+                          {item.project.title}
+                        </h3>
+
+                        <p className="mt-2 text-sm text-slate-500">
+                          Organization: {item.project.organization?.name || "Unknown"}
                         </p>
-                        <p className="text-gray-600 italic mt-1">
-                          “{item.review.comment}”
+                      </div>
+                    </div>
+
+                    {item.contribution ? (
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                          Contribution
+                        </p>
+                        <p className="text-sm leading-7 text-slate-700">
+                          {item.contribution}
                         </p>
                       </div>
                     ) : (
-                      <p className="mt-3 text-sm text-gray-500">No review yet.</p>
+                      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5">
+                        <p className="text-sm text-slate-500">
+                          No contribution summary added yet.
+                        </p>
+                      </div>
                     )}
 
-                    <form action={savePortfolioDetails} className="mt-5 space-y-4">
-                      <input
-                        type="hidden"
-                        name="portfolioItemId"
-                        value={item.id}
-                      />
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          My contribution
-                        </label>
-                        <textarea
-                          name="contribution"
-                          defaultValue={item.contribution ?? ""}
-                          rows={4}
-                          placeholder="Explain exactly what you worked on in this project."
-                          className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
+                    {user.showReviewsPublicly && item.review && (
+                      <div className="mt-5 rounded-2xl border border-amber-100 bg-amber-50 p-5">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+                          Review Feedback
+                        </p>
+                        <p className="text-sm italic leading-7 text-slate-700">
+                          “{item.review.comment}”
+                        </p>
                       </div>
-
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Project image / screenshot URL
-                          </label>
-                          <input
-                            type="url"
-                            name="imageUrl"
-                            defaultValue={item.imageUrl ?? ""}
-                            placeholder="https://..."
-                            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Proof link / live demo / repo
-                          </label>
-                          <input
-                            type="url"
-                            name="proofUrl"
-                            defaultValue={item.proofUrl ?? ""}
-                            placeholder="https://..."
-                            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                      </div>
-
-                      <button
-                        type="submit"
-                        className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition"
-                      >
-                        Save Details
-                      </button>
-                    </form>
+                    )}
                   </div>
 
-                  <div className="flex flex-wrap gap-3">
-                    <form action={movePortfolioItem}>
-                      <input type="hidden" name="portfolioItemId" value={item.id} />
-                      <input type="hidden" name="direction" value="up" />
-                      <button
-                        type="submit"
-                        disabled={index === 0}
-                        className="rounded-lg border px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        Move Up
-                      </button>
-                    </form>
+                  <div className="border-t border-slate-200 bg-slate-50/70 p-6 md:p-7 lg:border-l lg:border-t-0">
+                    <div className="space-y-5">
+                      <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                          Project Status
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-emerald-700">
+                          Completed
+                        </p>
+                      </div>
 
-                    <form action={movePortfolioItem}>
-                      <input type="hidden" name="portfolioItemId" value={item.id} />
-                      <input type="hidden" name="direction" value="down" />
-                      <button
-                        type="submit"
-                        disabled={index === portfolio.length - 1}
-                        className="rounded-lg border px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        Move Down
-                      </button>
-                    </form>
+                      <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                          Public Proof
+                        </p>
 
-                    <form action={removeFromPortfolio}>
-                      <input type="hidden" name="portfolioItemId" value={item.id} />
-                      <button
-                        type="submit"
-                        className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition"
-                      >
-                        Remove
-                      </button>
-                    </form>
+                        <div className="mt-3 space-y-2">
+                          {item.proofUrl ? (
+                            <a
+                              href={item.proofUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block text-sm font-semibold text-blue-600 hover:underline"
+                            >
+                              View Proof Link →
+                            </a>
+                          ) : (
+                            <p className="text-sm text-slate-500">
+                              No proof link added.
+                            </p>
+                          )}
+
+                          {item.imageUrl ? (
+                            <a
+                              href={item.imageUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block text-sm font-semibold text-blue-600 hover:underline"
+                            >
+                              View Project Image →
+                            </a>
+                          ) : (
+                            <p className="text-sm text-slate-500">
+                              No project image added.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                          Showcase Value
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-slate-600">
+                          This project is part of a public, proof-based portfolio
+                          showing real completed work and contribution.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}
+
+        <section className="mt-10 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h3 className="text-xl font-semibold tracking-tight text-slate-900">
+                Looking for proof-based talent?
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                BuildUp helps organizations discover volunteers with visible,
+                real-world project experience.
+              </p>
+            </div>
+
+            <Link
+              href="/register/organization"
+              className="inline-flex h-11 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+            >
+              Join BuildUp
+            </Link>
+          </div>
+        </section>
       </section>
     </main>
   );

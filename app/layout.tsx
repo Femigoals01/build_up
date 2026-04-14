@@ -1,7 +1,12 @@
 
 
 
+
+
+
+
 // import "./globals.css";
+
 // export default function RootLayout({
 //   children,
 // }: {
@@ -9,7 +14,26 @@
 // }) {
 //   return (
 //     <html lang="en">
-//       <body>{children}</body>
+//       <body className="bg-gray-50 text-gray-900">
+//         {children}
+//       </body>
+//     </html>
+//   );
+// }
+
+
+
+
+// import "./globals.css";
+
+// export default function RootLayout({
+//   children,
+// }: {
+//   children: React.ReactNode;
+// }) {
+//   return (
+//     <html lang="en">
+//       <body className="bg-gray-50 text-gray-900">{children}</body>
 //     </html>
 //   );
 // }
@@ -17,6 +41,7 @@
 
 
 import "./globals.css";
+import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 
 export default function RootLayout({
   children,
@@ -26,7 +51,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gray-50 text-gray-900">
-        {children}
+        <SessionProviderWrapper>
+          {children}
+        </SessionProviderWrapper>
       </body>
     </html>
   );

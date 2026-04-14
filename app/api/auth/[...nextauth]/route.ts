@@ -1,67 +1,48 @@
 
 
 
+
+
 // import NextAuth from "next-auth";
 // import type { AuthOptions } from "next-auth";
 // import CredentialsProvider from "next-auth/providers/credentials";
-// import { PrismaAdapter } from "@next-auth/prisma-adapter";
 // import { prisma } from "@/lib/prisma";
 // import bcrypt from "bcryptjs";
 
 // export const authOptions: AuthOptions = {
-//   adapter: PrismaAdapter(prisma),
-
-//   session: {
-//     strategy: "jwt",
-//   },
+//   session: { strategy: "jwt" },
 
 //   providers: [
 //     CredentialsProvider({
 //       name: "Credentials",
-
 //       credentials: {
-//         email: { label: "Email", type: "email" },
-//         password: { label: "Password", type: "password" },
+//         email: {},
+//         password: {},
 //       },
 
 //       async authorize(credentials) {
-//         if (!credentials?.email || !credentials.password) {
-//           console.log("❌ Missing credentials");
-//           return null;
-//         }
+//         if (!credentials?.email || !credentials.password) return null;
 
 //         const user = await prisma.user.findUnique({
 //           where: { email: credentials.email },
 //         });
 
-//         if (!user) {
-//           console.log("❌ User not found:", credentials.email);
-//           return null;
-//         }
-
-//         if (!user.password) {
-//           console.log("❌ User has no password:", user.email);
-//           return null;
-//         }
+//         if (!user) return null;
 
 //         const isValid = await bcrypt.compare(
 //           credentials.password,
 //           user.password
 //         );
 
-//         if (!isValid) {
-//           console.log("❌ Invalid password for:", user.email);
-//           return null;
-//         }
-
-//         console.log("✅ Login successful:", user.email);
+//         if (!isValid) return null;
 
 //         return {
 //           id: user.id,
-//           email: user.email,
 //           name: user.name,
-//           role: user.role,       // VOLUNTEER | ORGANIZATION | MENTOR
+//           email: user.email,
+//           role: user.role,
 //           username: user.username,
+//           profileImageUrl: user.profileImageUrl,
 //         };
 //       },
 //     }),
@@ -73,6 +54,7 @@
 //         token.id = user.id;
 //         token.role = user.role;
 //         token.username = user.username;
+//         token.profileImageUrl = user.profileImageUrl;
 //       }
 //       return token;
 //     },
@@ -80,11 +62,9 @@
 //     async session({ session, token }) {
 //       if (session.user) {
 //         session.user.id = token.id as string;
-//         session.user.role = token.role as
-//           | "VOLUNTEER"
-//           | "ORGANIZATION"
-//           | "MENTOR";
+//         session.user.role = token.role as any;
 //         session.user.username = token.username as string;
+//         session.user.profileImageUrl = token.profileImageUrl as string | null;
 //       }
 //       return session;
 //     },
@@ -99,6 +79,7 @@
 // export { handler as GET, handler as POST };
 
 
+
 import NextAuth from "next-auth";
 import type { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -106,42 +87,90 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export const authOptions: AuthOptions = {
-  session: {
-    strategy: "jwt",
-  },
+  session: { strategy: "jwt" },
 
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        email: {},
+        password: {},
       },
+
+      // async authorize(credentials) {
+      //   if (!credentials?.email || !credentials.password) {
+      //     throw new Error("Email and password are required");
+      //   }
+
+      //   const normalizedEmail = credentials.email.trim().toLowerCase();
+
+      //   const user = await prisma.user.findUnique({
+      //     where: { email: normalizedEmail },
+      //   });
+
+      //   if (!user) {
+      //     throw new Error("Invalid email or password");
+      //   }
+
+      //   const isValid = await bcrypt.compare(
+      //     credentials.password,
+      //     user.password
+      //   );
+
+      //   if (!isValid) {
+      //     throw new Error("Invalid email or password");
+      //   }
+
+      //   if (!user.emailVerified) {
+      //     throw new Error("Please verify your email before logging in");
+      //   }
+
+      //   return {
+      //     id: user.id,
+      //     name: user.name,
+      //     email: user.email,
+      //     role: user.role,
+      //     username: user.username,
+      //     profileImageUrl: user.profileImageUrl,
+      //   };
+      // },
+
+
 
       async authorize(credentials) {
-        if (!credentials?.email || !credentials.password) return null;
+  if (!credentials?.email || !credentials.password) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
+  const user = await prisma.user.findUnique({
+    where: { email: credentials.email },
+  });
 
-        if (!user) return null;
+  if (!user) {
+    throw new Error("Invalid email or password");
+  }
 
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
+  const isValid = await bcrypt.compare(
+    credentials.password,
+    user.password
+  );
 
-        if (!isValid) return null;
+  if (!isValid) {
+    throw new Error("Invalid email or password");
+  }
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          username: user.username,
-        };
-      },
+  // 🔥 ADD THIS BLOCK
+  if (!user.emailVerified) {
+    throw new Error("EMAIL_NOT_VERIFIED");
+  }
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    username: user.username,
+    profileImageUrl: user.profileImageUrl,
+  };
+},
     }),
   ],
 
@@ -151,6 +180,7 @@ export const authOptions: AuthOptions = {
         token.id = user.id;
         token.role = user.role;
         token.username = user.username;
+        token.profileImageUrl = user.profileImageUrl;
       }
       return token;
     },
@@ -160,6 +190,7 @@ export const authOptions: AuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as any;
         session.user.username = token.username as string;
+        session.user.profileImageUrl = token.profileImageUrl as string | null;
       }
       return session;
     },
