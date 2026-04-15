@@ -1,12 +1,15 @@
 
 
 
-
 // import Image from "next/image";
 // import { getServerSession } from "next-auth";
+// import { redirect } from "next/navigation";
 // import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 // import { prisma } from "@/lib/prisma";
 // import SignOutButton from "@/components/auth/SignOutButton";
+
+// export const dynamic = "force-dynamic";
+// export const revalidate = 0;
 
 // function formatRole(role?: string | null) {
 //   if (!role) return "User";
@@ -35,9 +38,10 @@
 // export default async function DashboardHeader() {
 //   const session = await getServerSession(authOptions);
 
-//   if (!session?.user?.id) return null;
+//   if (!session?.user?.id) {
+//     redirect("/login");
+//   }
 
-//   // 🔥 ALWAYS FRESH FROM DB
 //   const user = await prisma.user.findUnique({
 //     where: { id: session.user.id },
 //     select: {
@@ -47,15 +51,17 @@
 //     },
 //   });
 
-//   const name = user?.name || session.user.name || "User";
-//   const role = user?.role || session.user.role || null;
-//   const profileImageUrl = user?.profileImageUrl || null;
+//   if (!user) {
+//     redirect("/login");
+//   }
+
+//   const name = user.name || session.user.name || "User";
+//   const role = user.role || session.user.role || null;
+//   const profileImageUrl = user.profileImageUrl || null;
 
 //   return (
 //     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
 //       <div className="flex min-h-16 items-center justify-between gap-4 px-4 py-3 md:px-6 lg:px-8">
-        
-//         {/* LEFT */}
 //         <div className="min-w-0">
 //           <h1 className="text-lg font-semibold tracking-tight text-slate-900 md:text-xl">
 //             Dashboard
@@ -65,30 +71,27 @@
 //           </p>
 //         </div>
 
-//         {/* RIGHT */}
 //         <div className="flex items-center gap-3 md:gap-4">
-
-//           {/* ROLE BADGE */}
 //           <span
-//             className={`hidden rounded-full border px-3 py-1 text-xs font-semibold md:inline-flex ${getRoleStyles(role)}`}
+//             className={`hidden rounded-full border px-3 py-1 text-xs font-semibold md:inline-flex ${getRoleStyles(
+//               role
+//             )}`}
 //           >
 //             {formatRole(role)}
 //           </span>
 
-//           {/* USER */}
 //           <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
-            
 //             <div className="relative h-10 w-10 overflow-hidden rounded-full border border-white/60 shadow-sm">
 //               {profileImageUrl ? (
 //                 <Image
 //                   src={profileImageUrl}
-//                   alt={name || "User"}
+//                   alt={name || "User profile"}
 //                   fill
 //                   className="object-cover"
 //                   sizes="40px"
 //                 />
 //               ) : (
-//                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-600 text-sm font-bold text-white">
+//                 <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-sm font-bold text-white">
 //                   {getInitial(name)}
 //                 </div>
 //               )}
@@ -104,9 +107,7 @@
 //             </div>
 //           </div>
 
-//           {/* LOGOUT */}
 //           <SignOutButton />
-
 //         </div>
 //       </div>
 //     </header>
@@ -124,6 +125,13 @@ import SignOutButton from "@/components/auth/SignOutButton";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+type AppRole = "VOLUNTEER" | "ORGANIZATION" | "MENTOR" | "ADMIN";
+
+type DashboardHeaderProps = {
+  name?: string | null;
+  role?: AppRole;
+};
 
 function formatRole(role?: string | null) {
   if (!role) return "User";
@@ -149,7 +157,10 @@ function getInitial(name?: string | null) {
   return name?.trim()?.charAt(0)?.toUpperCase() || "U";
 }
 
-export default async function DashboardHeader() {
+export default async function DashboardHeader({
+  name: fallbackName,
+  role: fallbackRole,
+}: DashboardHeaderProps) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
@@ -169,8 +180,8 @@ export default async function DashboardHeader() {
     redirect("/login");
   }
 
-  const name = user.name || session.user.name || "User";
-  const role = user.role || session.user.role || null;
+  const name = user.name || fallbackName || session.user.name || "User";
+  const role = user.role || fallbackRole || session.user.role || null;
   const profileImageUrl = user.profileImageUrl || null;
 
   return (
