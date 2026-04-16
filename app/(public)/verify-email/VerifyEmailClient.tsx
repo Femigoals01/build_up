@@ -1,13 +1,15 @@
 
 
+
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import BuildUpLogo from "@/components/brand/BuildUpLogo";
 
 const RESEND_COOLDOWN = 60;
+const OTP_LENGTH = 6;
 
 export default function VerifyEmailClient() {
   const searchParams = useSearchParams();
@@ -15,12 +17,19 @@ export default function VerifyEmailClient() {
 
   const email = useMemo(() => searchParams.get("email") || "", [searchParams]);
 
-  const [otp, setOtp] = useState("");
+  const [otpDigits, setOtpDigits] = useState<string[]>(
+    Array(OTP_LENGTH).fill("")
+  );
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN);
+
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const autoSubmitTriggeredRef = useRef(false);
+
+  const otp = otpDigits.join("");
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -38,8 +47,119 @@ export default function VerifyEmailClient() {
     return () => clearInterval(timer);
   }, [cooldown]);
 
-  const handleVerify = async (e: React.FormEvent) => {
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (
+      otp.length === OTP_LENGTH &&
+      !loading &&
+      !autoSubmitTriggeredRef.current
+    ) {
+      autoSubmitTriggeredRef.current = true;
+      void handleVerify();
+    }
+
+    if (otp.length < OTP_LENGTH) {
+      autoSubmitTriggeredRef.current = false;
+    }
+  }, [otp, loading]);
+
+  const updateDigit = (index: number, value: string) => {
+    const cleaned = value.replace(/\D/g, "");
+
+    if (!cleaned) {
+      const nextDigits = [...otpDigits];
+      nextDigits[index] = "";
+      setOtpDigits(nextDigits);
+      return;
+    }
+
+    if (cleaned.length > 1) {
+      const pasted = cleaned.slice(0, OTP_LENGTH).split("");
+      const nextDigits = Array(OTP_LENGTH).fill("");
+      pasted.forEach((digit, i) => {
+        nextDigits[i] = digit;
+      });
+      setOtpDigits(nextDigits);
+
+      const nextIndex = Math.min(pasted.length, OTP_LENGTH - 1);
+      inputRefs.current[nextIndex]?.focus();
+      return;
+    }
+
+    const nextDigits = [...otpDigits];
+    nextDigits[index] = cleaned;
+    setOtpDigits(nextDigits);
+
+    if (index < OTP_LENGTH - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === "Backspace") {
+      if (otpDigits[index]) {
+        const nextDigits = [...otpDigits];
+        nextDigits[index] = "";
+        setOtpDigits(nextDigits);
+        return;
+      }
+
+      if (index > 0) {
+        inputRefs.current[index - 1]?.focus();
+        const nextDigits = [...otpDigits];
+        nextDigits[index - 1] = "";
+        setOtpDigits(nextDigits);
+      }
+    }
+
+    if (e.key === "ArrowLeft" && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+
+    if (e.key === "ArrowRight" && index < OTP_LENGTH - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, OTP_LENGTH);
+
+    if (!pasted) return;
+
+    const nextDigits = Array(OTP_LENGTH).fill("");
+    pasted.split("").forEach((digit, index) => {
+      nextDigits[index] = digit;
+    });
+
+    setOtpDigits(nextDigits);
+
+    const nextIndex = Math.min(pasted.length, OTP_LENGTH - 1);
+    inputRefs.current[nextIndex]?.focus();
+  };
+
+  const handleVerify = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+
+    if (!email.trim()) {
+      setError("Missing email address. Please return to registration.");
+      return;
+    }
+
+    if (otp.trim().length !== OTP_LENGTH) {
+      setError("Please enter the complete 6-digit code.");
+      return;
+    }
+
     setError("");
     setMessage("");
     setLoading(true);
@@ -61,20 +181,23 @@ export default function VerifyEmailClient() {
       if (!res.ok) {
         setError(data?.error || "Verification failed.");
         setLoading(false);
+        autoSubmitTriggeredRef.current = false;
         return;
       }
 
       setMessage("Email verified successfully.");
+
       setTimeout(() => {
         router.push(
-          email
-            ? `/verify-email/success?email=${encodeURIComponent(email)}`
-            : "/verify-email/success"
+          `/verify-email/success?email=${encodeURIComponent(
+            email.trim().toLowerCase()
+          )}`
         );
       }, 900);
     } catch (err) {
       console.error("Verify email error:", err);
       setError("Something went wrong while verifying your email.");
+      autoSubmitTriggeredRef.current = false;
     } finally {
       setLoading(false);
     }
@@ -113,6 +236,9 @@ export default function VerifyEmailClient() {
 
       setMessage("A new verification code has been sent to your email.");
       setCooldown(RESEND_COOLDOWN);
+      setOtpDigits(Array(OTP_LENGTH).fill(""));
+      autoSubmitTriggeredRef.current = false;
+      inputRefs.current[0]?.focus();
     } catch (err) {
       console.error("Resend verification error:", err);
       setError("Something went wrong while resending the code.");
@@ -145,6 +271,29 @@ export default function VerifyEmailClient() {
               We sent a verification code to your email address. Enter it to
               activate your BuildUp account and continue to login.
             </p>
+
+            <div className="mt-10 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <p className="text-2xl font-bold text-slate-900">Secure</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Protect your account
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <p className="text-2xl font-bold text-slate-900">Verified</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Confirm your identity
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <p className="text-2xl font-bold text-slate-900">Ready</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Access your dashboard
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -198,18 +347,27 @@ export default function VerifyEmailClient() {
                     <label className="mb-2 block text-sm font-semibold text-slate-800">
                       Verification Code
                     </label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={6}
-                      placeholder="Enter 6-digit code"
-                      className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-center text-lg tracking-[0.35em] outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
-                      value={otp}
-                      onChange={(e) =>
-                        setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
-                      }
-                      required
-                    />
+
+                    <div className="flex items-center justify-between gap-2 sm:gap-3">
+                      {otpDigits.map((digit, index) => (
+                        <input
+                          key={index}
+                          ref={(el) => {
+                            inputRefs.current[index] = el;
+                          }}
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete={index === 0 ? "one-time-code" : "off"}
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) => updateDigit(index, e.target.value)}
+                          onKeyDown={(e) => handleKeyDown(index, e)}
+                          onPaste={handlePaste}
+                          className="h-14 w-12 rounded-2xl border border-slate-200 bg-slate-50 text-center text-xl font-semibold outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 sm:w-14"
+                        />
+                      ))}
+                    </div>
+
                     <p className="mt-2 text-xs text-slate-500">
                       The code expires in 10 minutes.
                     </p>
@@ -217,7 +375,7 @@ export default function VerifyEmailClient() {
 
                   <button
                     type="submit"
-                    disabled={loading || !email}
+                    disabled={loading || !email || otp.length !== OTP_LENGTH}
                     className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
                   >
                     {loading ? "Verifying..." : "Verify Email"}

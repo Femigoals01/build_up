@@ -66,31 +66,3 @@ export default function BuildUpLogo({
 }
 
 
-
-// import Image from "next/image";
-// import Link from "next/link";
-
-// type Props = {
-//   href?: string;
-//   className?: string;
-//   imageClassName?: string;
-// };
-
-// export default function BuildUpLogo({
-//   href = "/",
-//   className = "",
-//   imageClassName = "",
-// }: Props) {
-//   return (
-//     <Link href={href} className={`inline-flex items-center ${className}`}>
-//       <Image
-//         src="/brand/buildup-logo.png"
-//         alt="BuildUp logo"
-//         width={44}
-//         height={44}
-//         priority
-//         className={imageClassName}
-//       />
-//     </Link>
-//   );
-// }
