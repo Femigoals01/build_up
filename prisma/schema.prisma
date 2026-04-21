@@ -1,7 +1,3 @@
-
-
-
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,65 +7,70 @@ datasource db {
 }
 
 model User {
-  id                         String              @id @default(cuid())
+  id                         String        @id @default(cuid())
   name                       String
-  email                      String              @unique
+  email                      String        @unique
   password                   String
   role                       Role
-  createdAt                  DateTime            @default(now())
+  createdAt                  DateTime      @default(now())
   bio                        String?
   experience                 String?
   skills                     String?
-  rating                     Float               @default(0)
-  ratingCount                Int                 @default(0)
-  username                   String              @unique
-  lastActivitySeenAt         DateTime            @default(now())
+  rating                     Float         @default(0)
+  ratingCount                Int           @default(0)
+  username                   String        @unique
+  lastActivitySeenAt         DateTime      @default(now())
   mentorStatus               MentorStatus?
   country                    String?
   mobileNumber               String?
   countryCode                String?
   availabilityStatus         String?
-  passwordResetToken   String?
-passwordResetExpiry  DateTime?
+  passwordResetToken         String?
+  passwordResetExpiry        DateTime?
   careerGoal                 String?
-  emailNotifications         Boolean             @default(true)
+  emailNotifications         Boolean       @default(true)
   githubUrl                  String?
   headline                   String?
-  inAppNotifications         Boolean             @default(true)
-  isPortfolioPublic          Boolean             @default(true)
+  inAppNotifications         Boolean       @default(true)
+  isPortfolioPublic          Boolean       @default(true)
   linkedinUrl                String?
-  notifyBadges               Boolean             @default(true)
-  notifyMentorMessages       Boolean             @default(true)
-  notifyOrganizationMessages Boolean             @default(true)
-  notifyProjectUpdates       Boolean             @default(true)
-  notifyReviews              Boolean             @default(true)
-  notifyWeeklySummary        Boolean             @default(false)
-  openToMentorGuidance       Boolean             @default(true)
-  portfolioWebsite           String?
-  preferredDifficulty        String?
-  showBadgesPublicly         Boolean             @default(true)
-  showBioPublicly            Boolean             @default(true)
-  showCountryPublicly        Boolean             @default(true)
-  showEmailPublicly          Boolean             @default(false)
-  showPhonePublicly          Boolean             @default(false)
-  showReviewsPublicly        Boolean             @default(true)
-  showSkillsPublicly         Boolean             @default(true)
-  profileImageUrl            String?
-  emailOtp                   String?
-  emailOtpExpiry             DateTime?
-  emailVerified              Boolean             @default(false)
-  applications               Application[]       @relation("VolunteerApplications")
-  badges                     Badge[]
-  sentMessages               ChatMessage[]
-  messageReads               ChatMessageRead[]
-  mentorRequests             MentorshipRequest[] @relation("MentorRequests")
-  volunteerRequests          MentorshipRequest[] @relation("VolunteerRequests")
-  notifications              Notification[]
-  portfolio                  PortfolioItem[]
-  mentoredProjects           Project[]           @relation("MentorProjects")
-  projects                   Project[]           @relation("OrganizationProjects")
-  reviewsGiven               Review[]            @relation("OrganizationReviews")
-  reviewsReceived            Review[]            @relation("VolunteerReviews")
+  notifyBadges               Boolean       @default(true)
+  notifyMentorMessages       Boolean       @default(true)
+  notifyOrganizationMessages Boolean       @default(true)
+
+  directConversationParticipants DirectConversationParticipant[] @relation("DirectConversationParticipants")
+  directMessagesSent             DirectMessage[]                 @relation("DirectMessagesSent")
+  directMessageReads             DirectMessageRead[]             @relation("DirectMessageReads")
+
+  notifyProjectUpdates Boolean             @default(true)
+  notifyReviews        Boolean             @default(true)
+  notifyWeeklySummary  Boolean             @default(false)
+  openToMentorGuidance Boolean             @default(true)
+  portfolioWebsite     String?
+  preferredDifficulty  String?
+  showBadgesPublicly   Boolean             @default(true)
+  showBioPublicly      Boolean             @default(true)
+  showCountryPublicly  Boolean             @default(true)
+  showEmailPublicly    Boolean             @default(false)
+  showPhonePublicly    Boolean             @default(false)
+  showReviewsPublicly  Boolean             @default(true)
+  showSkillsPublicly   Boolean             @default(true)
+  profileImageUrl      String?
+  emailOtp             String?
+  emailOtpExpiry       DateTime?
+  emailVerified        Boolean             @default(false)
+  applications         Application[]       @relation("VolunteerApplications")
+  badges               Badge[]
+  sentMessages         ChatMessage[]
+  messageReads         ChatMessageRead[]
+  mentorRequests       MentorshipRequest[] @relation("MentorRequests")
+  volunteerRequests    MentorshipRequest[] @relation("VolunteerRequests")
+  notifications        Notification[]
+  portfolio            PortfolioItem[]
+  mentoredProjects     Project[]           @relation("MentorProjects")
+  projects             Project[]           @relation("OrganizationProjects")
+  reviewsGiven         Review[]            @relation("OrganizationReviews")
+  reviewsReceived      Review[]            @relation("VolunteerReviews")
 }
 
 /// *
@@ -168,6 +169,54 @@ model ChatMessageRead {
   readAt    DateTime    @default(now())
   message   ChatMessage @relation(fields: [messageId], references: [id])
   user      User        @relation(fields: [userId], references: [id])
+
+  @@unique([messageId, userId])
+}
+
+model DirectConversation {
+  id        String                 @id @default(cuid())
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  kind      DirectConversationKind @default(DIRECT)
+
+  participants DirectConversationParticipant[]
+  messages     DirectMessage[]
+}
+
+model DirectConversationParticipant {
+  id             String   @id @default(cuid())
+  conversationId String
+  userId         String
+  createdAt      DateTime @default(now())
+
+  conversation DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User               @relation("DirectConversationParticipants", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+model DirectMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String?
+  content        String?
+  createdAt      DateTime @default(now())
+  isSystem       Boolean  @default(false)
+  audioUrl       String?
+
+  conversation DirectConversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User?               @relation("DirectMessagesSent", fields: [senderId], references: [id])
+  reads        DirectMessageRead[]
+}
+
+model DirectMessageRead {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+
+  message DirectMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User          @relation("DirectMessageReads", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId])
 }
@@ -300,8 +349,11 @@ enum Difficulty {
   ADVANCED
 }
 
-
 enum ApplicationSource {
   VOLUNTEER
   ORGANIZATION
+}
+
+enum DirectConversationKind {
+  DIRECT
 }

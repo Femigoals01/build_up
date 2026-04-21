@@ -1,52 +1,5 @@
 
 
-// "use client";
-
-// import { useEffect, useRef } from "react";
-
-// export default function AudioWaveform({ src }: { src: string }) {
-//   const canvasRef = useRef<HTMLCanvasElement>(null);
-
-//   useEffect(() => {
-//     const canvas = canvasRef.current;
-//     if (!canvas) return;
-
-//     const audio = new Audio(src);
-//     const ctx = canvas.getContext("2d")!;
-//     const audioCtx = new AudioContext();
-//     const analyser = audioCtx.createAnalyser();
-//     const source = audioCtx.createMediaElementSource(audio);
-
-//     source.connect(analyser);
-//     analyser.connect(audioCtx.destination);
-
-//     analyser.fftSize = 256;
-//     const bufferLength = analyser.frequencyBinCount;
-//     const dataArray = new Uint8Array(bufferLength);
-
-//     function draw() {
-//       requestAnimationFrame(draw);
-
-//       analyser.getByteFrequencyData(dataArray);
-
-//       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-//       const barWidth = (canvas.width / bufferLength) * 2;
-//       let x = 0;
-
-//       for (let i = 0; i < bufferLength; i++) {
-//         const barHeight = dataArray[i] / 2;
-//         ctx.fillStyle = "#6366f1";
-//         ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-//         x += barWidth + 1;
-//       }
-//     }
-
-//     draw();
-//   }, [src]);
-
-//   return <canvas ref={canvasRef} width={200} height={50} />;
-// }
 
 
 "use client";

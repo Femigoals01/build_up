@@ -1,55 +1,5 @@
-// "use client";
 
-// import { useState } from "react";
-// import VolunteerOnboardingBanner from "@/components/dashboard/VolunteerOnboardingBanner";
 
-// type OnboardingStep = {
-//   label: string;
-//   done: boolean;
-//   href: string;
-//   description: string;
-//   icon: string;
-// };
-
-// type Props = {
-//   userId: string;
-//   show: boolean;
-//   onboardingProgress: number;
-//   completedOnboardingSteps: number;
-//   totalOnboardingSteps: number;
-//   nextOnboardingStep?: OnboardingStep;
-//   onboardingSteps: OnboardingStep[];
-// };
-
-// export default function OnboardingBannerShell(props: Props) {
-//   const [resetSignal, setResetSignal] = useState(0);
-//   const [dismissed, setDismissed] = useState(false);
-
-//   return (
-//     <div className="space-y-3">
-//       {dismissed && props.show && (
-//         <div className="flex justify-end">
-//           <button
-//             type="button"
-//             onClick={() => {
-//               setDismissed(false);
-//               setResetSignal((prev) => prev + 1);
-//             }}
-//             className="text-sm font-semibold text-indigo-700 hover:underline"
-//           >
-//             Show onboarding again
-//           </button>
-//         </div>
-//       )}
-
-//       <VolunteerOnboardingBanner
-//         {...props}
-//         resetSignal={resetSignal}
-//         onDismiss={() => setDismissed(true)}
-//       />
-//     </div>
-//   );
-// }
 
 
 
