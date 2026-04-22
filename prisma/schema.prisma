@@ -37,6 +37,7 @@ model User {
   notifyBadges               Boolean       @default(true)
   notifyMentorMessages       Boolean       @default(true)
   notifyOrganizationMessages Boolean       @default(true)
+  supportMessages            SupportMessage[]
 
   directConversationParticipants DirectConversationParticipant[] @relation("DirectConversationParticipants")
   directMessagesSent             DirectMessage[]                 @relation("DirectMessagesSent")
@@ -292,6 +293,23 @@ model playing_with_neon {
   id    Int    @id @default(autoincrement())
   name  String
   value Float? @db.Real
+}
+
+
+
+model SupportMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  category  String?
+  message   String
+  status    String   @default("OPEN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String?
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 /// *
