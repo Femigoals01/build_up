@@ -4,6 +4,7 @@
 
 
 
+
 // import { getServerSession } from "next-auth";
 // import { redirect } from "next/navigation";
 // import Link from "next/link";
@@ -13,6 +14,8 @@
 // import NotificationBell from "@/components/notifications/NotificationBell";
 // import LatestNotificationCard from "@/components/notifications/LatestNotificationCard";
 // import OrganizationProjectsTabs from "@/components/organization/OrganizationProjectsTabs";
+// import SidebarShell from "@/components/sidebar/SidebarShell";
+// import SidebarContent from "@/components/sidebar/SidebarContent";
 
 // export const dynamic = "force-dynamic";
 // export const revalidate = 0;
@@ -80,100 +83,74 @@
 //   const acceptedPlacements = activeVolunteersCount;
 
 //   return (
-//     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
-//       <div className="min-h-screen">
-//         <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 border-r border-slate-200 bg-white/95 px-6 py-8 backdrop-blur lg:block">
-//           <div className="flex h-full flex-col overflow-y-auto pb-6">
-//             <div>
-//               <div className="mb-10">
-//                 <div className="inline-flex items-center gap-3">
-//                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-lg font-bold text-white shadow-sm">
-//                     B
-//                   </div>
-//                   <div>
-//                     <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-//                       BuildUp
-//                     </h2>
-//                     <p className="text-xs text-slate-500">
-//                       Organization workspace
-//                     </p>
-//                   </div>
-//                 </div>
+//     <div className="flex bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
+//       <SidebarShell>
+//         <SidebarContent
+//           user={{
+//             name: session.user.name || "User",
+//             role: session.user.role || "ORGANIZATION",
+//           }}
+//         />
+//       </SidebarShell>
+
+//       <main className="min-w-0 flex-1 px-4 py-6 md:px-8 lg:px-10 lg:py-8">
+//         <div className="mx-auto max-w-7xl space-y-8">
+//           <section className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm lg:hidden">
+//             <div className="flex flex-wrap items-center justify-between gap-3">
+//               <div>
+//                 <h2 className="text-xl font-bold text-slate-900">BuildUp</h2>
+//                 <p className="text-sm text-slate-500">
+//                   Organization workspace
+//                 </p>
 //               </div>
 
-//               <nav className="space-y-2">
-//                 <Link
-//                   href="/dashboard/organization"
-//                   className="flex items-center gap-3 rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700"
-//                 >
-//                   <span className="text-base">📊</span>
-//                   Dashboard
-//                 </Link>
-
-//                 <div className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-blue-600">
-//                   <span className="text-base">📁</span>
-//                   My Projects
-//                 </div>
+//               <div className="flex items-center gap-2">
+//                 <NotificationBell
+//                   userId={session.user.id}
+//                   notifications={notifications}
+//                   unreadCount={unreadCount}
+//                 />
 
 //                 <Link
 //                   href="/dashboard/organization/inbox"
-//                   className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-blue-600"
+//                   className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700"
 //                 >
-//                   <span className="flex items-center gap-3">
-//                     <span className="text-base">💬</span>
-//                     Messages
-//                   </span>
+//                   Messages
 //                   <UnreadBadge />
 //                 </Link>
 
 //                 <Link
-//                   href="/dashboard/organization/invites"
-//                   className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-blue-600"
-//                 >
-//                   <span className="text-base">📩</span>
-//                   Invite History
-//                 </Link>
-
-//                 <Link
 //                   href="/projects/new"
-//                   className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-blue-600"
+//                   className="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
 //                 >
-//                   <span className="text-base">➕</span>
-//                   Post a Project
+//                   Post Project
 //                 </Link>
-//               </nav>
+//               </div>
 //             </div>
+//           </section>
 
-//             <div className="mt-auto mb-2 rounded-[24px] border border-slate-200 bg-slate-50 p-4">
-//               <p className="text-sm font-semibold text-slate-900">
-//                 Need more traction?
-//               </p>
-//               <p className="mt-1 text-sm leading-6 text-slate-500">
-//                 Post clear, outcome-driven projects to attract stronger
-//                 volunteers and better applications.
-//               </p>
-//               <Link
-//                 href="/projects/new"
-//                 className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
-//               >
-//                 Create Project
-//               </Link>
-//             </div>
-//           </div>
-//         </aside>
+//           <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
+//             <div className="relative px-6 py-8 md:px-8 md:py-10">
+//               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.08),transparent_24%)]" />
+//               <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+//                 <div className="max-w-3xl">
+//                   <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+//                     <span className="h-2 w-2 rounded-full bg-blue-600" />
+//                     Organization Dashboard
+//                   </div>
 
-//         <main className="min-w-0 px-4 py-6 md:px-8 lg:ml-72 lg:px-10 lg:py-8">
-//           <div className="mx-auto max-w-7xl space-y-8">
-//             <section className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm lg:hidden">
-//               <div className="flex flex-wrap items-center justify-between gap-3">
-//                 <div>
-//                   <h2 className="text-xl font-bold text-slate-900">BuildUp</h2>
-//                   <p className="text-sm text-slate-500">
-//                     Organization workspace
+//                   <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+//                     Manage projects and volunteers
+//                   </h1>
+
+//                   <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 md:text-base">
+//                     Track activity across your projects, review incoming
+//                     applications, manage accepted volunteers, and keep work
+//                     moving smoothly.
 //                   </p>
 //                 </div>
 
-//                 <div className="flex items-center gap-2">
+//                 <div className="flex flex-wrap items-center gap-3">
 //                   <NotificationBell
 //                     userId={session.user.id}
 //                     notifications={notifications}
@@ -181,189 +158,142 @@
 //                   />
 
 //                   <Link
-//                     href="/dashboard/organization/inbox"
-//                     className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700"
+//                     href="/projects/new"
+//                     className="inline-flex h-11 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
 //                   >
-//                     Messages
-//                     <UnreadBadge />
+//                     Post a New Project
 //                   </Link>
 
 //                   <Link
-//                     href="/projects/new"
-//                     className="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
+//                     href="/dashboard/organization/inbox"
+//                     className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
 //                   >
-//                     Post Project
+//                     Open Messages
+//                   </Link>
+
+//                   <Link
+//                     href="/dashboard/organization/invites"
+//                     className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+//                   >
+//                     View Invite History
 //                   </Link>
 //                 </div>
 //               </div>
-//             </section>
+//             </div>
+//           </section>
 
-//             <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
-//               <div className="relative px-6 py-8 md:px-8 md:py-10">
-//                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.08),transparent_24%)]" />
-//                 <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-//                   <div className="max-w-3xl">
-//                     <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-//                       <span className="h-2 w-2 rounded-full bg-blue-600" />
-//                       Organization Dashboard
-//                     </div>
+//           <LatestNotificationCard
+//             userId={session.user.id}
+//             notifications={notifications}
+//             unreadCount={unreadCount}
+//           />
 
-//                     <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
-//                       Manage projects and volunteers
-//                     </h1>
+//           <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+//             <div className="border-b border-slate-200 px-6 py-5 md:px-8">
+//               <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+//                 <div>
+//                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+//                     Performance Overview
+//                   </p>
+//                   <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
+//                     Organization performance at a glance
+//                   </h2>
+//                   <p className="mt-2 max-w-2xl text-sm text-slate-500">
+//                     A concise summary of projects, applicant flow, and
+//                     volunteer activity across your workspace.
+//                   </p>
+//                 </div>
 
-//                     <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 md:text-base">
-//                       Track activity across your projects, review incoming
-//                       applications, manage accepted volunteers, and keep work
-//                       moving smoothly.
-//                     </p>
-//                   </div>
-
-//                   <div className="flex flex-wrap items-center gap-3">
-//                     <NotificationBell
-//                       userId={session.user.id}
-//                       notifications={notifications}
-//                       unreadCount={unreadCount}
-//                     />
-
-//                     <Link
-//                       href="/projects/new"
-//                       className="inline-flex h-11 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-//                     >
-//                       Post a New Project
-//                     </Link>
-
-//                     <Link
-//                       href="/dashboard/organization/inbox"
-//                       className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-//                     >
-//                       Open Messages
-//                     </Link>
-
-//                     <Link
-//                       href="/dashboard/organization/invites"
-//                       className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-//                     >
-//                       View Invite History
-//                     </Link>
-//                   </div>
+//                 <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
+//                   Live dashboard snapshot
 //                 </div>
 //               </div>
-//             </section>
+//             </div>
 
-//             <LatestNotificationCard
-//               userId={session.user.id}
-//               notifications={notifications}
-//               unreadCount={unreadCount}
-//             />
-
-//             <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-//               <div className="border-b border-slate-200 px-6 py-5 md:px-8">
-//                 <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-//                   <div>
-//                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-//                       Performance Overview
-//                     </p>
-//                     <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
-//                       Organization performance at a glance
-//                     </h2>
-//                     <p className="mt-2 max-w-2xl text-sm text-slate-500">
-//                       A concise summary of projects, applicant flow, and
-//                       volunteer activity across your workspace.
-//                     </p>
-//                   </div>
-
-//                   <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
-//                     Live dashboard snapshot
-//                   </div>
-//                 </div>
+//             <div className="space-y-6 px-6 py-6 md:px-8 md:py-8">
+//               <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+//                 <PrimaryStatCard
+//                   label="Projects Posted"
+//                   value={projectsPosted}
+//                   hint="Total projects created"
+//                   icon="📁"
+//                   accent="slate"
+//                 />
+//                 <PrimaryStatCard
+//                   label="Active Projects"
+//                   value={openAndActiveProjects}
+//                   hint="Open and in progress"
+//                   icon="⚡"
+//                   accent="blue"
+//                 />
+//                 <PrimaryStatCard
+//                   label="Total Applicants"
+//                   value={totalApplicants}
+//                   hint="Across all projects"
+//                   icon="👥"
+//                   accent="emerald"
+//                 />
 //               </div>
 
-//               <div className="space-y-6 px-6 py-6 md:px-8 md:py-8">
-//                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-//                   <PrimaryStatCard
-//                     label="Projects Posted"
-//                     value={projectsPosted}
-//                     hint="Total projects created"
-//                     icon="📁"
-//                     accent="slate"
-//                   />
-//                   <PrimaryStatCard
-//                     label="Active Projects"
-//                     value={openAndActiveProjects}
-//                     hint="Open and in progress"
-//                     icon="⚡"
-//                     accent="blue"
-//                   />
-//                   <PrimaryStatCard
-//                     label="Total Applicants"
-//                     value={totalApplicants}
-//                     hint="Across all projects"
-//                     icon="👥"
-//                     accent="emerald"
-//                   />
-//                 </div>
+//               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+//                 <SecondaryStatCard
+//                   label="Pending Reviews"
+//                   value={pendingReviews}
+//                   tone="amber"
+//                 />
+//                 <SecondaryStatCard
+//                   label="Active Volunteers"
+//                   value={activeVolunteersCount}
+//                   tone="blue"
+//                 />
+//                 <SecondaryStatCard
+//                   label="Completed Projects"
+//                   value={completedProjectsCount}
+//                   tone="slate"
+//                 />
+//                 <SecondaryStatCard
+//                   label="Accepted Placements"
+//                   value={acceptedPlacements}
+//                   tone="emerald"
+//                 />
+//               </div>
 
-//                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-//                   <SecondaryStatCard
-//                     label="Pending Reviews"
-//                     value={pendingReviews}
-//                     tone="amber"
-//                   />
-//                   <SecondaryStatCard
-//                     label="Active Volunteers"
-//                     value={activeVolunteersCount}
-//                     tone="blue"
-//                   />
-//                   <SecondaryStatCard
-//                     label="Completed Projects"
-//                     value={completedProjectsCount}
-//                     tone="slate"
-//                   />
-//                   <SecondaryStatCard
-//                     label="Accepted Placements"
-//                     value={acceptedPlacements}
-//                     tone="emerald"
-//                   />
-//                 </div>
+//               <div className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-5">
+//                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+//                   <p className="text-sm leading-6 text-slate-600">
+//                     <span className="font-semibold text-slate-900">
+//                       {pendingReviews}
+//                     </span>{" "}
+//                     pending reviews need attention, while{" "}
+//                     <span className="font-semibold text-slate-900">
+//                       {activeVolunteersCount}
+//                     </span>{" "}
+//                     volunteers are currently active across{" "}
+//                     <span className="font-semibold text-slate-900">
+//                       {openAndActiveProjects}
+//                     </span>{" "}
+//                     open and in-progress projects.
+//                   </p>
 
-//                 <div className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-5">
-//                   <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-//                     <p className="text-sm leading-6 text-slate-600">
-//                       <span className="font-semibold text-slate-900">
-//                         {pendingReviews}
-//                       </span>{" "}
-//                       pending reviews need attention, while{" "}
-//                       <span className="font-semibold text-slate-900">
-//                         {activeVolunteersCount}
-//                       </span>{" "}
-//                       volunteers are currently active across{" "}
-//                       <span className="font-semibold text-slate-900">
-//                         {openAndActiveProjects}
-//                       </span>{" "}
-//                       open and in-progress projects.
-//                     </p>
-
-//                     <Link
-//                       href="/dashboard/organization/inbox"
-//                       className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-//                     >
-//                       Review activity
-//                     </Link>
-//                   </div>
+//                   <Link
+//                     href="/dashboard/organization/inbox"
+//                     className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+//                   >
+//                     Review activity
+//                   </Link>
 //                 </div>
 //               </div>
-//             </section>
+//             </div>
+//           </section>
 
-//             <OrganizationProjectsTabs
-//               userId={session.user.id}
-//               activeProjects={activeProjects}
-//               pendingProjects={pendingProjects}
-//               completedProjects={completedProjects}
-//             />
-//           </div>
-//         </main>
-//       </div>
+//           <OrganizationProjectsTabs
+//             userId={session.user.id}
+//             activeProjects={activeProjects}
+//             pendingProjects={pendingProjects}
+//             completedProjects={completedProjects}
+//           />
+//         </div>
+//       </main>
 //     </div>
 //   );
 // }
@@ -453,8 +383,6 @@
 //     </div>
 //   );
 // }
-
-
 
 
 
@@ -550,43 +478,69 @@ export default async function OrganizationDashboard() {
 
       <main className="min-w-0 flex-1 px-4 py-6 md:px-8 lg:px-10 lg:py-8">
         <div className="mx-auto max-w-7xl space-y-8">
+          {/* Mobile workspace header */}
           <section className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm lg:hidden">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">BuildUp</h2>
-                <p className="text-sm text-slate-500">
-                  Organization workspace
-                </p>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">BuildUp</h2>
+                  <p className="text-sm text-slate-500">
+                    Organization workspace
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <NotificationBell
+                    userId={session.user.id}
+                    notifications={notifications}
+                    unreadCount={unreadCount}
+                  />
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <NotificationBell
-                  userId={session.user.id}
-                  notifications={notifications}
-                  unreadCount={unreadCount}
+              {/* Mobile nav shortcuts */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <MobileNavCard
+                  href="/dashboard/organization"
+                  icon="📊"
+                  label="Dashboard"
+                  active
                 />
-
-                <Link
+                <MobileNavCard
+                  href="/projects"
+                  icon="📁"
+                  label="My Projects"
+                />
+                <MobileNavCard
                   href="/dashboard/organization/inbox"
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700"
-                >
-                  Messages
-                  <UnreadBadge />
-                </Link>
-
-                <Link
+                  icon="💬"
+                  label="Messages"
+                  trailing={<UnreadBadge />}
+                />
+                <MobileNavCard
+                  href="/dashboard/organization/invites"
+                  icon="📩"
+                  label="Invites"
+                />
+                <MobileNavCard
                   href="/projects/new"
-                  className="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
-                >
-                  Post Project
-                </Link>
+                  icon="➕"
+                  label="Post Project"
+                />
+                <MobileNavCard
+                  href="/dashboard/settings"
+                  icon="⚙️"
+                  label="Settings"
+                />
               </div>
             </div>
           </section>
 
+          {/* Hero */}
           <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
             <div className="relative px-6 py-8 md:px-8 md:py-10">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.08),transparent_24%)]" />
+
               <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                 <div className="max-w-3xl">
                   <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
@@ -643,6 +597,7 @@ export default async function OrganizationDashboard() {
             unreadCount={unreadCount}
           />
 
+          {/* Stats */}
           <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 px-6 py-5 md:px-8">
               <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
@@ -750,6 +705,53 @@ export default async function OrganizationDashboard() {
         </div>
       </main>
     </div>
+  );
+}
+
+function MobileNavCard({
+  href,
+  icon,
+  label,
+  trailing,
+  active = false,
+}: {
+  href: string;
+  icon: string;
+  label: string;
+  trailing?: React.ReactNode;
+  active?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`group rounded-2xl border p-4 shadow-sm transition ${
+        active
+          ? "border-blue-100 bg-blue-50"
+          : "border-slate-200 bg-slate-50/70 hover:bg-white"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span
+          className={`flex h-10 w-10 items-center justify-center rounded-2xl text-base ${
+            active
+              ? "bg-blue-600 text-white"
+              : "bg-white text-slate-700 border border-slate-200"
+          }`}
+        >
+          {icon}
+        </span>
+
+        {trailing ? <span className="shrink-0">{trailing}</span> : null}
+      </div>
+
+      <p
+        className={`mt-3 text-sm font-semibold ${
+          active ? "text-blue-700" : "text-slate-800"
+        }`}
+      >
+        {label}
+      </p>
+    </Link>
   );
 }
 
