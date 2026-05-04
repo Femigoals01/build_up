@@ -1484,18 +1484,12 @@ export default async function VolunteerDashboard() {
           },
           chat: true,
           submissions: {
-            where: {
-              volunteerId: session.user.id,
-            },
-            orderBy: {
-              createdAt: "desc",
-            },
+            where: { volunteerId: session.user.id },
+            orderBy: { createdAt: "desc" },
             include: {
               comments: {
                 include: {
-                  user: {
-                    select: { name: true },
-                  },
+                  user: { select: { name: true } },
                 },
                 orderBy: { createdAt: "asc" },
               },
@@ -1710,18 +1704,18 @@ export default async function VolunteerDashboard() {
   });
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
       <VolunteerRealtimeRefresh userId={session.user.id} />
 
-      <main className="min-h-screen w-full">
+      <main className="min-h-screen w-full max-w-full overflow-x-hidden">
         <div className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/95 backdrop-blur xl:hidden">
-          <div className="flex items-center justify-between gap-3 px-3 py-4 sm:px-6">
+          <div className="flex items-center justify-between gap-3 px-4 py-4">
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-600 sm:text-xs">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-600">
                 Volunteer Dashboard
               </p>
 
-              <h1 className="truncate text-base font-bold text-slate-900 sm:text-lg">
+              <h1 className="truncate text-base font-bold text-slate-900">
                 Welcome, {session.user.name}
               </h1>
             </div>
@@ -1737,8 +1731,8 @@ export default async function VolunteerDashboard() {
             </div>
           </div>
 
-          <div className="overflow-x-auto px-3 pb-4 sm:px-6">
-            <div className="flex w-max min-w-full gap-2">
+          <div className="max-w-full overflow-x-auto px-4 pb-4">
+            <div className="flex w-max gap-2">
               <MobileNavLink
                 href="/dashboard/volunteer"
                 active
@@ -1773,13 +1767,13 @@ export default async function VolunteerDashboard() {
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-[1600px] space-y-6 px-3 py-4 sm:space-y-8 sm:px-6 sm:py-6 lg:px-8 xl:px-10 xl:py-10">
-          <section className="relative overflow-hidden rounded-[1.75rem] border border-white/40 bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 p-5 text-white shadow-xl shadow-blue-200/50 sm:rounded-3xl sm:p-8 md:p-10">
+        <div className="mx-auto w-full max-w-full space-y-6 px-4 py-4 sm:space-y-8 sm:px-6 sm:py-6 lg:max-w-[1600px] lg:px-8 xl:px-10 xl:py-10">
+          <section className="relative max-w-full overflow-hidden rounded-[1.75rem] border border-white/40 bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 p-5 text-white shadow-xl shadow-blue-200/50 sm:rounded-3xl sm:p-8 md:p-10">
             <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
             <div className="absolute bottom-0 left-1/3 h-32 w-32 rounded-full bg-indigo-300/20 blur-2xl" />
 
-            <div className="relative flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
-              <div className="max-w-2xl">
+            <div className="relative flex min-w-0 flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+              <div className="min-w-0 max-w-2xl">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold tracking-wide text-blue-50">
                     Volunteer dashboard
@@ -1797,7 +1791,7 @@ export default async function VolunteerDashboard() {
                   )}
                 </div>
 
-                <h1 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">
+                <h1 className="mt-4 break-words text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">
                   Welcome back, {session.user.name}
                 </h1>
 
@@ -1809,7 +1803,7 @@ export default async function VolunteerDashboard() {
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                   <div className="w-full rounded-xl bg-white/10 px-4 py-3 backdrop-blur sm:w-auto">
                     <p className="text-xs text-blue-100">Profile Strength</p>
-                    <p className="text-base font-bold text-white sm:text-lg">
+                    <p className="break-words text-base font-bold text-white sm:text-lg">
                       {profileStrength.score}% • {profileLevel.icon}{" "}
                       {profileLevel.name}
                     </p>
@@ -1907,83 +1901,81 @@ export default async function VolunteerDashboard() {
             />
           </StatsGrid>
 
-          <section>
-            <div className="rounded-[1.75rem] border border-gray-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-8">
-              <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
-                    ✨ Recommended for You
-                  </h2>
+          <section className="max-w-full overflow-hidden rounded-[1.75rem] border border-gray-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-8">
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <h2 className="break-words text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
+                  ✨ Recommended for You
+                </h2>
 
-                  <p className="mt-1 text-sm text-gray-500">
-                    Projects matched to your current skill set.
-                  </p>
-                </div>
-
-                <Link
-                  href="/projects"
-                  className="inline-flex w-full items-center justify-center rounded-xl border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-100 sm:w-auto sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:hover:bg-transparent sm:hover:underline"
-                >
-                  Explore all →
-                </Link>
+                <p className="mt-1 text-sm text-gray-500">
+                  Projects matched to your current skill set.
+                </p>
               </div>
 
-              {recommendedProjects.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-5 text-sm text-gray-600 sm:p-8 sm:text-base">
-                  Add more skills to your profile to unlock better project
-                  recommendations.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
-                  {recommendedProjects.map((project) => (
-                    <div
-                      key={project.id}
-                      className="group rounded-2xl border border-gray-200 bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-lg sm:p-5"
-                    >
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="min-w-0">
-                          <h3 className="break-words text-base font-semibold leading-snug text-slate-900 transition group-hover:text-blue-600 sm:text-lg">
-                            {project.title}
-                          </h3>
-
-                          <p className="mt-1 text-sm text-gray-500">
-                            {project.organization.name}
-                          </p>
-                        </div>
-
-                        <span className="w-fit whitespace-nowrap rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-                          {project.matchScore} match
-                        </span>
-                      </div>
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {project.matchedSkills.map((skill) => (
-                          <span
-                            key={skill}
-                            className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-
-                      <Link
-                        href={`/projects/${project.id}`}
-                        className="mt-5 inline-flex items-center text-sm font-semibold text-blue-600 hover:underline"
-                      >
-                        View project →
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <Link
+                href="/projects"
+                className="inline-flex w-full items-center justify-center rounded-xl border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-100 sm:w-auto sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:hover:bg-transparent sm:hover:underline"
+              >
+                Explore all →
+              </Link>
             </div>
+
+            {recommendedProjects.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-5 text-sm text-gray-600 sm:p-8 sm:text-base">
+                Add more skills to your profile to unlock better project
+                recommendations.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
+                {recommendedProjects.map((project) => (
+                  <div
+                    key={project.id}
+                    className="group min-w-0 rounded-2xl border border-gray-200 bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-lg sm:p-5"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <h3 className="break-words text-base font-semibold leading-snug text-slate-900 transition group-hover:text-blue-600 sm:text-lg">
+                          {project.title}
+                        </h3>
+
+                        <p className="mt-1 break-words text-sm text-gray-500">
+                          {project.organization.name}
+                        </p>
+                      </div>
+
+                      <span className="w-fit whitespace-nowrap rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                        {project.matchScore} match
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {project.matchedSkills.map((skill) => (
+                        <span
+                          key={skill}
+                          className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+
+                    <Link
+                      href={`/projects/${project.id}`}
+                      className="mt-5 inline-flex items-center text-sm font-semibold text-blue-600 hover:underline"
+                    >
+                      View project →
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
 
-          <section className="rounded-[1.75rem] border border-gray-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-8">
+          <section className="max-w-full overflow-hidden rounded-[1.75rem] border border-gray-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-8">
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
+              <div className="min-w-0">
+                <h2 className="break-words text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
                   💼 Current Projects
                 </h2>
 
@@ -2020,7 +2012,7 @@ export default async function VolunteerDashboard() {
                   return (
                     <div
                       key={app.id}
-                      className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 transition hover:shadow-lg sm:p-6"
+                      className="relative min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 transition hover:shadow-lg sm:p-6"
                     >
                       <div
                         className={`absolute bottom-5 left-0 top-5 w-1 rounded-full ${
@@ -2028,14 +2020,14 @@ export default async function VolunteerDashboard() {
                         }`}
                       />
 
-                      <div className="pl-3">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 pl-3">
+                        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                           <div className="min-w-0">
                             <h3 className="break-words text-base font-semibold leading-snug text-slate-900 sm:text-lg">
                               {project.title}
                             </h3>
 
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 break-words text-sm text-gray-500">
                               {project.organization.name}
                             </p>
 
@@ -2077,7 +2069,7 @@ export default async function VolunteerDashboard() {
                             const latestSubmission = submissions[0];
 
                             return (
-                              <div className="mt-5 space-y-4">
+                              <div className="mt-5 min-w-0 space-y-4">
                                 <div className="flex flex-wrap items-center gap-2">
                                   <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                                     Active
@@ -2104,7 +2096,7 @@ export default async function VolunteerDashboard() {
                                 </div>
 
                                 {project.mentor && (
-                                  <p className="text-sm text-slate-600">
+                                  <p className="break-words text-sm text-slate-600">
                                     Mentor:{" "}
                                     <span className="font-semibold text-slate-900">
                                       {project.mentor.name}
@@ -2112,17 +2104,17 @@ export default async function VolunteerDashboard() {
                                   </p>
                                 )}
 
-                                <div className="grid gap-2 pt-2 sm:flex sm:flex-wrap">
+                                <div className="grid w-full gap-2 pt-2">
                                   <Link
                                     href={`/dashboard/messages/start?userId=${project.organizationId}`}
-                                    className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+                                    className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                                   >
                                     💬 Message Organization
                                   </Link>
 
                                   <Link
                                     href={`/dashboard/projects/${project.id}/submit`}
-                                    className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 sm:w-auto"
+                                    className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
                                   >
                                     {!latestSubmission
                                       ? "Submit Work"
@@ -2131,7 +2123,7 @@ export default async function VolunteerDashboard() {
 
                                   <Link
                                     href={`/dashboard/volunteer/projects/${project.id}`}
-                                    className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+                                    className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                                   >
                                     Project Details →
                                   </Link>
@@ -2149,7 +2141,7 @@ export default async function VolunteerDashboard() {
 
           <section className="space-y-6 sm:space-y-8">
             <div className="grid grid-cols-1 gap-6 sm:gap-8 xl:grid-cols-3">
-              <div className="rounded-[1.75rem] border border-gray-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-8 xl:col-span-2">
+              <div className="max-w-full overflow-hidden rounded-[1.75rem] border border-gray-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-8 xl:col-span-2">
                 <div className="mb-6">
                   <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
                     📈 Rating Trend
@@ -2167,7 +2159,7 @@ export default async function VolunteerDashboard() {
                 </div>
               </div>
 
-              <div className="rounded-[1.75rem] border border-gray-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-8">
+              <div className="max-w-full overflow-hidden rounded-[1.75rem] border border-gray-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-8">
                 <div className="mb-6">
                   <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
                     Rating Breakdown
@@ -2211,7 +2203,7 @@ export default async function VolunteerDashboard() {
               </div>
             </div>
 
-            <div className="rounded-[1.75rem] border border-gray-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-8">
+            <div className="max-w-full overflow-hidden rounded-[1.75rem] border border-gray-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-8">
               <div className="mb-6">
                 <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
                   🏆 Badge Progress
@@ -2234,7 +2226,7 @@ export default async function VolunteerDashboard() {
                   return (
                     <div
                       key={tier.name}
-                      className="rounded-2xl border border-gray-100 bg-gray-50 p-5"
+                      className="min-w-0 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 p-5"
                     >
                       <div className="mb-4 flex items-center justify-between gap-3">
                         <span className="text-2xl">{tier.icon}</span>
@@ -2250,7 +2242,7 @@ export default async function VolunteerDashboard() {
                         </span>
                       </div>
 
-                      <h3 className="min-h-[40px] text-sm font-semibold text-gray-900">
+                      <h3 className="min-h-[40px] break-words text-sm font-semibold text-gray-900">
                         {tier.name}
                       </h3>
 
@@ -2274,7 +2266,7 @@ export default async function VolunteerDashboard() {
             </div>
           </section>
 
-          <section className="rounded-[1.75rem] border border-gray-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-8">
+          <section className="max-w-full overflow-hidden rounded-[1.75rem] border border-gray-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-8">
             <div className="mb-6">
               <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
                 ⭐ Reviews
@@ -2351,8 +2343,8 @@ function MobileNavLink({
 
 function ReviewRow({ review }: { review: ReviewRowData }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="max-w-full overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <StarRating rating={review.rating} />
 
@@ -2360,7 +2352,7 @@ function ReviewRow({ review }: { review: ReviewRowData }) {
             “{review.comment || "No comment provided."}”
           </p>
 
-          <p className="mt-3 text-sm font-medium text-gray-500">
+          <p className="mt-3 break-words text-sm font-medium text-gray-500">
             — {review.organization}
           </p>
         </div>
