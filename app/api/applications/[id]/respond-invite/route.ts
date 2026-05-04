@@ -2,6 +2,8 @@
 
 
 
+
+
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -26,10 +28,7 @@ export async function POST(
     const action = String(body?.action || "").trim();
 
     if (!applicationId || !["accept", "decline"].includes(action)) {
-      return NextResponse.json(
-        { error: "Invalid request" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
     const application = await prisma.application.findFirst({
@@ -69,20 +68,54 @@ export async function POST(
       "A volunteer";
 
     if (action === "accept") {
-      const updated = await prisma.application.update({
-        where: { id: applicationId },
-        data: { status: "ACCEPTED" },
-      });
+      const updated = await prisma.$transaction(async (tx) => {
+        const acceptedApplication = await tx.application.update({
+          where: { id: applicationId },
+          data: { status: "ACCEPTED" },
+        });
 
-      await prisma.notification.create({
-        data: {
-          userId: application.project.organizationId,
-          type: "APPLICATION",
-          title: "Invite accepted",
-          message: `${volunteerDisplayName} accepted your invite for "${application.project.title}".`,
-          // link: `/dashboard/projects/${application.project.id}`,
-          link: `/dashboard/projects/${application.project.id}?focus=invite-accepted`,
-        },
+        await tx.project.update({
+          where: { id: application.project.id },
+          data: { status: "IN_PROGRESS" },
+        });
+
+        await tx.application.updateMany({
+          where: {
+            projectId: application.project.id,
+            id: { not: applicationId },
+            status: "PENDING",
+          },
+          data: { status: "REJECTED" },
+        });
+
+        const chat =
+          (await tx.projectChat.findUnique({
+            where: { projectId: application.project.id },
+          })) ??
+          (await tx.projectChat.create({
+            data: { projectId: application.project.id },
+          }));
+
+        await tx.chatMessage.create({
+          data: {
+            chatId: chat.id,
+            content: "✅ Volunteer accepted the organization invite.",
+            isSystem: true,
+          },
+        });
+
+        await tx.notification.create({
+          data: {
+            userId: application.project.organizationId,
+            type: "APPLICATION",
+            title: "Invite accepted",
+            message: `${volunteerDisplayName} accepted your invite for "${application.project.title}".`,
+            // link: `/dashboard/projects/${application.project.id}?focus=invite-accepted`,
+            link: `/dashboard/organization/projects/${application.project.id}`,
+          },
+        });
+
+        return acceptedApplication;
       });
 
       await pusherServer.trigger(
@@ -105,8 +138,8 @@ export async function POST(
         type: "APPLICATION",
         title: "Invite declined",
         message: `${volunteerDisplayName} declined your invite for "${application.project.title}".`,
-        // link: `/dashboard/projects/${application.project.id}`,
-        link: `/dashboard/projects/${application.project.id}?focus=invite-declined`,
+        // link: `/dashboard/projects/${application.project.id}?focus=invite-declined`,
+        link: `/dashboard/organization/projects/${application.project.id}`,
       },
     });
 

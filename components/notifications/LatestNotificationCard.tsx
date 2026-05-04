@@ -1,3 +1,7 @@
+
+
+
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -55,17 +59,16 @@ function getNotificationAccent(type: string) {
   }
 }
 
+function isInviteResponseNotification(notification: NotificationItem) {
+  return (
+    notification.type === "APPLICATION" &&
+    (notification.title === "Invite accepted" ||
+      notification.title === "Invite declined")
+  );
+}
+
 function buildNotificationLink(notification: NotificationItem) {
   if (!notification.link) return null;
-
-  if (notification.title === "Invite accepted") {
-    return `${notification.link}?focus=invite-accepted`;
-  }
-
-  if (notification.title === "Invite declined") {
-    return `${notification.link}?focus=invite-declined`;
-  }
-
   return notification.link;
 }
 
@@ -111,14 +114,17 @@ export default function LatestNotificationCard({
     };
   }, [userId]);
 
-  const latestUnreadNotification =
-    notifications.find((n) => !n.isRead) ?? null;
-
   const latestNotification =
-    latestUnreadNotification ?? notifications[0] ?? null;
+    notifications.find(
+      (notification) =>
+        !notification.isRead && isInviteResponseNotification(notification)
+    ) ?? null;
 
   const accent = useMemo(
-    () => (latestNotification ? getNotificationAccent(latestNotification.type) : null),
+    () =>
+      latestNotification
+        ? getNotificationAccent(latestNotification.type)
+        : null,
     [latestNotification]
   );
 
@@ -145,14 +151,12 @@ export default function LatestNotificationCard({
               <div
                 className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${accent.badge}`}
               >
-                Latest notification
+                Latest invite update
               </div>
 
-              {!latestNotification.isRead && (
-                <span className="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-red-700">
-                  Unread
-                </span>
-              )}
+              <span className="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-red-700">
+                Unread
+              </span>
             </div>
 
             <h2 className="mt-3 text-xl font-bold tracking-tight text-slate-900">

@@ -700,14 +700,14 @@ export default async function MentorDashboard() {
 
   return (
     <div className="flex bg-slate-50">
-      <SidebarShell>
+      {/* <SidebarShell>
         <SidebarContent
           user={{
             name: session.user.name || "User",
             role: session.user.role || "MENTOR",
           }}
         />
-      </SidebarShell>
+      </SidebarShell> */}
 
       <main className="min-w-0 flex-1 bg-[linear-gradient(180deg,#f8fafc_0%,#ffffff_38%,#eef4ff_100%)] px-4 py-6 md:px-8 lg:px-10 lg:py-8">
         <div className="mx-auto max-w-7xl space-y-8">

@@ -22,6 +22,9 @@ import UnreadBadge from "@/components/chat/UnreadBadge";
 import OnboardingBannerShell from "@/components/dashboard/OnboardingBannerShell";
 import InviteResponseButtons from "@/components/projects/InviteResponseButtons";
 import VolunteerInviteHeroCard from "@/components/dashboard/VolunteerInviteHeroCard";
+import VolunteerRealtimeRefresh from "@/components/volunteer/VolunteerRealtimeRefresh";
+import SubmissionCommentsThread from "@/components/submissions/SubmissionCommentsThread";
+import ProfileCompletionCompact from "@/components/dashboard/ProfileCompletionCompact";
 
 
 
@@ -104,9 +107,9 @@ export default async function VolunteerDashboard() {
   const volunteerSkills =
     typeof volunteer.skills === "string" && volunteer.skills.trim().length > 0
       ? volunteer.skills
-          .split(",")
-          .map((skill) => skill.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((skill) => skill.trim())
+        .filter(Boolean)
       : [];
 
   const lastSeen = volunteer.lastActivitySeenAt ?? new Date(0);
@@ -133,10 +136,53 @@ export default async function VolunteerDashboard() {
               ratingCount: true,
             },
           },
+
+
           chat: true,
+
+
+
+          //           submissions: {
+          //   where: {
+          //     volunteerId: session.user.id,
+          //   },
+          //   orderBy: {
+          //     createdAt: "desc",
+          //   },
+          //   select: {
+          //     id: true,
+          //     status: true,
+          //     createdAt: true,
+          //     workUrl: true,
+          //     fileUrl: true,
+          //     feedback: true,
+          //     version: true, // 🔥 important
+          //   },
+          // },
+
+          submissions: {
+            where: {
+              volunteerId: session.user.id,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+            include: {
+              comments: {
+                include: {
+                  user: {
+                    select: { name: true },
+                  },
+                },
+                orderBy: { createdAt: "asc" },
+              },
+            },
+          },
         },
       },
     },
+
+
     orderBy: { createdAt: "desc" },
   });
 
@@ -184,10 +230,10 @@ export default async function VolunteerDashboard() {
   const pendingApps = applications.filter((a) => a.status === "PENDING");
 
   const invitedPendingApps = pendingApps.filter(
-  (a) => a.source === "ORGANIZATION"
-);
+    (a) => a.source === "ORGANIZATION"
+  );
 
-const latestInvite = invitedPendingApps[0] ?? null;
+  const latestInvite = invitedPendingApps[0] ?? null;
 
   const completedApps = applications.filter(
     (a) => a.status === "COMPLETED" && a.project.status === "COMPLETED"
@@ -195,14 +241,43 @@ const latestInvite = invitedPendingApps[0] ?? null;
 
   const completedCount = completedApps.length;
 
-  const hasAnyReview = completedApps.some((app) =>
-    app.project.reviews.some((r) => r.volunteerId === session.user.id)
-  );
+  // const hasAnyReview = completedApps.some((app) =>
+  //   app.project.reviews.some((r) => r.volunteerId === session.user.id)
+  // );
+
+  const allReviews = completedApps
+  .flatMap((app) =>
+    app.project.reviews
+      .filter((r) => r.volunteerId === session.user.id)
+      .map((r) => ({
+        ...r,
+        organization: app.project.organization.name,
+        projectTitle: app.project.title,
+      }))
+  )
+  .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+const firstTenReviews = allReviews.slice(0, 10);
+const remainingReviews = allReviews.slice(10);
+
+
+
 
   const dashboardProjects = [...activeApps, ...pendingApps];
 
+
+
   const openProjects = await prisma.project.findMany({
-    where: { status: "OPEN" },
+    where: {
+      status: "OPEN",
+      applications: {
+        none: {
+          status: {
+            in: ["ACCEPTED", "COMPLETED"],
+          },
+        },
+      },
+    },
     include: {
       organization: { select: { name: true } },
     },
@@ -364,7 +439,8 @@ const latestInvite = invitedPendingApps[0] ?? null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden overflow-hidden xl:block">
+      <VolunteerRealtimeRefresh userId={session.user.id} />
+      {/* <aside className="fixed inset-y-0 left-0 z-30 hidden overflow-hidden xl:block">
         <SidebarShell>
           <SidebarItem href="/dashboard" label="Dashboard" icon="🏠" active />
           <SidebarItem href="/projects" label="Projects" icon="💼" />
@@ -396,9 +472,9 @@ const latestInvite = invitedPendingApps[0] ?? null;
           />
           <SidebarItem href="/dashboard/settings" label="Settings" icon="⚙️" />
         </SidebarShell>
-      </aside>
+      </aside> */}
 
-      <main className="min-h-screen xl:pl-[288px]">
+      <main className="min-h-screen">
         <div className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/90 backdrop-blur xl:hidden">
           <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-6">
             <div className="min-w-0">
@@ -411,16 +487,13 @@ const latestInvite = invitedPendingApps[0] ?? null;
             </div>
 
             <div className="flex items-center gap-3">
-              {/* <NotificationBell
-                notifications={notifications}
-                unreadCount={unreadCount}
-              /> */}
+
 
               <NotificationBell
-  userId={session.user.id}
- notifications= {notifications}
-  unreadCount={unreadCount}
-/>
+                userId={session.user.id}
+                notifications={notifications}
+                unreadCount={unreadCount}
+              />
               <PortfolioShare url={portfolioUrl} />
             </div>
           </div>
@@ -457,7 +530,8 @@ const latestInvite = invitedPendingApps[0] ?? null;
         </div>
 
         <div className="space-y-8 px-4 py-5 sm:px-6 lg:px-8 xl:px-10 xl:py-10">
-          <section className="relative overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 p-6 text-white shadow-xl shadow-blue-200/50 sm:p-8 md:p-10">
+
+          <section className="relative rounded-3xl border border-white/40 bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 p-6 text-white shadow-xl shadow-blue-200/50 sm:p-8 md:p-10">
             <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
             <div className="absolute bottom-0 left-1/3 h-32 w-32 rounded-full bg-indigo-300/20 blur-2xl" />
 
@@ -468,7 +542,7 @@ const latestInvite = invitedPendingApps[0] ?? null;
                     Volunteer dashboard
                   </span>
 
-                  {onboardingProgress === 100 && (
+                  {/* {onboardingProgress === 100 && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-100 backdrop-blur shadow-sm shadow-emerald-400/30">
                       <span className="text-emerald-300">✔</span>
                       Profile Complete
@@ -480,7 +554,19 @@ const latestInvite = invitedPendingApps[0] ?? null;
                   >
                     <span>{profileLevel.icon}</span>
                     <span className={profileLevel.colorClass}>{profileLevel.name}</span>
-                  </span>
+                  </span> */}
+
+
+                  {profileCompletion === 100 ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-100 backdrop-blur shadow-sm shadow-emerald-400/30">
+                      <span className="text-emerald-300">✔</span>
+                      Profile Complete
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-3 py-1 text-xs font-semibold text-amber-100 backdrop-blur">
+                      ⚡ {profileCompletion}% Complete
+                    </span>
+                  )}
                 </div>
 
                 <h1 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">
@@ -492,7 +578,7 @@ const latestInvite = invitedPendingApps[0] ?? null;
                   and continue building proof of experience through real projects.
                 </p>
 
-                <div className="mt-4 flex flex-wrap items-center gap-3">
+                {/* <div className="mt-4 flex flex-wrap items-center gap-3">
                   <div className="rounded-xl bg-white/10 px-4 py-2 backdrop-blur">
                     <p className="text-xs text-blue-100">Profile Strength</p>
                     <p className="text-lg font-bold text-white">
@@ -506,9 +592,18 @@ const latestInvite = invitedPendingApps[0] ?? null;
                       {profileLevel.icon} {profileLevel.name}
                     </p>
                   </div>
+                </div> */}
+
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <div className="rounded-xl bg-white/10 px-4 py-2 backdrop-blur">
+                    <p className="text-xs text-blue-100">Profile Strength</p>
+                    <p className="text-lg font-bold text-white">
+                      {profileStrength.score}% • {profileLevel.icon} {profileLevel.name}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="mt-3">
+                {/* <div className="mt-3">
                   <p className="text-sm text-blue-100">
                     Level:{" "}
                     <span className="font-semibold text-white">
@@ -527,7 +622,7 @@ const latestInvite = invitedPendingApps[0] ?? null;
                       </>
                     )}
                   </p>
-                </div>
+                </div> */}
 
                 <div className="mt-5 flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-3 backdrop-blur-sm">
@@ -544,18 +639,16 @@ const latestInvite = invitedPendingApps[0] ?? null;
                 </div>
               </div>
 
-              <div className="hidden flex-wrap items-center gap-4 xl:flex">
-                {/* <NotificationBell
-                  notifications={notifications}
-                  unreadCount={unreadCount}
-                /> */}
+
+              <div className="relative z-20 hidden flex-wrap items-center gap-4 xl:flex">
+
 
 
                 <NotificationBell
-  userId={session.user.id}
-  notifications={notifications}
-  unreadCount={unreadCount}
-/>
+                  userId={session.user.id}
+                  notifications={notifications}
+                  unreadCount={unreadCount}
+                />
                 <PortfolioShare url={portfolioUrl} />
               </div>
             </div>
@@ -563,68 +656,14 @@ const latestInvite = invitedPendingApps[0] ?? null;
 
 
 
-
-
-
-
-
-
-{/* {latestInvite && (
-  <section className="rounded-3xl border border-purple-200 bg-gradient-to-r from-purple-50 via-white to-blue-50 p-5 shadow-sm sm:p-6">
-    <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-100 text-2xl">
-          📩
-        </div>
-
-        <div>
-          <div className="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-purple-700">
-            Invitation received
-          </div>
-
-          <h2 className="mt-3 text-xl font-bold tracking-tight text-slate-900">
-            {latestInvite.project.organization.name} invited you to join{" "}
-            {latestInvite.project.title}
-          </h2>
-
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-            Review this invite and decide whether to accept or decline it.
-            Accepted invites move straight into your active project flow.
-          </p>
-
-          <InviteResponseButtons applicationId={latestInvite.id} />
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        <Link
-          href="/dashboard/projects?tab=PENDING"
-          className="inline-flex h-11 items-center justify-center rounded-2xl bg-purple-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-700"
-        >
-          Review Invite
-        </Link>
-
-        <Link
-          href={`/projects/${latestInvite.project.id}`}
-          className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-        >
-          View Project
-        </Link>
-      </div>
-    </div>
-  </section>
-)} */}
-
-
-
-{latestInvite && (
-  <VolunteerInviteHeroCard
-    applicationId={latestInvite.id}
-    projectId={latestInvite.project.id}
-    projectTitle={latestInvite.project.title}
-    organizationName={latestInvite.project.organization.name}
-  />
-)}
+          {latestInvite && (
+            <VolunteerInviteHeroCard
+              applicationId={latestInvite.id}
+              projectId={latestInvite.project.id}
+              projectTitle={latestInvite.project.title}
+              organizationName={latestInvite.project.organization.name}
+            />
+          )}
 
           <OnboardingBannerShell
             userId={session.user.id}
@@ -636,183 +675,20 @@ const latestInvite = invitedPendingApps[0] ?? null;
             onboardingSteps={onboardingSteps}
           />
 
-          <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
-            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Profile Level
-                </p>
-                <h2 className="mt-2 text-2xl font-bold text-slate-900">
-                  {profileLevel.icon} {profileLevel.name}
-                </h2>
-                <p className="mt-2 text-sm text-slate-500">
-                  Your current level is based on your profile strength score.
-                </p>
-              </div>
+    
 
-              <div className="md:min-w-[280px]">
-                <div className="mb-2 flex items-center justify-between text-sm">
-                  <span className="text-slate-600">Progress</span>
-                  <span className="font-semibold text-blue-600">
-                    {profileStrength.score}%
-                  </span>
-                </div>
 
-                <div className="h-3 overflow-hidden rounded-full bg-slate-200">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
-                    style={{ width: `${profileStrength.score}%` }}
-                  />
-                </div>
-
-                {nextProfileLevel ? (
-                  <p className="mt-3 text-sm text-slate-500">
-                    Reach{" "}
-                    <span className="font-semibold text-slate-700">
-                      {nextProfileLevel.min}%
-                    </span>{" "}
-                    to become{" "}
-                    <span className="font-semibold text-slate-700">
-                      {nextProfileLevel.name}
-                    </span>.
-                  </p>
-                ) : (
-                  <p className="mt-3 text-sm font-semibold text-emerald-600">
-                    You have reached the highest profile level.
-                  </p>
-                )}
-              </div>
-            </div>
-          </section>
-
-          <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
-            <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
-              <div className="max-w-xl">
-                <h2 className="text-xl font-semibold tracking-tight">
-                  ✅ Profile Completion
-                </h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  A stronger profile helps you get matched faster and present
-                  yourself better to organizations and mentors.
-                </p>
-
-                <div className="mt-6">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">
-                      Completion progress
-                    </span>
-                    <span className="text-sm font-semibold text-blue-600">
-                      {profileCompletion}%
-                    </span>
-                  </div>
-
-                  <div className="h-3 overflow-hidden rounded-full bg-gray-200">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
-                      style={{ width: `${profileCompletion}%` }}
-                    />
-                  </div>
-
-                  <p className="mt-3 text-sm text-gray-600">
-                    {completedProfileSteps} of {profileChecklist.length} profile steps completed
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex-1">
-                <div className="grid gap-3">
-                  {profileChecklist.map((item) => (
-                    <div
-                      key={item.label}
-                      className={`flex flex-col gap-3 rounded-2xl border px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${
-                        item.done
-                          ? "border-green-200 bg-green-50"
-                          : "border-gray-200 bg-gray-50"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg">
-                          {item.done ? "✅" : "⭕"}
-                        </span>
-                        <span
-                          className={`text-sm font-medium ${
-                            item.done ? "text-green-700" : "text-gray-700"
-                          }`}
-                        >
-                          {item.label}
-                        </span>
-                      </div>
-
-                      {!item.done && (
-                        <Link
-                          href={item.href}
-                          className="text-sm font-semibold text-blue-600 hover:underline"
-                        >
-                          Complete →
-                        </Link>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {incompleteProfileSteps.length > 0 && (
-                  <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-4">
-                    <p className="text-sm font-semibold text-blue-800">
-                      Recommended next step
-                    </p>
-                    <p className="mt-1 text-sm text-blue-700">
-                      Complete <strong>{incompleteProfileSteps[0].label}</strong> to improve your
-                      visibility and project-readiness.
-                    </p>
-                  </div>
-                )}
-
-                {profileCompletion < 100 && (
-                  <div className="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-5">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-indigo-900">
-                          🚀 Boost your profile visibility
-                        </p>
-                        <p className="mt-1 text-sm text-indigo-700">
-                          Complete your profile to get matched faster with projects and mentors.
-                        </p>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        <Link
-                          href="/dashboard/settings"
-                          className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-                        >
-                          Complete Profile
-                        </Link>
-
-                        <Link
-                          href="/portfolio"
-                          className="inline-flex items-center justify-center rounded-xl border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100"
-                        >
-                          Add Portfolio
-                        </Link>
-
-                        <Link
-                          href="/projects"
-                          className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                        >
-                          Browse Projects
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
-
-          <ActionPanel
-            pending={pendingApps.length}
-            active={activeApps.length}
-            completed={completedCount}
+          <ProfileCompletionCompact
+            score={profileStrength.score}
+            levelName={profileLevel.name}
+            levelIcon={profileLevel.icon}
+            profileCompletion={profileCompletion}
+            completedSteps={completedProfileSteps}
+            totalSteps={profileChecklist.length}
+            checklist={profileChecklist}
           />
+
+
 
           <StatsGrid>
             <StatCard
@@ -845,8 +721,10 @@ const latestInvite = invitedPendingApps[0] ?? null;
             />
           </StatsGrid>
 
-          <section className="grid grid-cols-1 gap-8 xl:grid-cols-3">
-            <div className="xl:col-span-2 rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
+
+              
+              <section>
+  <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
               <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h2 className="text-xl font-semibold tracking-tight">
@@ -914,7 +792,7 @@ const latestInvite = invitedPendingApps[0] ?? null;
               )}
             </div>
 
-            <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
+            {/* <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
               <div className="mb-6">
                 <h2 className="text-xl font-semibold tracking-tight">
                   📌 Recent Activity
@@ -931,11 +809,10 @@ const latestInvite = invitedPendingApps[0] ?? null;
                   activities.map((a) => (
                     <li
                       key={a.id}
-                      className={`flex items-start gap-4 rounded-2xl border p-4 ${
-                        a.unread
-                          ? "border-blue-200 bg-blue-50"
-                          : "border-gray-100 bg-gray-50"
-                      }`}
+                      className={`flex items-start gap-4 rounded-2xl border p-4 ${a.unread
+                        ? "border-blue-200 bg-blue-50"
+                        : "border-gray-100 bg-gray-50"
+                        }`}
                     >
                       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-xl shadow-sm">
                         {a.icon}
@@ -955,7 +832,7 @@ const latestInvite = invitedPendingApps[0] ?? null;
                   ))
                 )}
               </ol>
-            </div>
+            </div> */}
           </section>
 
           <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
@@ -969,8 +846,15 @@ const latestInvite = invitedPendingApps[0] ?? null;
                 </p>
               </div>
 
-              <Link
+              {/* <Link
                 href="/dashboard/projects"
+                className="text-sm font-semibold text-blue-600 hover:underline"
+              >
+                View all projects →
+              </Link> */}
+
+              <Link
+                href="/dashboard/volunteer/projects"
                 className="text-sm font-semibold text-blue-600 hover:underline"
               >
                 View all projects →
@@ -991,8 +875,8 @@ const latestInvite = invitedPendingApps[0] ?? null;
                     (project.status === "OPEN" || project.status === "IN_PROGRESS");
 
                   const isInvited = app.source === "ORGANIZATION";
-                    
-  const canRespondToInvite = isInvited && app.status === "PENDING";
+
+                  const canRespondToInvite = isInvited && app.status === "PENDING";
 
                   return (
                     <div
@@ -1000,63 +884,130 @@ const latestInvite = invitedPendingApps[0] ?? null;
                       className="relative rounded-2xl border border-gray-200 bg-white p-6 transition hover:shadow-lg"
                     >
                       <div
-                        className={`absolute bottom-5 left-0 top-5 w-1 rounded-full ${
-                          isActive ? "bg-blue-500" : "bg-yellow-500"
-                        }`}
+                        className={`absolute bottom-5 left-0 top-5 w-1 rounded-full ${isActive ? "bg-blue-500" : "bg-yellow-500"
+                          }`}
                       />
 
                       <div className="pl-3">
                         <div className="flex items-start justify-between gap-3">
-                          
+
                           <div>
-  <h3 className="text-lg font-semibold leading-snug">
-    {project.title}
-  </h3>
-  <p className="mt-1 text-sm text-gray-500">
-    {project.organization.name}
-  </p>
+                            <h3 className="text-lg font-semibold leading-snug">
+                              {project.title}
+                            </h3>
+                            <p className="mt-1 text-sm text-gray-500">
+                              {project.organization.name}
+                            </p>
 
-  <div className="mt-2 flex flex-wrap gap-2">
-    {isInvited && (
-      <span className="inline-flex rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700">
-        Invited by organization
-      </span>
-    )}
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {isInvited && (
+                                <span className="inline-flex rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700">
+                                  Invited by organization
+                                </span>
+                              )}
 
-    {!isInvited && app.status === "PENDING" && (
-      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-        Applied by you
-      </span>
-    )}
-  </div>
+                              {!isInvited && app.status === "PENDING" && (
+                                <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                                  Applied by you
+                                </span>
+                              )}
+                            </div>
 
-  {canRespondToInvite && (
-    <InviteResponseButtons applicationId={app.id} />
-  )}
-</div>
+                            {canRespondToInvite && (
+                              <InviteResponseButtons applicationId={app.id} />
+                            )}
+                          </div>
 
                           <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                              isActive
-                                ? "bg-blue-50 text-blue-700"
-                                : "bg-yellow-50 text-yellow-700"
-                            }`}
+                            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${isActive
+                              ? "bg-blue-50 text-blue-700"
+                              : "bg-yellow-50 text-yellow-700"
+                              }`}
                           >
                             {isActive ? "Active" : "Pending"}
                           </span>
                         </div>
 
-                        <MentorSection mentor={project.mentor} />
+                        {/* <MentorSection mentor={project.mentor} /> */}
 
-                        {isActive && (
-                          <Link
-                            href={`/dashboard/projects/${project.id}/chat`}
-                            className="relative mt-4 inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:underline"
-                          >
-                            💬 Open project chat
-                            <UnreadBadge />
-                          </Link>
-                        )}
+{isActive && (() => {
+  const submissions = project.submissions || [];
+  const latestSubmission = submissions[0];
+
+  return (
+    <div className="mt-4 space-y-4">
+
+      {/* ================= STATUS ROW ================= */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+          Active
+        </span>
+
+        {latestSubmission && (
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              latestSubmission.status === "APPROVED"
+                ? "bg-emerald-50 text-emerald-700"
+                : latestSubmission.status === "REJECTED"
+                ? "bg-rose-50 text-rose-700"
+                : "bg-amber-50 text-amber-700"
+            }`}
+          >
+            {latestSubmission.status === "APPROVED" && "🟢 Approved"}
+            {latestSubmission.status === "REJECTED" && "🔴 Revision Requested"}
+            {latestSubmission.status === "PENDING" && "🟡 Pending Review"}
+          </span>
+        )}
+      </div>
+
+      {/* ================= MENTOR ================= */}
+      {project.mentor && (
+        <p className="text-sm text-slate-600">
+          Mentor:{" "}
+          <span className="font-semibold text-slate-900">
+            {project.mentor.name}
+          </span>
+        </p>
+      )}
+
+      {/* ================= ACTIONS ================= */}
+      <div className="flex flex-wrap gap-2 pt-2">
+
+        {/* Message Organization */}
+        <Link
+          href={`/dashboard/messages/start?userId=${project.organizationId}`}
+          className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          💬 Message Organization
+        </Link>
+
+        {/* Submit / View Submission */}
+        <Link
+          href={`/dashboard/projects/${project.id}/submit`}
+          className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+        >
+          {!latestSubmission ? "Submit Work" : "View Submission"}
+        </Link>
+
+        {/* Project Details */}
+        <Link
+          href={`/dashboard/volunteer/projects/${project.id}`}
+          className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          Project Details →
+        </Link>
+      </div>
+    </div>
+  );
+})()}
+
+
+
+
+
+
+
+
                       </div>
                     </div>
                   );
@@ -1148,11 +1099,10 @@ const latestInvite = invitedPendingApps[0] ?? null;
                       <div className="mb-4 flex items-center justify-between gap-3">
                         <span className="text-2xl">{tier.icon}</span>
                         <span
-                          className={`rounded-full px-2 py-1 text-[11px] font-bold ${
-                            earned
-                              ? "bg-green-100 text-green-700"
-                              : "bg-blue-100 text-blue-700"
-                          }`}
+                          className={`rounded-full px-2 py-1 text-[11px] font-bold ${earned
+                            ? "bg-green-100 text-green-700"
+                            : "bg-blue-100 text-blue-700"
+                            }`}
                         >
                           {earned ? "Earned" : `${Math.round(progress)}%`}
                         </span>
@@ -1169,9 +1119,8 @@ const latestInvite = invitedPendingApps[0] ?? null;
 
                       <div className="mt-4 h-2 overflow-hidden rounded-full bg-gray-200">
                         <div
-                          className={`h-full rounded-full ${
-                            earned ? "bg-green-500" : "bg-blue-500"
-                          }`}
+                          className={`h-full rounded-full ${earned ? "bg-green-500" : "bg-blue-500"
+                            }`}
                           style={{ width: `${progress}%` }}
                         />
                       </div>
@@ -1182,7 +1131,7 @@ const latestInvite = invitedPendingApps[0] ?? null;
             </div>
           </section>
 
-          <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
+          {/* <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
             <div className="mb-6">
               <h2 className="text-xl font-semibold tracking-tight">⭐ Reviews</h2>
               <p className="mt-1 text-sm text-gray-500">
@@ -1220,7 +1169,63 @@ const latestInvite = invitedPendingApps[0] ?? null;
                   ))}
               </div>
             )}
-          </section>
+          </section> */}
+
+<section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
+  <div className="mb-6">
+    <h2 className="text-xl font-semibold tracking-tight">⭐ Reviews</h2>
+    <p className="mt-1 text-sm text-gray-500">
+      Feedback from organizations on your completed work.
+    </p>
+  </div>
+
+  {allReviews.length === 0 ? (
+    <p className="text-gray-600">No reviews yet.</p>
+  ) : (
+    <div className="space-y-4">
+      {firstTenReviews.map((review) => (
+        <ReviewRow key={review.id} review={review} />
+      ))}
+
+      {/* {remainingReviews.length > 0 && (
+        <details className="group">
+          <summary className="mt-4 cursor-pointer list-none text-sm font-semibold text-blue-600 hover:underline">
+            View all reviews ↓
+          </summary>
+
+          <div className="mt-4 space-y-4">
+            {remainingReviews.map((review) => (
+              <ReviewRow key={review.id} review={review} />
+            ))}
+          </div>
+        </details>
+      )} */}
+
+
+      {remainingReviews.length > 0 && (
+  <details className="group">
+    {/* REVIEWS (hidden initially) */}
+    <div className="hidden group-open:block space-y-4 mt-4">
+      {remainingReviews.map((review) => (
+        <ReviewRow key={review.id} review={review} />
+      ))}
+    </div>
+
+    {/* TOGGLE BUTTON (always at bottom) */}
+    <summary className="mt-6 cursor-pointer list-none text-sm font-semibold text-blue-600 hover:underline">
+      <span className="group-open:hidden">View all reviews ↓</span>
+      <span className="hidden group-open:inline">Show less ↑</span>
+    </summary>
+  </details>
+)}
+    </div>
+  )}
+</section>
+
+
+
+
+
         </div>
       </main>
     </div>
@@ -1280,6 +1285,13 @@ function MentorSection({ mentor }: { mentor: Mentor | null }) {
       >
         View mentor profile →
       </Link>
+
+      <Link
+        href={`/dashboard/messages/start?userId=${mentor.id}`}
+        className="mt-3 inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+      >
+        💬 Message Mentor
+      </Link>
     </div>
   );
 }
@@ -1300,15 +1312,42 @@ function MobileNavLink({
   return (
     <Link
       href={href}
-      className={`inline-flex items-center gap-2 whitespace-nowrap rounded-2xl border px-4 py-2.5 text-sm font-medium transition ${
-        active
-          ? "border-blue-200 bg-blue-50 text-blue-700"
-          : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-      }`}
+      className={`inline-flex items-center gap-2 whitespace-nowrap rounded-2xl border px-4 py-2.5 text-sm font-medium transition ${active
+        ? "border-blue-200 bg-blue-50 text-blue-700"
+        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+        }`}
     >
       <span>{icon}</span>
       <span>{label}</span>
       {badge}
     </Link>
+  );
+}
+
+
+
+
+
+function ReviewRow({ review }: { review: any }) {
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <StarRating rating={review.rating} />
+
+          <p className="mt-3 leading-relaxed text-gray-800">
+            “{review.comment}”
+          </p>
+
+          <p className="mt-3 text-sm font-medium text-gray-500">
+            — {review.organization}
+          </p>
+        </div>
+
+        <div className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+          {review.projectTitle}
+        </div>
+      </div>
+    </div>
   );
 }

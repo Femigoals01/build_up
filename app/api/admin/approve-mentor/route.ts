@@ -1,5 +1,7 @@
 
 
+
+
 // import { NextResponse } from "next/server";
 // import { prisma } from "@/lib/prisma";
 
@@ -14,15 +16,14 @@
 //       );
 //     }
 
-//     // ✅ 1. APPROVE MENTOR → SET ROLE
 //     await prisma.user.update({
 //       where: { id: mentorId },
 //       data: {
 //         role: "MENTOR",
+//         mentorStatus: "APPROVED",
 //       },
 //     });
 
-//     // ✅ 2. SEND NOTIFICATION
 //     await prisma.notification.create({
 //       data: {
 //         userId: mentorId,
@@ -45,8 +46,6 @@
 //     );
 //   }
 // }
-
-
 
 
 import { NextResponse } from "next/server";
@@ -78,6 +77,7 @@ export async function POST(req: Request) {
         message:
           "Your mentor account has been approved! You can now access your mentor dashboard.",
         type: "SYSTEM",
+        link: "/dashboard/mentor",
       },
     });
 

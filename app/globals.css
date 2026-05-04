@@ -103,3 +103,18 @@ body {
 .animate-toast-out {
   animation: toast-out 0.22s ease-in forwards;
 }
+
+
+
+@keyframes sidebarPulse {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: translateY(-50%) scaleY(0.86);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(-50%) scaleY(1);
+  }
+}

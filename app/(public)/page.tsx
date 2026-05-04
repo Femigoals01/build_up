@@ -63,20 +63,31 @@ export const metadata: Metadata = {
 
 
 export default async function HomePage() {
+ 
+
   const projects = await prisma.project.findMany({
-    where: { status: "OPEN" },
-    take: 4,
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      title: true,
-      difficulty: true,
-      skills: true, // 🔥 added
-      organization: {
-        select: { name: true },
+  where: {
+    status: "OPEN",
+    applications: {
+      none: {
+        status: {
+          in: ["ACCEPTED", "COMPLETED"],
+        },
       },
     },
-  });
+  },
+  take: 4,
+  orderBy: { createdAt: "desc" },
+  select: {
+    id: true,
+    title: true,
+    difficulty: true,
+    skills: true,
+    organization: {
+      select: { name: true },
+    },
+  },
+});
 
   const featuredStats = [
     { value: "1,000+", label: "Volunteers" },
@@ -142,22 +153,22 @@ export default async function HomePage() {
           <div className="absolute right-[-12rem] top-[-8rem] -z-10 h-[36rem] w-[36rem] rounded-full bg-blue-300/30 blur-3xl" />
           <div className="absolute left-[-8rem] top-16 -z-10 h-72 w-72 rounded-full bg-blue-100/60 blur-3xl" />
 
-          <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pb-16 lg:pt-10">
+          <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-6 sm:px-6 lg:px-0.5 lg:pb-0.5 lg:pt-0.5">
             <div className="grid items-center gap-6 lg:grid-cols-[1.04fr_0.96fr] lg:gap-10">
               <div className="max-w-3xl text-center lg:text-left">
                 <div className="mb-5 flex justify-center lg:justify-start">
-                  <BuildUpLogo
+                  {/* <BuildUpLogo
                     href="/"
                     showTagline={false}
                     className="justify-start"
                     imageClassName="shadow-sm"
-                  />
+                  /> */}
                 </div>
 
-                <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-800 sm:text-[15px] lg:text-[17px]">
+                {/* <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-800 sm:text-[15px] lg:text-[17px]">
                   REAL PROJECTS. REAL MENTORS.{" "}
                   <span className="text-blue-600">REAL IMPACT.</span>
-                </p>
+                </p> */}
 
                 <h1
                   id="hero-heading"
@@ -288,6 +299,9 @@ export default async function HomePage() {
 
             </div>
 
+
+
+{/* 
             <div className="mt-6 rounded-[2rem] border border-slate-200 bg-white/95 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur sm:mt-8 sm:p-5 lg:p-8">
               <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                 <div className="flex items-start gap-4 xl:border-r xl:border-slate-200 xl:pr-6">
@@ -346,7 +360,11 @@ export default async function HomePage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
+
+
+
+
           </div>
         </section>
 
@@ -403,7 +421,8 @@ export default async function HomePage() {
 
               <div className="mt-6 h-1.5 w-20 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500" />
 
-              <div className="mt-8 space-y-5">
+             
+              {/* <div className="mt-8 space-y-5">
                 <p className="text-base leading-8 text-slate-600 sm:text-lg">
                   <span className="font-semibold text-slate-900">BuildUp</span>{" "}
                   was created to solve a real problem: people learn valuable
@@ -428,7 +447,36 @@ export default async function HomePage() {
                     development.
                   </span>
                 </p>
-              </div>
+              </div> */}
+
+<div className="mt-8 space-y-4">
+  <p className="text-base leading-8 text-slate-600 sm:text-lg">
+    <span className="font-semibold text-slate-900">BuildUp</span> connects 
+    <strong className="text-slate-900"> volunteers</strong>, 
+    <strong className="text-slate-900"> organizations</strong>, and 
+    <strong className="text-slate-900"> mentors</strong> to work on real projects 
+    and build proven experience.
+  </p>
+
+  <p className="text-base leading-8 text-slate-600 sm:text-lg">
+    Instead of just certificates, you gain{" "}
+    <span className="font-semibold text-slate-900">
+      real work, portfolio proof, and mentor-backed growth.
+    </span>
+  </p>
+
+  {/* 🔥 VIEW ALL LINK */}
+  <div className="pt-2">
+    <Link
+      href="/about"
+      className="inline-flex items-center text-sm font-semibold text-blue-600 hover:underline"
+    >
+      View full story →
+    </Link>
+  </div>
+</div>
+
+              
 
               <div className="mt-8 flex flex-wrap gap-3">
                 <div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm">
