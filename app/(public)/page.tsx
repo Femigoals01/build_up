@@ -153,7 +153,7 @@ export default async function HomePage() {
           <div className="absolute right-[-12rem] top-[-8rem] -z-10 h-[36rem] w-[36rem] rounded-full bg-blue-300/30 blur-3xl" />
           <div className="absolute left-[-8rem] top-16 -z-10 h-72 w-72 rounded-full bg-blue-100/60 blur-3xl" />
 
-          <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-6 sm:px-6 lg:px-0.5 lg:pb-0.5 lg:pt-0.5">
+          <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-6 sm:px-6 lg:ps-5 lg:pe-0.5 lg:pb-0.5 lg:pt-0.5">
             <div className="grid items-center gap-6 lg:grid-cols-[1.04fr_0.96fr] lg:gap-10">
               <div className="max-w-3xl text-center lg:text-left">
                 <div className="mb-5 flex justify-center lg:justify-start">
