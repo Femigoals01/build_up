@@ -1,55 +1,5 @@
 
 
-// import { redirect } from "next/navigation";
-// import { getServerSession } from "next-auth";
-// import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-
-// export default async function StartChat({
-//   searchParams,
-// }: {
-//   searchParams: { userId?: string };
-// }) {
-//   const session = await getServerSession(authOptions);
-
-//   if (!session?.user?.id) {
-//     redirect("/login");
-//   }
-
-//   const targetUserId = searchParams.userId;
-
-//   if (!targetUserId) {
-//     redirect("/dashboard");
-//   }
-
-//   try {
-//     const res = await fetch(
-//       `${process.env.NEXT_PUBLIC_APP_URL}/api/direct-chat/get-or-create`,
-//       {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({
-//           targetUserId,
-//         }),
-//         cache: "no-store",
-//       }
-//     );
-
-//     if (!res.ok) {
-//       console.error("Failed to create conversation");
-//       redirect("/dashboard");
-//     }
-
-//     const conversation = await res.json();
-
-//     // 🔥 redirect to actual chat page
-//     redirect(`/dashboard/messages/${conversation.id}`);
-//   } catch (error) {
-//     console.error("Start chat error:", error);
-//     redirect("/dashboard");
-//   }
-// }
 
 
 
