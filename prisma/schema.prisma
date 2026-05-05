@@ -166,10 +166,7 @@ model ChatMessage {
   isSystem  Boolean           @default(false)
   audioUrl  String?
 
-   fileUrl   String?
-  fileName  String?
-  fileType  String?
-  fileSize  Int?
+  
   chat      ProjectChat       @relation(fields: [chatId], references: [id])
   sender    User?             @relation(fields: [senderId], references: [id])
   reads     ChatMessageRead[]

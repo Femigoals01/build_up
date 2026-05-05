@@ -137,61 +137,7 @@ export default async function OrganizationDashboard() {
         <div className="mx-auto max-w-7xl space-y-8">
 
 
-          {/* <section className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm lg:hidden">
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900">BuildUp</h2>
-                  <p className="text-sm text-slate-500">
-                    Organization workspace
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <NotificationBell
-                    userId={session.user.id}
-                    notifications={notifications}
-                    unreadCount={unreadCount}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <MobileNavCard
-                  href="/dashboard/organization"
-                  icon="📊"
-                  label="Dashboard"
-                  active
-                />
-                <MobileNavCard
-                  href="/projects"
-                  icon="📁"
-                  label="My Projects"
-                />
-                <MobileNavCard
-                  href="/dashboard/organization/inbox"
-                  icon="💬"
-                  label="Messages"
-                  trailing={<UnreadBadge />}
-                />
-                <MobileNavCard
-                  href="/dashboard/organization/invites"
-                  icon="📩"
-                  label="Invites"
-                />
-                <MobileNavCard
-                  href="/projects/new"
-                  icon="➕"
-                  label="Post Project"
-                />
-                <MobileNavCard
-                  href="/dashboard/settings"
-                  icon="⚙️"
-                  label="Settings"
-                />
-              </div>
-            </div>
-          </section> */}
+          
 
           <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
             <div className="relative px-6 py-8 md:px-8 md:py-10">
