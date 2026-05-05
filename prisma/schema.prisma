@@ -1,6 +1,3 @@
-
-
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -158,18 +155,22 @@ model ProjectChat {
 /// * CHAT MESSAGE
 /// * =======================
 model ChatMessage {
-  id        String            @id @default(cuid())
+  id        String   @id @default(cuid())
   chatId    String
   senderId  String?
   content   String?
-  createdAt DateTime          @default(now())
-  isSystem  Boolean           @default(false)
+  createdAt DateTime @default(now())
+  isSystem  Boolean  @default(false)
   audioUrl  String?
 
-  
-  chat      ProjectChat       @relation(fields: [chatId], references: [id])
-  sender    User?             @relation(fields: [senderId], references: [id])
-  reads     ChatMessageRead[]
+  fileUrl  String?
+  fileName String?
+  fileType String?
+  fileSize Int?
+
+  chat   ProjectChat       @relation(fields: [chatId], references: [id])
+  sender User?             @relation(fields: [senderId], references: [id])
+  reads  ChatMessageRead[]
 }
 
 model ChatMessageRead {
@@ -214,10 +215,10 @@ model DirectMessage {
   isSystem       Boolean  @default(false)
   audioUrl       String?
 
-  fileUrl      String?
-fileName     String?
-fileType     String?
-fileSize     Int?
+  fileUrl  String?
+  fileName String?
+  fileType String?
+  fileSize Int?
 
   conversation DirectConversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender       User?               @relation("DirectMessagesSent", fields: [senderId], references: [id])
