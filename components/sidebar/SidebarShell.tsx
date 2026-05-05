@@ -121,7 +121,7 @@ export default function SidebarShell({
 
     <aside
   className={`sticky top-[84px] hidden h-[calc(100vh-84px)] flex-shrink-0 flex-col overflow-hidden border-r border-white/10 bg-[linear-gradient(180deg,#0f172a_0%,#111827_50%,#172554_100%)] text-slate-200 transition-all duration-300 lg:flex ${
-    collapsed ? "w-20" : "w-72"
+    collapsed ? "w-20" : "w-46"
   }`}
 >
       <button

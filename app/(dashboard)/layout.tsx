@@ -52,6 +52,49 @@
 
 
 
+// import { getServerSession } from "next-auth";
+// import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+// import DashboardHeader from "@/components/dashboard/DashboardHeader";
+// import DashboardProviders from "./DashboardProviders";
+// import SidebarShell from "@/components/sidebar/SidebarShell";
+// import SidebarContent from "@/components/sidebar/SidebarContent";
+// import Footer from "@/components/Footer";
+
+// export default async function DashboardLayout({
+//   children,
+// }: {
+//   children: React.ReactNode;
+// }) {
+//   const session = await getServerSession(authOptions);
+
+//   return (
+//     <DashboardProviders>
+//       <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-slate-50">
+//         <DashboardHeader
+//           name={session?.user?.name}
+//           role={session?.user?.role}
+//         />
+
+//         <div className="flex min-w-0 flex-1">
+//           <aside className="hidden shrink-0 xl:block">
+//             <SidebarShell>
+//               <SidebarContent user={session?.user || {}} />
+//             </SidebarShell>
+//           </aside>
+
+//           <main className="min-w-0 flex-1 overflow-x-hidden px-0 py-0 transition-all duration-300">
+//             {children}
+//           </main>
+//         </div>
+
+//         <Footer />
+//       </div>
+//     </DashboardProviders>
+//   );
+// }
+
+
+
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
@@ -69,25 +112,29 @@ export default async function DashboardLayout({
 
   return (
     <DashboardProviders>
-      <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-slate-50">
+      <div className="flex h-screen w-full max-w-full flex-col overflow-hidden bg-slate-50">
+        {/* HEADER - stays at top */}
         <DashboardHeader
           name={session?.user?.name}
           role={session?.user?.role}
         />
 
-        <div className="flex min-w-0 flex-1">
-          <aside className="hidden shrink-0 xl:block">
+        {/* BODY - fixed height area */}
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          {/* SIDEBAR - does not move when content scrolls */}
+          <aside className="hidden h-full shrink-0 overflow-y-auto xl:block">
             <SidebarShell>
               <SidebarContent user={session?.user || {}} />
             </SidebarShell>
           </aside>
 
-          <main className="min-w-0 flex-1 overflow-x-hidden px-0 py-0 transition-all duration-300">
+          {/* MAIN CONTENT - only this scrolls */}
+          <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
             {children}
+
+            <Footer />
           </main>
         </div>
-
-        <Footer />
       </div>
     </DashboardProviders>
   );
