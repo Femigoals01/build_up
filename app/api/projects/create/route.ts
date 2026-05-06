@@ -1,3 +1,62 @@
+
+
+
+
+// import { NextResponse } from "next/server";
+// import { prisma } from "@/lib/prisma";
+// import { getServerSession } from "next-auth";
+// import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
+// export async function POST(req: Request) {
+//   const session = await getServerSession(authOptions);
+
+//   if (!session || session.user.role !== "ORGANIZATION") {
+//     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+//   }
+
+//   try {
+//     const { title, description, difficulty, skills, requirements } =
+//       await req.json();
+
+//     if (!title || !description || !difficulty) {
+//       return NextResponse.json(
+//         { error: "Missing required fields" },
+//         { status: 400 }
+//       );
+//     }
+
+//     // 1️⃣ Create project
+//     const project = await prisma.project.create({
+//       data: {
+//         title,
+//         description,
+//         requirements,
+//         difficulty,
+//         skills: skills ?? [],
+//         organizationId: session.user.id,
+//       },
+//     });
+
+//     // 2️⃣ Create project chat immediately
+//     await prisma.projectChat.create({
+//       data: {
+//         projectId: project.id,
+//       },
+//     });
+
+//     return NextResponse.json(project, { status: 201 });
+//   } catch (error) {
+//     console.error("Create project error:", error);
+//     return NextResponse.json(
+//       { error: "Failed to create project" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+
+
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
@@ -11,8 +70,14 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { title, description, difficulty, skills, requirements } =
-      await req.json();
+    const {
+      title,
+      description,
+      difficulty,
+      skills,
+      requirements,
+      stipendAmount,
+    } = await req.json();
 
     if (!title || !description || !difficulty) {
       return NextResponse.json(
@@ -21,7 +86,17 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1️⃣ Create project
+    if (!stipendAmount || stipendAmount < 5000) {
+      return NextResponse.json(
+        { error: "Minimum stipend is ₦5,000" },
+        { status: 400 }
+      );
+    }
+
+    const stipendAmountKobo = Math.round(stipendAmount * 100);
+    const platformFee = Math.round(stipendAmountKobo * 0.18);
+    const volunteerAmount = stipendAmountKobo - platformFee;
+
     const project = await prisma.project.create({
       data: {
         title,
@@ -30,13 +105,24 @@ export async function POST(req: Request) {
         difficulty,
         skills: skills ?? [],
         organizationId: session.user.id,
+        stipendAmount: stipendAmountKobo,
       },
     });
 
-    // 2️⃣ Create project chat immediately
     await prisma.projectChat.create({
       data: {
         projectId: project.id,
+      },
+    });
+
+    await prisma.projectFunding.create({
+      data: {
+        projectId: project.id,
+        organizationId: session.user.id,
+        stipendAmount: stipendAmountKobo,
+        platformFee,
+        volunteerAmount,
+        status: "UNPAID",
       },
     });
 

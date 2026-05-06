@@ -91,6 +91,7 @@ model Project {
   organizationId     String
   difficulty         Difficulty
   skills             String[]
+  stipendAmount      Int                 @default(0) // stored in kobo
   mentorId           String?
   applications       Application[]
   mentorshipRequests MentorshipRequest[]
@@ -360,6 +361,81 @@ model ProjectSubmissionComment {
   user       User              @relation(fields: [userId], references: [id])
 }
 
+model ProjectFunding {
+  id                String        @id @default(cuid())
+  projectId         String        @unique
+  organizationId    String
+  volunteerId       String?
+  stipendAmount     Int
+  platformFee       Int
+  volunteerAmount   Int
+  status            FundingStatus @default(UNPAID)
+  paystackReference String?       @unique
+  paidAt            DateTime?
+  releasedAt        DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Int      @default(0)
+  pending   Int      @default(0)
+  withdrawn Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WalletTransaction {
+  id          String                  @id @default(cuid())
+  userId      String
+  projectId   String?
+  type        WalletTransactionType
+  amount      Int
+  status      WalletTransactionStatus
+  description String?
+  createdAt   DateTime                @default(now())
+}
+
+model BankAccount {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  bankName              String
+  bankCode              String
+  accountNumber         String
+  accountName           String
+  paystackRecipientCode String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model WithdrawalRequest {
+  id     String           @id @default(cuid())
+  userId String
+  amount Int
+  status WithdrawalStatus @default(PENDING)
+
+  bankName              String
+  accountNumber         String
+  accountName           String
+  paystackRecipientCode String?
+
+  walletTransactionId  String?
+  paystackTransferCode String?
+  failureReason        String?
+
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+}
+
+enum WithdrawalStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 enum SubmissionStatus {
   PENDING
   APPROVED
@@ -428,4 +504,25 @@ enum ApplicationSource {
 
 enum DirectConversationKind {
   DIRECT
+}
+
+enum FundingStatus {
+  UNPAID
+  HELD
+  RELEASED
+  REFUNDED
+  DISPUTED
+}
+
+enum WalletTransactionType {
+  PROJECT_EARNING
+  WITHDRAWAL
+  REFUND
+  PLATFORM_FEE
+}
+
+enum WalletTransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
 }

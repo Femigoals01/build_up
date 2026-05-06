@@ -2,17 +2,16 @@
 
 
 
+
+
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
-import UnreadBadge from "@/components/chat/UnreadBadge";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import LatestNotificationCard from "@/components/notifications/LatestNotificationCard";
 import OrganizationProjectsTabs from "@/components/organization/OrganizationProjectsTabs";
-import SidebarShell from "@/components/sidebar/SidebarShell";
-import SidebarContent from "@/components/sidebar/SidebarContent";
 import OrganizationRealtimeRefresh from "@/components/organization/OrganizationRealtimeRefresh";
 
 export const dynamic = "force-dynamic";
@@ -25,83 +24,87 @@ export default async function OrganizationDashboard() {
     redirect("/login");
   }
 
-  const [projects, notifications] = await Promise.all([
+  const [projects, notifications, fundings] = await Promise.all([
     prisma.project.findMany({
       where: { organizationId: session.user.id },
-      
-
-
       include: {
-  applications: {
-    include: {
-      volunteer: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          skills: true,
-          bio: true,
-          country: true,
-          profileImageUrl: true,
-          headline: true,
-          username: true,
+        applications: {
+          include: {
+            volunteer: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                skills: true,
+                bio: true,
+                country: true,
+                profileImageUrl: true,
+                headline: true,
+                username: true,
+              },
+            },
+          },
+        },
+        submissions: {
+          orderBy: { createdAt: "desc" },
+          take: 3,
+          include: {
+            volunteer: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                profileImageUrl: true,
+              },
+            },
+          },
         },
       },
-    },
-  },
-
-  submissions: {
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 3,
-    include: {
-      volunteer: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          profileImageUrl: true,
-        },
-      },
-    },
-  },
-},
-
-
       orderBy: { createdAt: "desc" },
     }),
+
     prisma.notification.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
       take: 10,
     }),
+
+    prisma.projectFunding.findMany({
+      where: { organizationId: session.user.id },
+    }),
   ]);
+
+  const fundingMap = new Map(fundings.map((f) => [f.projectId, f]));
+
+  const projectsWithFunding = projects.map((project) => ({
+    ...project,
+    funding: fundingMap.get(project.id) ?? null,
+  }));
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  const hasAcceptedVolunteer = (project: (typeof projects)[number]) =>
+  const hasAcceptedVolunteer = (project: (typeof projectsWithFunding)[number]) =>
     project.applications.some(
       (application) =>
         application.status === "ACCEPTED" ||
         application.status === "COMPLETED"
     );
 
-  const completedProjects = projects.filter((p) => p.status === "COMPLETED");
+  const completedProjects = projectsWithFunding.filter(
+    (p) => p.status === "COMPLETED"
+  );
 
-  const activeProjects = projects.filter(
+  const activeProjects = projectsWithFunding.filter(
     (p) =>
       p.status !== "COMPLETED" &&
       (p.status === "IN_PROGRESS" || hasAcceptedVolunteer(p))
   );
 
-  const pendingProjects = projects.filter(
-    (p) =>
-      p.status === "OPEN" &&
-      !hasAcceptedVolunteer(p)
+  const pendingProjects = projectsWithFunding.filter(
+    (p) => p.status === "OPEN" && !hasAcceptedVolunteer(p)
   );
 
-  const realApplications = projects.flatMap((p) =>
+  const realApplications = projectsWithFunding.flatMap((p) =>
     p.applications.filter((a) => a.source !== "ORGANIZATION")
   );
 
@@ -111,34 +114,21 @@ export default async function OrganizationDashboard() {
     (a) => a.status === "PENDING"
   ).length;
 
-  const activeVolunteersCount = projects.flatMap((p) =>
+  const activeVolunteersCount = projectsWithFunding.flatMap((p) =>
     p.applications.filter(
       (a) => a.status === "ACCEPTED" || a.status === "COMPLETED"
     )
   ).length;
 
-  const projectsPosted = projects.length;
+  const projectsPosted = projectsWithFunding.length;
   const openAndActiveProjects = activeProjects.length + pendingProjects.length;
   const completedProjectsCount = completedProjects.length;
   const acceptedPlacements = activeVolunteersCount;
 
   return (
     <div className="flex bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
-      {/* <SidebarShell>
-        <SidebarContent
-          user={{
-            name: session.user.name || "User",
-            role: session.user.role || "ORGANIZATION",
-          }}
-        />
-      </SidebarShell> */}
-
       <main className="min-w-0 flex-1 px-4 py-6 md:px-8 lg:px-10 lg:py-8">
         <div className="mx-auto max-w-7xl space-y-8">
-
-
-          
-
           <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
             <div className="relative px-6 py-8 md:px-8 md:py-10">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.08),transparent_24%)]" />
@@ -308,53 +298,6 @@ export default async function OrganizationDashboard() {
         </div>
       </main>
     </div>
-  );
-}
-
-function MobileNavCard({
-  href,
-  icon,
-  label,
-  trailing,
-  active = false,
-}: {
-  href: string;
-  icon: string;
-  label: string;
-  trailing?: React.ReactNode;
-  active?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`group rounded-2xl border p-4 shadow-sm transition ${
-        active
-          ? "border-blue-100 bg-blue-50"
-          : "border-slate-200 bg-slate-50/70 hover:bg-white"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <span
-          className={`flex h-10 w-10 items-center justify-center rounded-2xl text-base ${
-            active
-              ? "bg-blue-600 text-white"
-              : "bg-white text-slate-700 border border-slate-200"
-          }`}
-        >
-          {icon}
-        </span>
-
-        {trailing ? <span className="shrink-0">{trailing}</span> : null}
-      </div>
-
-      <p
-        className={`mt-3 text-sm font-semibold ${
-          active ? "text-blue-700" : "text-slate-800"
-        }`}
-      >
-        {label}
-      </p>
-    </Link>
   );
 }
 

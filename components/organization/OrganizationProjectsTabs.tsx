@@ -2,7 +2,6 @@
 
 
 
-
 // "use client";
 
 // import Link from "next/link";
@@ -210,6 +209,13 @@
 //               className="inline-flex h-10 items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
 //             >
 //               View Project
+//             </Link>
+
+//             <Link
+//               href={`/dashboard/messages/start?userId=${volunteer.id}`}
+//               className="inline-flex h-10 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white transition hover:bg-indigo-700"
+//             >
+//               💬 Message Volunteer
 //             </Link>
 //           </div>
 //         </div>
@@ -423,8 +429,8 @@
 //     currentTab === "pending"
 //       ? "Pending Projects"
 //       : currentTab === "completed"
-//         ? "Completed Projects"
-//         : "Active Projects";
+//       ? "Completed Projects"
+//       : "Active Projects";
 
 //   const handleTabChange = (nextTab: ProjectTab) => {
 //     if (nextTab === currentTab) return;
@@ -805,6 +811,8 @@
 // }
 
 
+
+
 "use client";
 
 import Link from "next/link";
@@ -848,12 +856,21 @@ type Submission = {
   };
 };
 
+type ProjectFunding = {
+  status: string;
+  stipendAmount: number;
+  platformFee?: number | null;
+  volunteerAmount?: number | null;
+} | null;
+
 type OrganizationProject = {
   id: string;
   title: string;
   description?: string | null;
   location?: string | null;
   status: string;
+  stipendAmount?: number | null;
+  funding?: ProjectFunding;
   applications: ProjectApplication[];
   submissions?: Submission[];
 };
@@ -864,6 +881,37 @@ type OrganizationProjectsTabsProps = {
   pendingProjects: OrganizationProject[];
   completedProjects: OrganizationProject[];
 };
+
+function formatNairaFromKobo(amount?: number | null) {
+  if (!amount) return "₦0";
+  return `₦${(amount / 100).toLocaleString("en-NG", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
+function getFundingStatus(project: OrganizationProject) {
+  return project.funding?.status || "UNPAID";
+}
+
+function getFundingAmount(project: OrganizationProject) {
+  return project.funding?.stipendAmount ?? project.stipendAmount ?? 0;
+}
+
+function getFundingStyles(status: string) {
+  switch (status) {
+    case "HELD":
+      return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    case "RELEASED":
+      return "bg-blue-50 text-blue-700 border-blue-200";
+    case "DISPUTED":
+      return "bg-rose-50 text-rose-700 border-rose-200";
+    case "REFUNDED":
+      return "bg-slate-100 text-slate-700 border-slate-200";
+    case "UNPAID":
+    default:
+      return "bg-amber-50 text-amber-700 border-amber-200";
+  }
+}
 
 function getStatusStyles(status: string) {
   switch (status) {
@@ -916,6 +964,100 @@ function getSubmissionLabel(status: string) {
     default:
       return status;
   }
+}
+
+function FundProjectButton({ projectId }: { projectId: string }) {
+  const [loading, setLoading] = useState(false);
+
+  async function handleFundProject() {
+    try {
+      setLoading(true);
+
+      const res = await fetch("/api/payments/project/initiate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ projectId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Payment failed");
+      }
+
+      if (data.authorizationUrl) {
+        window.location.href = data.authorizationUrl;
+        return;
+      }
+
+      throw new Error("Payment link was not returned.");
+    } catch (error: any) {
+      alert(error?.message || "Unable to start payment.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleFundProject}
+      disabled={loading}
+      className="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {loading ? "Starting..." : "Fund Project"}
+    </button>
+  );
+}
+
+function FundingSummary({ project }: { project: OrganizationProject }) {
+  const fundingStatus = getFundingStatus(project);
+  const stipendAmount = getFundingAmount(project);
+
+  return (
+    <div className="mt-5 rounded-[22px] border border-slate-200 bg-slate-50/80 p-4">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+            Project Funding
+          </p>
+
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span
+              className={`rounded-full border px-3 py-1 text-xs font-semibold ${getFundingStyles(
+                fundingStatus
+              )}`}
+            >
+              {fundingStatus}
+            </span>
+
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+              Stipend: {formatNairaFromKobo(stipendAmount)}
+            </span>
+          </div>
+
+          <p className="mt-2 text-xs leading-5 text-slate-500">
+            Funds stay held until the project is completed. After approval, 82%
+            goes to the volunteer and 18% goes to BuildUp.
+          </p>
+        </div>
+
+        {fundingStatus === "UNPAID" ? (
+          <FundProjectButton projectId={project.id} />
+        ) : (
+          <span className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600">
+            {fundingStatus === "HELD"
+              ? "Funds Held"
+              : fundingStatus === "RELEASED"
+                ? "Funds Released"
+                : fundingStatus}
+          </span>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function VolunteerInfoCard({
@@ -1232,8 +1374,8 @@ export default function OrganizationProjectsTabs({
     currentTab === "pending"
       ? "Pending Projects"
       : currentTab === "completed"
-      ? "Completed Projects"
-      : "Active Projects";
+        ? "Completed Projects"
+        : "Active Projects";
 
   const handleTabChange = (nextTab: ProjectTab) => {
     if (nextTab === currentTab) return;
@@ -1266,68 +1408,38 @@ export default function OrganizationProjectsTabs({
           </div>
 
           <div className="inline-flex w-full flex-wrap gap-2 md:w-auto md:flex-nowrap">
-            <button
-              type="button"
-              onClick={() => handleTabChange("active")}
-              className={`inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition ${
-                currentTab === "active"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              Active Projects
-              <span
-                className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
-                  currentTab === "active"
-                    ? "bg-white/20 text-white"
-                    : "bg-slate-100 text-slate-600"
+            {(["active", "pending", "completed"] as ProjectTab[]).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => handleTabChange(tab)}
+                className={`inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition ${
+                  currentTab === tab
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                 }`}
               >
-                {activeProjects.length}
-              </span>
-            </button>
+                {tab === "active"
+                  ? "Active Projects"
+                  : tab === "pending"
+                    ? "Pending Projects"
+                    : "Completed Projects"}
 
-            <button
-              type="button"
-              onClick={() => handleTabChange("pending")}
-              className={`inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition ${
-                currentTab === "pending"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              Pending Projects
-              <span
-                className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
-                  currentTab === "pending"
-                    ? "bg-white/20 text-white"
-                    : "bg-slate-100 text-slate-600"
-                }`}
-              >
-                {pendingProjects.length}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleTabChange("completed")}
-              className={`inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition ${
-                currentTab === "completed"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              Completed Projects
-              <span
-                className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
-                  currentTab === "completed"
-                    ? "bg-white/20 text-white"
-                    : "bg-slate-100 text-slate-600"
-                }`}
-              >
-                {completedProjects.length}
-              </span>
-            </button>
+                <span
+                  className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
+                    currentTab === tab
+                      ? "bg-white/20 text-white"
+                      : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  {tab === "active"
+                    ? activeProjects.length
+                    : tab === "pending"
+                      ? pendingProjects.length
+                      : completedProjects.length}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -1337,6 +1449,7 @@ export default function OrganizationProjectsTabs({
           <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
             Currently viewing: {currentTabLabel}
           </span>
+
           <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
             {visibleProjects.length} project
             {visibleProjects.length === 1 ? "" : "s"}
@@ -1349,9 +1462,11 @@ export default function OrganizationProjectsTabs({
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-3xl bg-white text-2xl shadow-sm">
                 📂
               </div>
+
               <h3 className="text-lg font-semibold text-slate-900">
                 No {currentTabLabel.toLowerCase()} yet
               </h3>
+
               <p className="mt-2 text-sm leading-6 text-slate-500">
                 Projects in this category will appear here once they are
                 available.
@@ -1406,6 +1521,7 @@ export default function OrganizationProjectsTabs({
                           <h3 className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl">
                             {project.title}
                           </h3>
+
                           <p className="mt-1 text-sm text-slate-500">
                             {project.description ||
                               "Manage applicants, accepted volunteers, and project activity."}
@@ -1413,13 +1529,25 @@ export default function OrganizationProjectsTabs({
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <span
                           className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusStyles(
                             project.status
                           )}`}
                         >
                           {formatStatus(project.status)}
+                        </span>
+
+                        <span
+                          className={`rounded-full border px-3 py-1 text-xs font-semibold ${getFundingStyles(
+                            getFundingStatus(project)
+                          )}`}
+                        >
+                          {getFundingStatus(project)}
+                        </span>
+
+                        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                          💰 {formatNairaFromKobo(getFundingAmount(project))}
                         </span>
 
                         <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
@@ -1432,6 +1560,8 @@ export default function OrganizationProjectsTabs({
                           {acceptedApps.length === 1 ? "" : "s"}
                         </span>
                       </div>
+
+                      <FundingSummary project={project} />
                     </div>
                   </div>
 

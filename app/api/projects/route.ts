@@ -1,6 +1,7 @@
 
 
 
+
 // import { NextResponse } from "next/server";
 // import { getServerSession } from "next-auth";
 // import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -12,23 +13,22 @@
 //   description: string;
 //   difficulty: Difficulty;
 //   skills: string[];
+//   requirements?: string;
 // };
 
 // export async function POST(req: Request) {
 //   try {
-//     /* ================= AUTH ================= */
 //     const session = await getServerSession(authOptions);
 
-//     if (!session || session.user.role !== "ORGANIZATION") {
+//     if (!session || session.user.role !== "ORGANIZATION" || !session.user.id) {
 //       return NextResponse.json(
 //         { error: "Unauthorized" },
 //         { status: 401 }
 //       );
 //     }
 
-//     /* ================= BODY ================= */
 //     const body: CreateProjectBody = await req.json();
-//     const { title, description, difficulty, skills } = body;
+//     const { title, description, difficulty, skills, requirements } = body;
 
 //     if (!title || !description || !difficulty) {
 //       return NextResponse.json(
@@ -37,18 +37,27 @@
 //       );
 //     }
 
-//     /* ================= CREATE ================= */
-//     const project = await prisma.project.create({
-//       data: {
-//         title,
-//         description,
-//         difficulty,
-//         skills: skills ?? [],
-//         organizationId: session.user.id,
-//       },
+//     const project = await prisma.$transaction(async (tx) => {
+//       const createdProject = await tx.project.create({
+//         data: {
+//           title,
+//           description,
+//           requirements,
+//           difficulty,
+//           skills: skills ?? [],
+//           organizationId: session.user.id,
+//         },
+//       });
+
+//       await tx.projectChat.create({
+//         data: {
+//           projectId: createdProject.id,
+//         },
+//       });
+
+//       return createdProject;
 //     });
 
-//     /* ================= SUCCESS ================= */
 //     return NextResponse.json(
 //       {
 //         success: true,
@@ -68,7 +77,6 @@
 
 
 
-
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -81,6 +89,7 @@ type CreateProjectBody = {
   difficulty: Difficulty;
   skills: string[];
   requirements?: string;
+  stipendAmount: number; // 👈 NEW
 };
 
 export async function POST(req: Request) {
@@ -88,21 +97,40 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.role !== "ORGANIZATION" || !session.user.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body: CreateProjectBody = await req.json();
-    const { title, description, difficulty, skills, requirements } = body;
 
+    const {
+      title,
+      description,
+      difficulty,
+      skills,
+      requirements,
+      stipendAmount,
+    } = body;
+
+    // ✅ VALIDATION
     if (!title || !description || !difficulty) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
+
+    if (!stipendAmount || stipendAmount < 5000) {
+      return NextResponse.json(
+        { error: "Minimum stipend is ₦5,000" },
+        { status: 400 }
+      );
+    }
+
+    // ✅ CONVERT TO KOBO
+    const stipendAmountKobo = Math.round(stipendAmount * 100);
+
+    const platformFee = Math.round(stipendAmountKobo * 0.18);
+    const volunteerAmount = stipendAmountKobo - platformFee;
 
     const project = await prisma.$transaction(async (tx) => {
       const createdProject = await tx.project.create({
@@ -113,12 +141,26 @@ export async function POST(req: Request) {
           difficulty,
           skills: skills ?? [],
           organizationId: session.user.id,
+          stipendAmount: stipendAmountKobo, // 👈 STORE KOBO
         },
       });
 
+      // ✅ CREATE CHAT
       await tx.projectChat.create({
         data: {
           projectId: createdProject.id,
+        },
+      });
+
+      // ✅ CREATE FUNDING RECORD
+      await tx.projectFunding.create({
+        data: {
+          projectId: createdProject.id,
+          organizationId: session.user.id,
+          stipendAmount: stipendAmountKobo,
+          platformFee,
+          volunteerAmount,
+          status: "UNPAID",
         },
       });
 
