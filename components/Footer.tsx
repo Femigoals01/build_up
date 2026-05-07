@@ -122,20 +122,12 @@ export default function Footer() {
               </li>
             </ul>
 
-            {/* <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-4">
-              <p className="text-sm font-semibold text-white">
-                Build experience that speaks.
-              </p>
-              <p className="mt-2 text-sm leading-6 text-slate-400">
-                Join BuildUp to connect learning with real work and visible
-                proof of skill.
-              </p>
-            </div> */}
+         
           </div>
         </div>
 
         <div className="mt-12 flex flex-col gap-4 border-t border-slate-800 pt-6 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
-          <p>© {new Date().getFullYear()} BuildUp. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} InsighTecHub. All rights reserved.</p>
 
           <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             <Link
