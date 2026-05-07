@@ -192,7 +192,7 @@ export async function POST(req: Request) {
           email: session.user.email,
           amount: funding.stipendAmount,
           reference,
-          callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/organization`,
+          callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/project/verify`,
           metadata: {
             projectId: funding.projectId,
             organizationId: session.user.id,
