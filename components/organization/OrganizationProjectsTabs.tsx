@@ -1,8 +1,6 @@
 
 
 
-
-
 // "use client";
 
 // import Link from "next/link";
@@ -85,6 +83,12 @@
 
 // function getFundingAmount(project: OrganizationProject) {
 //   return project.funding?.stipendAmount ?? project.stipendAmount ?? 0;
+// }
+
+// function hasAwaitingPaymentApplication(project: OrganizationProject) {
+//   return project.applications.some(
+//     (application) => application.status === "AWAITING_PAYMENT"
+//   );
 // }
 
 // function getFundingStyles(status: string) {
@@ -205,6 +209,9 @@
 // function FundingSummary({ project }: { project: OrganizationProject }) {
 //   const fundingStatus = getFundingStatus(project);
 //   const stipendAmount = getFundingAmount(project);
+//   const awaitingPayment = hasAwaitingPaymentApplication(project);
+
+//   const canFundProject = fundingStatus === "UNPAID" && awaitingPayment;
 
 //   return (
 //     <div className="mt-5 rounded-[22px] border border-slate-200 bg-slate-50/80 p-4">
@@ -223,19 +230,29 @@
 //               {fundingStatus}
 //             </span>
 
+//             {awaitingPayment ? (
+//               <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+//                 Payment Required
+//               </span>
+//             ) : null}
+
 //             <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
 //               Stipend: {formatNairaFromKobo(stipendAmount)}
 //             </span>
 //           </div>
 
 //           <p className="mt-2 text-xs leading-5 text-slate-500">
-//             Funds stay held until the project is completed. After approval, 82%
-//             goes to the volunteer and 18% goes to BuildUp.
+//             Select a volunteer first. After funding succeeds, the project moves
+//             to in progress and the volunteer is notified.
 //           </p>
 //         </div>
 
-//         {fundingStatus === "UNPAID" ? (
+//         {canFundProject ? (
 //           <FundProjectButton projectId={project.id} />
+//         ) : fundingStatus === "UNPAID" ? (
+//           <span className="inline-flex h-10 items-center justify-center rounded-xl border border-amber-200 bg-amber-50 px-4 text-sm font-semibold text-amber-700">
+//             Select volunteer before funding
+//           </span>
 //         ) : (
 //           <span className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600">
 //             {fundingStatus === "HELD"
@@ -689,11 +706,18 @@
 //                 return application.status === "ACCEPTED";
 //               });
 
-//               const hasAssignedVolunteer = project.applications.some(
+//               const awaitingPaymentApps = project.applications.filter(
+//                 (application) => application.status === "AWAITING_PAYMENT"
+//               );
+
+//               const assignedOrSelectedApps = project.applications.filter(
 //                 (application) =>
+//                   application.status === "AWAITING_PAYMENT" ||
 //                   application.status === "ACCEPTED" ||
 //                   application.status === "COMPLETED"
 //               );
+
+//               const hasAssignedVolunteer = assignedOrSelectedApps.length > 0;
 
 //               return (
 //                 <section
@@ -736,6 +760,12 @@
 //                           {getFundingStatus(project)}
 //                         </span>
 
+//                         {awaitingPaymentApps.length > 0 ? (
+//                           <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+//                             Awaiting Payment
+//                           </span>
+//                         ) : null}
+
 //                         <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
 //                           💰 {formatNairaFromKobo(getFundingAmount(project))}
 //                         </span>
@@ -767,10 +797,10 @@
 
 //                     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
 //                       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-//                         Accepted Volunteers
+//                         Selected / Active
 //                       </p>
 //                       <p className="mt-2 text-2xl font-bold text-slate-900">
-//                         {acceptedApps.length}
+//                         {assignedOrSelectedApps.length}
 //                       </p>
 //                     </div>
 
@@ -800,7 +830,7 @@
 //                           <div className="flex flex-wrap gap-2">
 //                             {hasAssignedVolunteer ? (
 //                               <span className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 px-4 text-sm font-semibold text-slate-500">
-//                                 Volunteer Assigned
+//                                 Volunteer Selected
 //                               </span>
 //                             ) : (
 //                               <Link
@@ -869,7 +899,7 @@
 //                           <div className="flex flex-wrap gap-2">
 //                             {hasAssignedVolunteer ? (
 //                               <span className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 px-4 text-sm font-semibold text-slate-500">
-//                                 Volunteer Assigned
+//                                 Volunteer Selected
 //                               </span>
 //                             ) : (
 //                               <Link
@@ -903,9 +933,11 @@
 //                         {acceptedApps.length === 0 ? (
 //                           <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
 //                             <p className="text-sm font-medium text-slate-700">
-//                               {currentTab === "completed"
-//                                 ? "No contributors have been recorded for this completed project yet."
-//                                 : "No accepted volunteers for this project yet."}
+//                               {awaitingPaymentApps.length > 0
+//                                 ? "Volunteer selected. Fund the project to start work."
+//                                 : currentTab === "completed"
+//                                   ? "No contributors have been recorded for this completed project yet."
+//                                   : "No accepted volunteers for this project yet."}
 //                             </p>
 //                           </div>
 //                         ) : (
@@ -932,6 +964,7 @@
 //     </section>
 //   );
 // }
+
 
 
 "use client";
@@ -1191,8 +1224,8 @@ function FundingSummary({ project }: { project: OrganizationProject }) {
             {fundingStatus === "HELD"
               ? "Funds Held"
               : fundingStatus === "RELEASED"
-                ? "Funds Released"
-                : fundingStatus}
+              ? "Funds Released"
+              : fundingStatus}
           </span>
         )}
       </div>
@@ -1497,6 +1530,77 @@ function LatestSubmissionCard({
   );
 }
 
+function AwaitingPaymentProjectCard({
+  project,
+  awaitingPaymentApp,
+}: {
+  project: OrganizationProject;
+  awaitingPaymentApp: ProjectApplication;
+}) {
+  const paymentMessage =
+    awaitingPaymentApp.source === "ORGANIZATION"
+      ? "Invitation accepted — fund to get started"
+      : "Volunteer selected — fund to get started";
+
+  const helperText =
+    awaitingPaymentApp.source === "ORGANIZATION"
+      ? "The volunteer accepted your direct invite. Fund this project now so work can officially start."
+      : "You selected this volunteer from the applications. Fund this project now so work can officially start.";
+
+  return (
+    <section
+      key={project.id}
+      className="overflow-hidden rounded-[26px] border-2 border-amber-200 bg-gradient-to-br from-amber-50 via-white to-blue-50 p-6 shadow-sm md:p-7"
+    >
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <span className="inline-flex rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-amber-800">
+            Payment Required
+          </span>
+
+          <h3 className="mt-4 text-2xl font-extrabold tracking-tight text-slate-900">
+            {paymentMessage}
+          </h3>
+
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+            {helperText}
+          </p>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+              Project: {project.title}
+            </span>
+
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+              Volunteer:{" "}
+              {awaitingPaymentApp.volunteer?.name ?? "Selected volunteer"}
+            </span>
+
+            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+              Stipend: {formatNairaFromKobo(getFundingAmount(project))}
+            </span>
+
+            <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+              Awaiting payment
+            </span>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col">
+          <FundProjectButton projectId={project.id} />
+
+          <Link
+            href={`/dashboard/projects/${project.id}`}
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            View Project
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function OrganizationProjectsTabs({
   activeProjects,
   pendingProjects,
@@ -1514,8 +1618,8 @@ export default function OrganizationProjectsTabs({
     currentTab === "pending"
       ? "Pending Projects"
       : currentTab === "completed"
-        ? "Completed Projects"
-        : "Active Projects";
+      ? "Completed Projects"
+      : "Active Projects";
 
   const handleTabChange = (nextTab: ProjectTab) => {
     if (nextTab === currentTab) return;
@@ -1562,8 +1666,8 @@ export default function OrganizationProjectsTabs({
                 {tab === "active"
                   ? "Active Projects"
                   : tab === "pending"
-                    ? "Pending Projects"
-                    : "Completed Projects"}
+                  ? "Pending Projects"
+                  : "Completed Projects"}
 
                 <span
                   className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
@@ -1575,8 +1679,8 @@ export default function OrganizationProjectsTabs({
                   {tab === "active"
                     ? activeProjects.length
                     : tab === "pending"
-                      ? pendingProjects.length
-                      : completedProjects.length}
+                    ? pendingProjects.length
+                    : completedProjects.length}
                 </span>
               </button>
             ))}
@@ -1639,6 +1743,10 @@ export default function OrganizationProjectsTabs({
                 return application.status === "ACCEPTED";
               });
 
+              const awaitingPaymentApp = project.applications.find(
+                (application) => application.status === "AWAITING_PAYMENT"
+              );
+
               const awaitingPaymentApps = project.applications.filter(
                 (application) => application.status === "AWAITING_PAYMENT"
               );
@@ -1651,6 +1759,16 @@ export default function OrganizationProjectsTabs({
               );
 
               const hasAssignedVolunteer = assignedOrSelectedApps.length > 0;
+
+              if (awaitingPaymentApp) {
+                return (
+                  <AwaitingPaymentProjectCard
+                    key={project.id}
+                    project={project}
+                    awaitingPaymentApp={awaitingPaymentApp}
+                  />
+                );
+              }
 
               return (
                 <section
@@ -1866,11 +1984,9 @@ export default function OrganizationProjectsTabs({
                         {acceptedApps.length === 0 ? (
                           <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
                             <p className="text-sm font-medium text-slate-700">
-                              {awaitingPaymentApps.length > 0
-                                ? "Volunteer selected. Fund the project to start work."
-                                : currentTab === "completed"
-                                  ? "No contributors have been recorded for this completed project yet."
-                                  : "No accepted volunteers for this project yet."}
+                              {currentTab === "completed"
+                                ? "No contributors have been recorded for this completed project yet."
+                                : "No accepted volunteers for this project yet."}
                             </p>
                           </div>
                         ) : (
