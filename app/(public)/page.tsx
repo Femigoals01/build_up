@@ -59,6 +59,15 @@ export const metadata: Metadata = {
 };
 
 
+function formatNairaFromKobo(amount?: number | null) {
+  if (!amount) return "₦0";
+
+  return `₦${(amount / 100).toLocaleString("en-NG", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
+
 
 
 
@@ -83,6 +92,7 @@ export default async function HomePage() {
     title: true,
     difficulty: true,
     skills: true,
+    stipendAmount: true,
     organization: {
       select: { name: true },
     },
@@ -624,6 +634,10 @@ export default async function HomePage() {
                     <p className="mt-2 text-sm font-medium text-slate-600">
                       {project.organization.name}
                     </p>
+
+                    <p className="mt-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+  Stipend: {formatNairaFromKobo(project.stipendAmount)}
+</p>
                   </div>
 
                   {/* TITLE */}
