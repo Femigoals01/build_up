@@ -486,6 +486,7 @@ enum ProjectStatus {
 
 enum ApplicationStatus {
   PENDING
+  AWAITING_PAYMENT
   ACCEPTED
   REJECTED
   COMPLETED

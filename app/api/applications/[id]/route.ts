@@ -2,6 +2,7 @@
 
 
 
+
 // import { NextResponse } from "next/server";
 // import { prisma } from "@/lib/prisma";
 // import { getServerSession } from "next-auth";
@@ -17,7 +18,7 @@
 
 //     const session = await getServerSession(authOptions);
 
-//     if (!session || session.user.role !== "ORGANIZATION") {
+//     if (!session || session.user.role !== "ORGANIZATION" || !session.user.id) {
 //       return NextResponse.json(
 //         { error: "Unauthorized" },
 //         { status: 401 }
@@ -33,29 +34,141 @@
 //       );
 //     }
 
-//     const updatedApplication = await prisma.application.update({
+//     const application = await prisma.application.findUnique({
 //       where: { id },
-//       data: { status },
 //       include: {
 //         volunteer: true,
 //         project: true,
 //       },
 //     });
 
-//     await prisma.notification.create({
-//       data: {
-//         userId: updatedApplication.volunteerId,
-//         title:
-//           status === "ACCEPTED"
-//             ? "Application Accepted 🎉"
-//             : "Application Update",
-//         message:
-//           status === "ACCEPTED"
-//             ? `You’ve been accepted to work on "${updatedApplication.project.title}".`
-//             : `Your application for "${updatedApplication.project.title}" was not selected.`,
-//         type: NotificationType.APPLICATION, // ✅ REQUIRED
-//         link: `/dashboard/projects`, // ✅ OPTIONAL BUT GOOD UX
-//       },
+//     if (!application) {
+//       return NextResponse.json(
+//         { error: "Application not found" },
+//         { status: 404 }
+//       );
+//     }
+
+//     if (application.project.organizationId !== session.user.id) {
+//       return NextResponse.json(
+//         { error: "Forbidden" },
+//         { status: 403 }
+//       );
+//     }
+
+//     if (application.status !== "PENDING") {
+//       return NextResponse.json(
+//         { error: "Application already handled" },
+//         { status: 409 }
+//       );
+//     }
+
+//     const updatedApplication = await prisma.$transaction(async (tx) => {
+//       const updated = await tx.application.update({
+//         where: { id },
+//         data: { status },
+//         include: {
+//           volunteer: true,
+//           project: true,
+//         },
+//       });
+
+//       if (status === "ACCEPTED") {
+//         // Move project out of public OPEN listing
+//         await tx.project.update({
+//           where: { id: updated.projectId },
+//           data: { status: "IN_PROGRESS" },
+//         });
+
+//         // Reject every other pending application for the same project
+//         await tx.application.updateMany({
+//           where: {
+//             projectId: updated.projectId,
+//             id: { not: updated.id },
+//             status: "PENDING",
+//           },
+//           data: { status: "REJECTED" },
+//         });
+
+//         // Ensure project chat exists
+//         const chat =
+//           (await tx.projectChat.findUnique({
+//             where: { projectId: updated.projectId },
+//           })) ??
+//           (await tx.projectChat.create({
+//             data: { projectId: updated.projectId },
+//           }));
+
+//         // System message for acceptance
+//         await tx.chatMessage.create({
+//           data: {
+//             chatId: chat.id,
+//             content: "✅ Volunteer has been accepted into the project.",
+//             isSystem: true,
+//           },
+//         });
+//       } else if (status === "REJECTED") {
+//         // Optional: add rejection system message if chat exists
+//         const chat = await tx.projectChat.findUnique({
+//           where: { projectId: updated.projectId },
+//         });
+
+//         if (chat) {
+//           await tx.chatMessage.create({
+//             data: {
+//               chatId: chat.id,
+//               content: "❌ Volunteer application was rejected.",
+//               isSystem: true,
+//             },
+//           });
+//         }
+//       }
+
+//       // Notify the selected volunteer
+//       await tx.notification.create({
+//         data: {
+//           userId: updated.volunteerId,
+//           title:
+//             status === "ACCEPTED"
+//               ? "Application Accepted 🎉"
+//               : "Application Update",
+//           message:
+//             status === "ACCEPTED"
+//               ? `You’ve been accepted to work on "${updated.project.title}".`
+//               : `Your application for "${updated.project.title}" was not selected.`,
+//           type: NotificationType.APPLICATION,
+//           link: `/dashboard/projects`,
+//         },
+//       });
+
+//       // Notify other volunteers automatically rejected because one was accepted
+//       if (status === "ACCEPTED") {
+//         const autoRejectedApplications = await tx.application.findMany({
+//           where: {
+//             projectId: updated.projectId,
+//             id: { not: updated.id },
+//             status: "REJECTED",
+//           },
+//           include: {
+//             volunteer: true,
+//             project: true,
+//           },
+//         });
+
+//         for (const rejectedApp of autoRejectedApplications) {
+//           await tx.notification.create({
+//             data: {
+//               userId: rejectedApp.volunteerId,
+//               title: "Application Update",
+//               message: `Your application for "${rejectedApp.project.title}" was not selected.`,
+//               type: NotificationType.APPLICATION,
+//               link: `/dashboard/projects`,
+//             },
+//           });
+//         }
+//       }
+
+//       return updated;
 //     });
 
 //     return NextResponse.json(updatedApplication);
@@ -68,8 +181,6 @@
 //     );
 //   }
 // }
-
-
 
 
 
@@ -89,19 +200,13 @@ export async function PATCH(
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.role !== "ORGANIZATION" || !session.user.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { status } = await req.json();
 
     if (!["ACCEPTED", "REJECTED"].includes(status)) {
-      return NextResponse.json(
-        { error: "Invalid status" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
     const application = await prisma.application.findUnique({
@@ -120,10 +225,7 @@ export async function PATCH(
     }
 
     if (application.project.organizationId !== session.user.id) {
-      return NextResponse.json(
-        { error: "Forbidden" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     if (application.status !== "PENDING") {
@@ -134,9 +236,12 @@ export async function PATCH(
     }
 
     const updatedApplication = await prisma.$transaction(async (tx) => {
+      const nextStatus =
+        status === "ACCEPTED" ? "AWAITING_PAYMENT" : "REJECTED";
+
       const updated = await tx.application.update({
         where: { id },
-        data: { status },
+        data: { status: nextStatus },
         include: {
           volunteer: true,
           project: true,
@@ -144,13 +249,6 @@ export async function PATCH(
       });
 
       if (status === "ACCEPTED") {
-        // Move project out of public OPEN listing
-        await tx.project.update({
-          where: { id: updated.projectId },
-          data: { status: "IN_PROGRESS" },
-        });
-
-        // Reject every other pending application for the same project
         await tx.application.updateMany({
           where: {
             projectId: updated.projectId,
@@ -160,7 +258,35 @@ export async function PATCH(
           data: { status: "REJECTED" },
         });
 
-        // Ensure project chat exists
+        const funding = await tx.projectFunding.findUnique({
+          where: { projectId: updated.projectId },
+        });
+
+        if (!funding) {
+          const stipendAmount = updated.project.stipendAmount;
+          const platformFee = Math.round(stipendAmount * 0.18);
+          const volunteerAmount = stipendAmount - platformFee;
+
+          await tx.projectFunding.create({
+            data: {
+              projectId: updated.projectId,
+              organizationId: session.user.id,
+              volunteerId: updated.volunteerId,
+              stipendAmount,
+              platformFee,
+              volunteerAmount,
+              status: "UNPAID",
+            },
+          });
+        } else {
+          await tx.projectFunding.update({
+            where: { id: funding.id },
+            data: {
+              volunteerId: updated.volunteerId,
+            },
+          });
+        }
+
         const chat =
           (await tx.projectChat.findUnique({
             where: { projectId: updated.projectId },
@@ -169,16 +295,25 @@ export async function PATCH(
             data: { projectId: updated.projectId },
           }));
 
-        // System message for acceptance
         await tx.chatMessage.create({
           data: {
             chatId: chat.id,
-            content: "✅ Volunteer has been accepted into the project.",
+            content:
+              "✅ Volunteer selected. Payment is required before this project can start.",
             isSystem: true,
           },
         });
-      } else if (status === "REJECTED") {
-        // Optional: add rejection system message if chat exists
+
+        await tx.notification.create({
+          data: {
+            userId: session.user.id,
+            title: "Payment required",
+            message: `You selected ${updated.volunteer.name ?? "a volunteer"} for "${updated.project.title}". Fund the project to start work.`,
+            type: NotificationType.SYSTEM,
+            link: "/dashboard/organization",
+          },
+        });
+      } else {
         const chat = await tx.projectChat.findUnique({
           where: { projectId: updated.projectId },
         });
@@ -192,26 +327,18 @@ export async function PATCH(
             },
           });
         }
+
+        await tx.notification.create({
+          data: {
+            userId: updated.volunteerId,
+            title: "Application Update",
+            message: `Your application for "${updated.project.title}" was not selected.`,
+            type: NotificationType.APPLICATION,
+            link: "/dashboard/projects",
+          },
+        });
       }
 
-      // Notify the selected volunteer
-      await tx.notification.create({
-        data: {
-          userId: updated.volunteerId,
-          title:
-            status === "ACCEPTED"
-              ? "Application Accepted 🎉"
-              : "Application Update",
-          message:
-            status === "ACCEPTED"
-              ? `You’ve been accepted to work on "${updated.project.title}".`
-              : `Your application for "${updated.project.title}" was not selected.`,
-          type: NotificationType.APPLICATION,
-          link: `/dashboard/projects`,
-        },
-      });
-
-      // Notify other volunteers automatically rejected because one was accepted
       if (status === "ACCEPTED") {
         const autoRejectedApplications = await tx.application.findMany({
           where: {
@@ -232,7 +359,7 @@ export async function PATCH(
               title: "Application Update",
               message: `Your application for "${rejectedApp.project.title}" was not selected.`,
               type: NotificationType.APPLICATION,
-              link: `/dashboard/projects`,
+              link: "/dashboard/projects",
             },
           });
         }
