@@ -985,6 +985,7 @@ type Volunteer = {
   country?: string | null;
   profileImageUrl?: string | null;
   headline?: string | null;
+  experience?: string | null;
 };
 
 type ProjectApplication = {
@@ -1435,12 +1436,25 @@ function PendingVolunteerCard({
       </div>
 
       <div className="border-t border-slate-100 bg-slate-50/60 p-4">
-        <ApplicantCard
+        {/* <ApplicantCard
           applicationId={app.id}
           name={volunteer.name ?? "Unnamed volunteer"}
           email={volunteer.email}
           status={app.status}
-        />
+        /> */}
+
+        <ApplicantCard
+  applicationId={app.id}
+  name={volunteer.name ?? "Unnamed volunteer"}
+  email={volunteer.email}
+  status={app.status}
+  username={volunteer.username}
+  bio={volunteer.bio}
+  skills={volunteer.skills}
+  country={volunteer.country}
+  profileImageUrl={volunteer.profileImageUrl}
+  experience={volunteer.experience}
+/>
       </div>
     </div>
   );

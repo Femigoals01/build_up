@@ -41,6 +41,7 @@ export default async function OrganizationDashboard() {
                 profileImageUrl: true,
                 headline: true,
                 username: true,
+                experience: true,
               },
             },
           },
