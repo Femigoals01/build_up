@@ -43,9 +43,13 @@ export default async function VolunteerProjectsPage() {
       (app.project.status === "OPEN" || app.project.status === "IN_PROGRESS")
   );
 
-  const pendingProjects = applications.filter(
-    (app) => app.status === "PENDING"
-  );
+//   const pendingProjects = applications.filter(
+//     (app) => app.status === "PENDING"
+//   );
+
+const pendingProjects = applications.filter(
+  (app) => app.status === "PENDING" || app.status === "AWAITING_PAYMENT"
+);
 
   const completedProjects = applications.filter(
     (app) =>

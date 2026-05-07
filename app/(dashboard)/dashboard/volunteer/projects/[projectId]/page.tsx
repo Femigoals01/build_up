@@ -23,6 +23,17 @@ function submissionStyle(status: string) {
   return "bg-amber-50 text-amber-700 border-amber-200";
 }
 
+
+function formatNairaFromKobo(amount?: number | null) {
+  if (!amount) return "₦0";
+
+  return `₦${(amount / 100).toLocaleString("en-NG", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
+
+
 export default async function VolunteerProjectDetailsPage({
   params,
 }: {
@@ -142,6 +153,14 @@ export default async function VolunteerProjectDetailsPage({
                     {project.organization.name}
                   </span>
                 </p>
+
+<p className="mt-2 text-sm text-emerald-700">
+  Project Amount:{" "}
+  <span className="font-bold">
+    {formatNairaFromKobo(project.stipendAmount)}
+  </span>
+</p>
+
 
                 <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">
                   {project.description}
@@ -301,6 +320,16 @@ export default async function VolunteerProjectDetailsPage({
                     {project.status}
                   </p>
                 </div>
+
+<div>
+  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+    Project Amount
+  </p>
+  <p className="mt-1 text-sm font-semibold text-emerald-700">
+    {formatNairaFromKobo(project.stipendAmount)}
+  </p>
+</div>
+
               </div>
             </div>
 

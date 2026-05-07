@@ -11,6 +11,16 @@ import SubmitWorkForm from "./SubmitWorkForm";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+
+
+function formatNairaFromKobo(amount?: number | null) {
+  if (!amount) return "₦0";
+
+  return `₦${(amount / 100).toLocaleString("en-NG", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
 export default async function SubmitProjectWorkPage({
   params,
 }: {
@@ -104,7 +114,7 @@ export default async function SubmitProjectWorkPage({
                   {application.project.description}
                 </p>
 
-                <div className="mt-4 flex flex-wrap gap-2">
+                {/* <div className="mt-4 flex flex-wrap gap-2">
                   <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                     {application.project.status.replaceAll("_", " ")}
                   </span>
@@ -112,7 +122,23 @@ export default async function SubmitProjectWorkPage({
                   <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
                     {application.project.organization.name}
                   </span>
-                </div>
+                </div> */}
+
+
+                <div className="mt-4 flex flex-wrap gap-2">
+  <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+    {application.project.status.replaceAll("_", " ")}
+  </span>
+
+  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+    {application.project.organization.name}
+  </span>
+
+  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+    Project Amount: {formatNairaFromKobo(application.project.stipendAmount)}
+  </span>
+</div>
+
               </div>
 
               {latestSubmission ? (

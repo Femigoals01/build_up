@@ -61,6 +61,18 @@ function skillsMatch(projectSkill: string, volunteerSkill: string) {
   );
 }
 
+
+
+function formatNairaFromKobo(amount?: number | null) {
+  if (!amount) return "₦0";
+
+  return `₦${(amount / 100).toLocaleString("en-NG", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
+
+
 export default async function VolunteerDashboard() {
   const session = await getServerSession(authOptions);
 
@@ -206,7 +218,11 @@ export default async function VolunteerDashboard() {
       (a.project.status === "OPEN" || a.project.status === "IN_PROGRESS")
   );
 
-  const pendingApps = applications.filter((a) => a.status === "PENDING");
+  // const pendingApps = applications.filter((a) => a.status === "PENDING");
+
+  const pendingApps = applications.filter(
+  (a) => a.status === "PENDING" || a.status === "AWAITING_PAYMENT"
+);
 
   const invitedPendingApps = pendingApps.filter(
     (a) => a.source === "ORGANIZATION"
@@ -664,6 +680,8 @@ export default async function VolunteerDashboard() {
                 <p className="mt-1 text-sm text-gray-500">
                   Your active and pending project engagements.
                 </p>
+
+     
               </div>
 
               <Link
@@ -713,6 +731,10 @@ export default async function VolunteerDashboard() {
                               {project.organization.name}
                             </p>
 
+                                       <p className="mt-2 text-sm font-semibold text-emerald-700">
+  Project Amount: {formatNairaFromKobo(project.stipendAmount)}
+</p>
+
                             <div className="mt-3 flex flex-wrap gap-2">
                               {isInvited && (
                                 <span className="inline-flex rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700">
@@ -720,11 +742,23 @@ export default async function VolunteerDashboard() {
                                 </span>
                               )}
 
-                              {!isInvited && app.status === "PENDING" && (
+                              {/* {!isInvited && app.status === "PENDING" && (
                                 <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                                   Applied by you
                                 </span>
-                              )}
+                              )} */}
+
+                              {!isInvited && app.status === "PENDING" && (
+  <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+    Applied by you
+  </span>
+)}
+
+{app.status === "AWAITING_PAYMENT" && (
+  <span className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+    Selected — payment pending
+  </span>
+)}
                             </div>
 
                             {canRespondToInvite && (
