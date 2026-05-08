@@ -1038,11 +1038,19 @@ type Submission = {
   };
 };
 
+// type ProjectFunding = {
+//   status: string;
+//   stipendAmount: number;
+//   platformFee?: number | null;
+//   volunteerAmount?: number | null;
+// } | null;
+
 type ProjectFunding = {
   status: string;
   stipendAmount: number;
   platformFee?: number | null;
   volunteerAmount?: number | null;
+  paidAt?: string | Date | null;
 } | null;
 
 type OrganizationProject = {
@@ -1081,12 +1089,59 @@ function formatDeliveryDuration(days?: number | null) {
   return `${safeDays} ${safeDays === 1 ? "day" : "days"}`;
 }
 
+
+
+// function getDeliveryCountdown(project: OrganizationProject) {
+//   if (!project.deliveryDueAt) {
+//     return `Delivery: ${formatDeliveryDuration(project.deliveryDays)} after funding`;
+//   }
+
+//   const dueAt = new Date(project.deliveryDueAt).getTime();
+//   const now = Date.now();
+//   const difference = dueAt - now;
+
+//   if (difference <= 0) {
+//     return "Delivery overdue";
+//   }
+
+//   const totalMinutes = Math.floor(difference / (1000 * 60));
+//   const days = Math.floor(totalMinutes / (60 * 24));
+//   const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+//   const minutes = totalMinutes % 60;
+
+//   if (days > 0) {
+//     return `${days}d ${hours}h ${minutes}m remaining`;
+//   }
+
+//   if (hours > 0) {
+//     return `${hours}h ${minutes}m remaining`;
+//   }
+
+//   return `${minutes}m remaining`;
+// }
+
+
+
 function getDeliveryCountdown(project: OrganizationProject) {
-  if (!project.deliveryDueAt) {
-    return `Delivery: ${formatDeliveryDuration(project.deliveryDays)} after funding`;
+  const deliveryDays = project.deliveryDays && project.deliveryDays > 0
+    ? project.deliveryDays
+    : 7;
+
+  const fallbackDueAt =
+    project.funding?.paidAt && !project.deliveryDueAt
+      ? new Date(
+          new Date(project.funding.paidAt).getTime() +
+            deliveryDays * 24 * 60 * 60 * 1000
+        )
+      : null;
+
+  const effectiveDueAt = project.deliveryDueAt || fallbackDueAt;
+
+  if (!effectiveDueAt) {
+    return `Delivery: ${formatDeliveryDuration(deliveryDays)} after funding`;
   }
 
-  const dueAt = new Date(project.deliveryDueAt).getTime();
+  const dueAt = new Date(effectiveDueAt).getTime();
   const now = Date.now();
   const difference = dueAt - now;
 
@@ -1099,31 +1154,60 @@ function getDeliveryCountdown(project: OrganizationProject) {
   const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
   const minutes = totalMinutes % 60;
 
-  if (days > 0) {
-    return `${days}d ${hours}h ${minutes}m remaining`;
-  }
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}m remaining`;
-  }
+  if (days > 0) return `${days}d ${hours}h ${minutes}m remaining`;
+  if (hours > 0) return `${hours}h ${minutes}m remaining`;
 
   return `${minutes}m remaining`;
 }
 
+
+
+// function getDeliveryStyles(project: OrganizationProject) {
+//   if (!project.deliveryDueAt) {
+//     return "border-slate-200 bg-slate-50 text-slate-700";
+//   }
+
+//   const dueAt = new Date(project.deliveryDueAt).getTime();
+//   const now = Date.now();
+
+//   if (dueAt <= now) {
+//     return "border-rose-200 bg-rose-50 text-rose-700";
+//   }
+
+//   return "border-indigo-200 bg-indigo-50 text-indigo-700";
+// }
+
 function getDeliveryStyles(project: OrganizationProject) {
-  if (!project.deliveryDueAt) {
+  const deliveryDays = project.deliveryDays && project.deliveryDays > 0
+    ? project.deliveryDays
+    : 7;
+
+  const fallbackDueAt =
+    project.funding?.paidAt && !project.deliveryDueAt
+      ? new Date(
+          new Date(project.funding.paidAt).getTime() +
+            deliveryDays * 24 * 60 * 60 * 1000
+        )
+      : null;
+
+  const effectiveDueAt = project.deliveryDueAt || fallbackDueAt;
+
+  if (!effectiveDueAt) {
     return "border-slate-200 bg-slate-50 text-slate-700";
   }
 
-  const dueAt = new Date(project.deliveryDueAt).getTime();
-  const now = Date.now();
+  const dueAt = new Date(effectiveDueAt).getTime();
 
-  if (dueAt <= now) {
+  if (dueAt <= Date.now()) {
     return "border-rose-200 bg-rose-50 text-rose-700";
   }
 
   return "border-indigo-200 bg-indigo-50 text-indigo-700";
 }
+
+
+
+
 
 function getFundingStatus(project: OrganizationProject) {
   return project.funding?.status || "UNPAID";

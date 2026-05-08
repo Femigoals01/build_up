@@ -93,6 +93,7 @@ export default async function HomePage() {
       difficulty: true,
       skills: true,
       stipendAmount: true,
+      deliveryDays: true,
       organization: {
         select: { name: true },
       },
@@ -249,43 +250,7 @@ export default async function HomePage() {
                 </div>
               </div>
 
-              {/* <div className="relative order-first lg:order-none">
-                <div className="absolute inset-0 -z-10 rounded-[2.25rem] bg-gradient-to-br from-blue-200/30 via-indigo-200/20 to-cyan-100/10 blur-3xl" />
-                <div className="relative min-h-[280px] sm:min-h-[380px] md:min-h-[460px] lg:min-h-[620px]">
-                  <Image
-                    src="/hero-right.png"
-                    alt="BuildUp hero visual showing volunteers, mentors, and organizations"
-                    fill
-                    priority
-                    className="object-contain object-center lg:object-right-bottom"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                  />
-                </div>
-              </div> */}
-
-              {/* 
-              <div className="relative order-first lg:order-none">
-
-                <div className="relative -mx-4 sm:-mx-6 lg:mx-0">
-
-                 
-                  <div className="absolute inset-0 -z-10 bg-gradient-to-br from-blue-200/30 via-indigo-200/20 to-cyan-100/10 blur-3xl lg:rounded-[2.25rem]" />
-
-                  <div className="relative h-[300px] sm:h-[380px] md:h-[460px] lg:min-h-[620px] lg:h-auto">
-                    <Image
-                      src="/hero-right.png"
-                      alt="BuildUp hero visual showing volunteers, mentors, and organizations"
-                      fill
-                      priority
-                      className="
-                       object-cover object-center
-                      lg:object-contain lg:object-right-bottom
-               "
-                      sizes="100vw"
-                    />
-                  </div>
-                </div>
-              </div> */}
+              
 
 
               <div className="relative order-first lg:order-none">
@@ -309,68 +274,6 @@ export default async function HomePage() {
 
             </div>
 
-
-
-            {/* 
-            <div className="mt-6 rounded-[2rem] border border-slate-200 bg-white/95 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur sm:mt-8 sm:p-5 lg:p-8">
-              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                <div className="flex items-start gap-4 xl:border-r xl:border-slate-200 xl:pr-6">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-2xl text-white shadow-sm">
-                    💼
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
-                      Real Projects
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
-                      Work on live projects that create value
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 xl:border-r xl:border-slate-200 xl:pr-6">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-violet-600 text-2xl text-white shadow-sm">
-                    👥
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
-                      Expert Mentors
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
-                      Learn from experienced professionals
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 xl:border-r xl:border-slate-200 xl:pr-6">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-2xl text-white shadow-sm">
-                    🛡️
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
-                      Proof of Work
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
-                      Get reviews, badges &amp; portfolio evidence
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-2xl text-white shadow-sm">
-                    📈
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
-                      Real Growth
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
-                      Build skills that open real opportunities
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div> */}
 
 
 
@@ -431,33 +334,6 @@ export default async function HomePage() {
 
               <div className="mt-6 h-1.5 w-20 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500" />
 
-
-              {/* <div className="mt-8 space-y-5">
-                <p className="text-base leading-8 text-slate-600 sm:text-lg">
-                  <span className="font-semibold text-slate-900">BuildUp</span>{" "}
-                  was created to solve a real problem: people learn valuable
-                  skills, but often struggle to prove them with practical,
-                  real-world experience.
-                </p>
-
-                <p className="text-base leading-8 text-slate-600 sm:text-lg">
-                  We bring together <strong className="text-slate-900">volunteers</strong>,{" "}
-                  <strong className="text-slate-900">organizations</strong>, and{" "}
-                  <strong className="text-slate-900">mentors</strong> in one
-                  ecosystem where live projects become meaningful proof of
-                  competence, growth, and contribution.
-                </p>
-
-                <p className="text-base leading-8 text-slate-600 sm:text-lg">
-                  Instead of certificates alone, BuildUp helps people earn
-                  something more powerful:
-                  <span className="font-semibold text-slate-900">
-                    {" "}
-                    proof of work, portfolio evidence, reviews, and mentor-backed
-                    development.
-                  </span>
-                </p>
-              </div> */}
 
               <div className="mt-8 space-y-4">
                 <p className="text-base leading-8 text-slate-600 sm:text-lg">
@@ -608,89 +484,6 @@ export default async function HomePage() {
 
 
 
-            
-            // <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-            //   {projects.map((project) => (
-            //     <Link
-            //       key={project.id}
-            //       href="/register/volunteer"
-            //       className="group relative overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-white via-blue-50/60 to-indigo-50/50 p-6 shadow-[0_12px_35px_rgba(37,99,235,0.08)] transition duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_18px_45px_rgba(37,99,235,0.14)]"
-            //     >
-            //       {/* TOP ACCENT */}
-            //       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-400 opacity-80" />
-
-            //       {/* TOP ROW */}
-            //       <div className="flex items-start justify-between gap-3">
-            //         <span className="inline-flex rounded-full border border-blue-100 bg-white/90 px-3 py-1 text-xs font-semibold text-blue-700 shadow-sm">
-            //           {project.difficulty}
-            //         </span>
-
-            //         <span className="rounded-full bg-white/90 px-2.5 py-1 text-sm text-slate-400 shadow-sm group-hover:text-blue-600">
-            //           ↗
-            //         </span>
-            //       </div>
-
-            //       {/* ORGANIZATION */}
-            //       <div className="mt-5">
-            //         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-            //           Organization
-            //         </p>
-            //         <p className="mt-2 text-sm font-medium text-slate-600">
-            //           {project.organization.name}
-            //         </p>
-
-            //         <p className="mt-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-            //           Stipend: {formatNairaFromKobo(project.stipendAmount)}
-            //         </p>
-            //       </div>
-
-            //       {/* TITLE */}
-            //       <h3 className="mt-5 text-lg font-semibold leading-snug text-slate-900 group-hover:text-blue-700">
-            //         {project.title}
-            //       </h3>
-
-            //       {/* 🔥 SKILLS (NEW) */}
-            //       {project.skills && project.skills.length > 0 && (
-            //         <div className="mt-5">
-            //           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-            //             Skills Required
-            //           </p>
-
-            //           <div className="mt-3 flex flex-wrap gap-2">
-            //             {project.skills.slice(0, 4).map((skill: string) => (
-            //               <span
-            //                 key={skill}
-            //                 className="rounded-full border border-blue-100 bg-white/90 px-3 py-1 text-xs font-medium text-blue-700 shadow-sm"
-            //               >
-            //                 {skill}
-            //               </span>
-            //             ))}
-
-            //             {project.skills.length > 4 && (
-            //               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-            //                 +{project.skills.length - 4}
-            //               </span>
-            //             )}
-            //           </div>
-            //         </div>
-            //       )}
-
-            //       {/* FOOTER */}
-            //       <div className="mt-8 flex items-center justify-between border-t border-slate-200/80 pt-4">
-            //         <span className="text-sm font-semibold text-slate-800">
-            //           Apply to gain real experience
-            //         </span>
-
-            //         <span className="text-sm font-semibold text-blue-600 group-hover:translate-x-0.5">
-            //           Explore →
-            //         </span>
-            //       </div>
-            //     </Link>
-            //   ))}
-            // </div>
-
-
-
             <div className="mt-10 grid gap-y-6 md:grid-cols-2 md:gap-x-6 xl:grid-cols-4 xl:gap-x-0 xl:divide-x xl:divide-slate-200">
   {projects.map((project) => (
     <div key={project.id} className="xl:px-6 first:xl:pl-0 last:xl:pr-0">
@@ -716,9 +509,21 @@ export default async function HomePage() {
             {project.organization.name}
           </p>
 
-          <p className="mt-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+          {/* <p className="mt-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
             Stipend: {formatNairaFromKobo(project.stipendAmount)}
-          </p>
+          </p> */}
+
+
+          <div className="mt-3 flex flex-wrap gap-2">
+  <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+    Stipend: {formatNairaFromKobo(project.stipendAmount)}
+  </span>
+
+  <span className="inline-flex rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
+    Delivery: {project.deliveryDays ?? 7}{" "}
+    {(project.deliveryDays ?? 7) === 1 ? "day" : "days"}
+  </span>
+</div>
         </div>
 
         <h3 className="mt-5 text-lg font-semibold leading-snug text-slate-900 group-hover:text-blue-700">

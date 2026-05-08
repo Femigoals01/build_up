@@ -73,6 +73,83 @@ function formatNairaFromKobo(amount?: number | null) {
 
 
 
+function formatDeliveryDuration(days?: number | null) {
+  const safeDays = days && days > 0 ? days : 7;
+
+  return `${safeDays} ${safeDays === 1 ? "day" : "days"}`;
+}
+
+function getDeliveryCountdown(project: {
+  deliveryDays?: number | null;
+  deliveryDueAt?: Date | string | null;
+}) {
+  if (!project.deliveryDueAt) {
+    return `Delivery: ${formatDeliveryDuration(project.deliveryDays)} after funding`;
+  }
+
+  const dueAt = new Date(project.deliveryDueAt).getTime();
+  const difference = dueAt - Date.now();
+
+  if (difference <= 0) return "Delivery overdue";
+
+  const totalMinutes = Math.floor(difference / (1000 * 60));
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+
+  if (days > 0) return `${days}d ${hours}h ${minutes}m remaining`;
+  if (hours > 0) return `${hours}h ${minutes}m remaining`;
+
+  return `${minutes}m remaining`;
+}
+
+// function getDeliveryStyles(project: {
+//   deliveryDueAt?: Date | string | null;
+// }) {
+//   if (!project.deliveryDueAt) {
+//     return "bg-slate-50 text-slate-700";
+//   }
+
+//   const dueAt = new Date(project.deliveryDueAt).getTime();
+
+//   if (dueAt <= Date.now()) {
+//     return "bg-rose-50 text-rose-700";
+//   }
+
+//   return "bg-indigo-50 text-indigo-700";
+// }
+
+
+function getDeliveryStyles(project: {
+  deliveryDueAt?: Date | string | null;
+}) {
+  if (!project.deliveryDueAt) {
+    return "bg-slate-50 text-slate-700";
+  }
+
+  const dueAt = new Date(project.deliveryDueAt).getTime();
+  const difference = dueAt - Date.now();
+
+  // OVERDUE
+  if (difference <= 0) {
+    return "bg-rose-100 text-rose-800 border border-rose-200";
+  }
+
+  // LESS THAN 12 HOURS REMAINING
+  const twelveHours = 12 * 60 * 60 * 1000;
+
+  if (difference <= twelveHours) {
+    return "bg-red-100 text-red-700 border border-red-200 animate-pulse";
+  }
+
+  // NORMAL ACTIVE COUNTDOWN
+  return "bg-indigo-50 text-indigo-700 border border-indigo-100";
+}
+
+
+
+
+
 export default async function VolunteerDashboard() {
   const session = await getServerSession(authOptions);
 
@@ -734,6 +811,19 @@ export default async function VolunteerDashboard() {
                                        <p className="mt-2 text-sm font-semibold text-emerald-700">
   Project Amount: {formatNairaFromKobo(project.stipendAmount)}
 </p>
+
+
+
+<span
+  className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getDeliveryStyles(
+    project
+  )}`}
+>
+  ⏱ {getDeliveryCountdown(project)}
+</span>
+
+
+
 
                             <div className="mt-3 flex flex-wrap gap-2">
                               {isInvited && (
