@@ -1,3 +1,7 @@
+
+
+
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -92,6 +96,9 @@ model Project {
   difficulty         Difficulty
   skills             String[]
   stipendAmount      Int                 @default(0) // stored in kobo
+  deliveryDays      Int       @default(7)
+deliveryStartedAt DateTime?
+deliveryDueAt     DateTime?
   mentorId           String?
   applications       Application[]
   mentorshipRequests MentorshipRequest[]

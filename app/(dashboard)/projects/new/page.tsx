@@ -1,6 +1,8 @@
 
 
 
+
+
 // "use client";
 
 // import { useState, useEffect, useMemo } from "react";
@@ -34,10 +36,11 @@
 //   const [description, setDescription] = useState("");
 //   const [difficulty, setDifficulty] = useState<Difficulty>("BEGINNER");
 //   const [skills, setSkills] = useState("");
+//   const [stipendAmount, setStipendAmount] = useState("");
+//   const [deliveryDays, setDeliveryDays] = useState("7");
 //   const [loading, setLoading] = useState(false);
 //   const [error, setError] = useState("");
 
-//   /* ================= ROLE GUARD ================= */
 //   useEffect(() => {
 //     if (status === "loading") return;
 
@@ -51,7 +54,6 @@
 //     }
 //   }, [session, status, router]);
 
-//   /* ================= DERIVED ================= */
 //   const parsedSkills = useMemo(
 //     () =>
 //       skills
@@ -61,11 +63,18 @@
 //     [skills]
 //   );
 
-//   /* ================= SUBMIT ================= */
 //   const submit = async (e: React.FormEvent) => {
 //     e.preventDefault();
 //     setLoading(true);
 //     setError("");
+
+//     const stipend = Number(stipendAmount);
+
+//     if (!stipend || stipend < 5000) {
+//       setError("Minimum volunteer stipend is ₦5,000.");
+//       setLoading(false);
+//       return;
+//     }
 
 //     try {
 //       const res = await fetch("/api/projects", {
@@ -76,6 +85,7 @@
 //           description,
 //           difficulty,
 //           skills: parsedSkills,
+//           stipendAmount: stipend,
 //         }),
 //       });
 
@@ -98,7 +108,6 @@
 //     }
 //   };
 
-//   /* ================= UI ================= */
 //   if (status === "loading") {
 //     return (
 //       <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40 px-4 py-10">
@@ -121,7 +130,6 @@
 //   return (
 //     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40 px-4 py-6 md:px-8 lg:px-10 lg:py-8">
 //       <div className="mx-auto max-w-5xl space-y-8">
-//         {/* HERO */}
 //         <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
 //           <div className="relative px-6 py-8 md:px-8 md:py-10">
 //             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.08),transparent_24%)]" />
@@ -137,36 +145,35 @@
 //                 </h1>
 
 //                 <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 md:text-base">
-//                   Create a clear, attractive project that helps volunteers
-//                   understand the opportunity, required skills, and level of
-//                   challenge.
+//                   Create a clear project, set the required skills, and add the
+//                   stipend you are willing to give the volunteer after successful
+//                   completion.
 //                 </p>
 //               </div>
 
 //               <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-5 py-4">
 //                 <p className="text-sm font-semibold text-slate-900">
-//                   Quick tip
+//                   Stipend rule
 //                 </p>
 //                 <p className="mt-1 max-w-xs text-sm leading-6 text-slate-500">
-//                   Projects with clear titles, practical descriptions, and
-//                   specific skills usually attract better applicants.
+//                   Minimum stipend is ₦5,000. The amount will be locked once the
+//                   project is funded and assigned.
 //                 </p>
 //               </div>
 //             </div>
 //           </div>
 //         </section>
 
-//         {/* FORM */}
 //         <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm md:p-8">
 //           <form onSubmit={submit} className="space-y-8">
-//             {/* BASIC DETAILS */}
 //             <div className="space-y-6">
 //               <div>
 //                 <h2 className="text-xl font-semibold text-slate-900">
 //                   Project Details
 //                 </h2>
 //                 <p className="mt-1 text-sm text-slate-500">
-//                   Give volunteers a strong overview of what the project is about.
+//                   Give volunteers a strong overview of what the project is
+//                   about.
 //                 </p>
 //               </div>
 
@@ -200,7 +207,7 @@
 //                   </label>
 //                   <textarea
 //                     id="description"
-//                     placeholder="Describe the goal of the project, what needs to be done, expected deliverables, and how a volunteer will contribute."
+//                     placeholder="Describe the goal of the project, expected deliverables, and how a volunteer will contribute."
 //                     className="min-h-[180px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-7 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
 //                     value={description}
 //                     onChange={(e) => setDescription(e.target.value)}
@@ -213,7 +220,50 @@
 //               </div>
 //             </div>
 
-//             {/* DIFFICULTY */}
+//             <div className="space-y-5">
+//               <div>
+//                 <h2 className="text-xl font-semibold text-slate-900">
+//                   Volunteer Stipend
+//                 </h2>
+//                 <p className="mt-1 text-sm text-slate-500">
+//                   Add the amount you are willing to pay the volunteer after
+//                   successful project completion.
+//                 </p>
+//               </div>
+
+//               <div>
+//                 <label
+//                   htmlFor="stipendAmount"
+//                   className="mb-2 block text-sm font-semibold text-slate-800"
+//                 >
+//                   Stipend Amount
+//                 </label>
+
+//                 <div className="relative">
+//                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500">
+//                     ₦
+//                   </span>
+
+//                   <input
+//                     id="stipendAmount"
+//                     type="number"
+//                     min="5000"
+//                     step="500"
+//                     placeholder="5000"
+//                     className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pl-9 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+//                     value={stipendAmount}
+//                     onChange={(e) => setStipendAmount(e.target.value)}
+//                     required
+//                   />
+//                 </div>
+
+//                 <p className="mt-2 text-xs text-slate-500">
+//                   Minimum is ₦5,000. BuildUp will later release 82% to the
+//                   volunteer and keep 18% platform fee after completion.
+//                 </p>
+//               </div>
+//             </div>
+
 //             <div className="space-y-5">
 //               <div>
 //                 <h2 className="text-xl font-semibold text-slate-900">
@@ -226,71 +276,48 @@
 //               </div>
 
 //               <div className="grid gap-4 md:grid-cols-3">
-//                 <button
-//                   type="button"
-//                   onClick={() => setDifficulty("BEGINNER")}
-//                   className={`rounded-[24px] border p-5 text-left transition ${difficultyCardStyles(
-//                     "BEGINNER",
-//                     difficulty === "BEGINNER"
-//                   )}`}
-//                 >
-//                   <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/80 text-lg shadow-sm">
-//                     🌱
-//                   </div>
-//                   <h3 className="text-base font-semibold">Beginner</h3>
-//                   <p className="mt-2 text-sm leading-6 opacity-90">
-//                     Suitable for entry-level contributors with foundational
-//                     skills.
-//                   </p>
-//                 </button>
-
-//                 <button
-//                   type="button"
-//                   onClick={() => setDifficulty("INTERMEDIATE")}
-//                   className={`rounded-[24px] border p-5 text-left transition ${difficultyCardStyles(
-//                     "INTERMEDIATE",
-//                     difficulty === "INTERMEDIATE"
-//                   )}`}
-//                 >
-//                   <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/80 text-lg shadow-sm">
-//                     ⚡
-//                   </div>
-//                   <h3 className="text-base font-semibold">Intermediate</h3>
-//                   <p className="mt-2 text-sm leading-6 opacity-90">
-//                     Best for volunteers with some practical experience and
-//                     confidence.
-//                   </p>
-//                 </button>
-
-//                 <button
-//                   type="button"
-//                   onClick={() => setDifficulty("ADVANCED")}
-//                   className={`rounded-[24px] border p-5 text-left transition ${difficultyCardStyles(
-//                     "ADVANCED",
-//                     difficulty === "ADVANCED"
-//                   )}`}
-//                 >
-//                   <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/80 text-lg shadow-sm">
-//                     🚀
-//                   </div>
-//                   <h3 className="text-base font-semibold">Advanced</h3>
-//                   <p className="mt-2 text-sm leading-6 opacity-90">
-//                     For more complex projects requiring stronger technical or
-//                     strategic ability.
-//                   </p>
-//                 </button>
+//                 {(["BEGINNER", "INTERMEDIATE", "ADVANCED"] as Difficulty[]).map(
+//                   (level) => (
+//                     <button
+//                       key={level}
+//                       type="button"
+//                       onClick={() => setDifficulty(level)}
+//                       className={`rounded-[24px] border p-5 text-left transition ${difficultyCardStyles(
+//                         level,
+//                         difficulty === level
+//                       )}`}
+//                     >
+//                       <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/80 text-lg shadow-sm">
+//                         {level === "BEGINNER"
+//                           ? "🌱"
+//                           : level === "INTERMEDIATE"
+//                             ? "⚡"
+//                             : "🚀"}
+//                       </div>
+//                       <h3 className="text-base font-semibold">
+//                         {level.charAt(0) + level.slice(1).toLowerCase()}
+//                       </h3>
+//                       <p className="mt-2 text-sm leading-6 opacity-90">
+//                         {level === "BEGINNER"
+//                           ? "Suitable for entry-level contributors with foundational skills."
+//                           : level === "INTERMEDIATE"
+//                             ? "Best for volunteers with some practical experience and confidence."
+//                             : "For more complex projects requiring stronger technical or strategic ability."}
+//                       </p>
+//                     </button>
+//                   )
+//                 )}
 //               </div>
 //             </div>
 
-//             {/* SKILLS */}
 //             <div className="space-y-5">
 //               <div>
 //                 <h2 className="text-xl font-semibold text-slate-900">
 //                   Required Skills
 //                 </h2>
 //                 <p className="mt-1 text-sm text-slate-500">
-//                   Add the skills volunteers should have. Separate each one with a
-//                   comma.
+//                   Add the skills volunteers should have. Separate each one with
+//                   a comma.
 //                 </p>
 //               </div>
 
@@ -303,13 +330,13 @@
 //                 </label>
 //                 <input
 //                   id="skills"
-//                   placeholder="e.g. React, UI Design, Project Management, Copywriting"
+//                   placeholder="e.g. Social Media, Data Analysis, UI Design, Copywriting"
 //                   className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
 //                   value={skills}
 //                   onChange={(e) => setSkills(e.target.value)}
 //                 />
 //                 <p className="mt-2 text-xs text-slate-500">
-//                   Separate each skill with a comma for best results.
+//                   Separate each skill with a comma for best matching.
 //                 </p>
 //               </div>
 
@@ -332,17 +359,16 @@
 //               )}
 //             </div>
 
-//             {/* ERROR */}
 //             {error && (
 //               <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
 //                 {error}
 //               </div>
 //             )}
 
-//             {/* ACTIONS */}
 //             <div className="flex flex-col gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
 //               <p className="text-sm text-slate-500">
-//                 Your project will become visible to volunteers after publishing.
+//                 Your project will be created with an unpaid funding record.
+//                 Payment funding comes next.
 //               </p>
 
 //               <div className="flex flex-col gap-3 sm:flex-row">
@@ -369,6 +395,7 @@
 //     </main>
 //   );
 // }
+
 
 
 
@@ -408,6 +435,7 @@ export default function CreateProjectPage() {
   const [difficulty, setDifficulty] = useState<Difficulty>("BEGINNER");
   const [skills, setSkills] = useState("");
   const [stipendAmount, setStipendAmount] = useState("");
+  const [deliveryDays, setDeliveryDays] = useState("7");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -439,9 +467,20 @@ export default function CreateProjectPage() {
     setError("");
 
     const stipend = Number(stipendAmount);
+    const selectedDeliveryDays = Number(deliveryDays);
 
     if (!stipend || stipend < 5000) {
       setError("Minimum volunteer stipend is ₦5,000.");
+      setLoading(false);
+      return;
+    }
+
+    if (
+      !selectedDeliveryDays ||
+      selectedDeliveryDays < 1 ||
+      selectedDeliveryDays > 60
+    ) {
+      setError("Delivery time must be between 1 and 60 days.");
       setLoading(false);
       return;
     }
@@ -456,6 +495,7 @@ export default function CreateProjectPage() {
           difficulty,
           skills: parsedSkills,
           stipendAmount: stipend,
+          deliveryDays: selectedDeliveryDays,
         }),
       });
 
@@ -503,6 +543,7 @@ export default function CreateProjectPage() {
         <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
           <div className="relative px-6 py-8 md:px-8 md:py-10">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.08),transparent_24%)]" />
+
             <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
                 <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
@@ -515,19 +556,18 @@ export default function CreateProjectPage() {
                 </h1>
 
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 md:text-base">
-                  Create a clear project, set the required skills, and add the
-                  stipend you are willing to give the volunteer after successful
-                  completion.
+                  Create a clear project, set the required skills, choose the
+                  delivery timeline, and add the stipend you are willing to give
+                  the volunteer after successful completion.
                 </p>
               </div>
 
               <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-5 py-4">
                 <p className="text-sm font-semibold text-slate-900">
-                  Stipend rule
+                  Project rule
                 </p>
                 <p className="mt-1 max-w-xs text-sm leading-6 text-slate-500">
-                  Minimum stipend is ₦5,000. The amount will be locked once the
-                  project is funded and assigned.
+                  The delivery countdown starts only after the project is funded.
                 </p>
               </div>
             </div>
@@ -593,44 +633,75 @@ export default function CreateProjectPage() {
             <div className="space-y-5">
               <div>
                 <h2 className="text-xl font-semibold text-slate-900">
-                  Volunteer Stipend
+                  Stipend & Delivery Timeline
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Add the amount you are willing to pay the volunteer after
-                  successful project completion.
+                  Add the volunteer stipend and choose how long the volunteer
+                  has to deliver after funding.
                 </p>
               </div>
 
-              <div>
-                <label
-                  htmlFor="stipendAmount"
-                  className="mb-2 block text-sm font-semibold text-slate-800"
-                >
-                  Stipend Amount
-                </label>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div>
+                  <label
+                    htmlFor="stipendAmount"
+                    className="mb-2 block text-sm font-semibold text-slate-800"
+                  >
+                    Stipend Amount
+                  </label>
 
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500">
-                    ₦
-                  </span>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500">
+                      ₦
+                    </span>
 
-                  <input
-                    id="stipendAmount"
-                    type="number"
-                    min="5000"
-                    step="500"
-                    placeholder="5000"
-                    className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pl-9 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
-                    value={stipendAmount}
-                    onChange={(e) => setStipendAmount(e.target.value)}
-                    required
-                  />
+                    <input
+                      id="stipendAmount"
+                      type="number"
+                      min="5000"
+                      step="500"
+                      placeholder="5000"
+                      className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pl-9 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+                      value={stipendAmount}
+                      onChange={(e) => setStipendAmount(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <p className="mt-2 text-xs text-slate-500">
+                    Minimum is ₦5,000. BuildUp later releases 82% to the
+                    volunteer and keeps 18% platform fee after completion.
+                  </p>
                 </div>
 
-                <p className="mt-2 text-xs text-slate-500">
-                  Minimum is ₦5,000. BuildUp will later release 82% to the
-                  volunteer and keep 18% platform fee after completion.
-                </p>
+                <div>
+                  <label
+                    htmlFor="deliveryDays"
+                    className="mb-2 block text-sm font-semibold text-slate-800"
+                  >
+                    Project Delivery Time
+                  </label>
+
+                  <select
+                    id="deliveryDays"
+                    value={deliveryDays}
+                    onChange={(e) => setDeliveryDays(e.target.value)}
+                    className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+                    required
+                  >
+                    {Array.from({ length: 60 }, (_, index) => index + 1).map(
+                      (day) => (
+                        <option key={day} value={day}>
+                          {day} {day === 1 ? "day" : "days"}
+                        </option>
+                      )
+                    )}
+                  </select>
+
+                  <p className="mt-2 text-xs text-slate-500">
+                    Countdown begins immediately after successful funding.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -661,8 +732,8 @@ export default function CreateProjectPage() {
                         {level === "BEGINNER"
                           ? "🌱"
                           : level === "INTERMEDIATE"
-                            ? "⚡"
-                            : "🚀"}
+                          ? "⚡"
+                          : "🚀"}
                       </div>
                       <h3 className="text-base font-semibold">
                         {level.charAt(0) + level.slice(1).toLowerCase()}
@@ -671,8 +742,8 @@ export default function CreateProjectPage() {
                         {level === "BEGINNER"
                           ? "Suitable for entry-level contributors with foundational skills."
                           : level === "INTERMEDIATE"
-                            ? "Best for volunteers with some practical experience and confidence."
-                            : "For more complex projects requiring stronger technical or strategic ability."}
+                          ? "Best for volunteers with some practical experience and confidence."
+                          : "For more complex projects requiring stronger technical or strategic ability."}
                       </p>
                     </button>
                   )
@@ -737,27 +808,16 @@ export default function CreateProjectPage() {
 
             <div className="flex flex-col gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-slate-500">
-                Your project will be created with an unpaid funding record.
-                Payment funding comes next.
+                You can review applications after the project is published.
               </p>
 
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={() => router.push("/dashboard/organization")}
-                  className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="inline-flex h-12 items-center justify-center rounded-2xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {loading ? "Publishing..." : "Publish Project"}
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="inline-flex h-12 items-center justify-center rounded-2xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? "Creating Project..." : "Publish Project"}
+              </button>
             </div>
           </form>
         </section>
