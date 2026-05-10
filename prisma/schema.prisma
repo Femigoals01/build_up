@@ -43,6 +43,13 @@ model User {
   notifyOrganizationMessages Boolean          @default(true)
   supportMessages            SupportMessage[]
 
+  accountActionReason String?
+
+
+  accountStatus String    @default("ACTIVE")
+deactivatedAt DateTime?
+deletedAt     DateTime?
+
   directConversationParticipants DirectConversationParticipant[] @relation("DirectConversationParticipants")
   directMessagesSent             DirectMessage[]                 @relation("DirectMessagesSent")
   directMessageReads             DirectMessageRead[]             @relation("DirectMessageReads")

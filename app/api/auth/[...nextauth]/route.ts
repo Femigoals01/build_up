@@ -3,109 +3,12 @@
 
 
 
-
-
-
 // import NextAuth from "next-auth";
 // import type { AuthOptions } from "next-auth";
 // import CredentialsProvider from "next-auth/providers/credentials";
 // import { prisma } from "@/lib/prisma";
 // import bcrypt from "bcryptjs";
-
-// export const authOptions: AuthOptions = {
-//   session: { strategy: "jwt" },
-
-//   providers: [
-//     CredentialsProvider({
-//       name: "Credentials",
-//       credentials: {
-//         email: {},
-//         password: {},
-//       },
-
-//       async authorize(credentials) {
-//         if (!credentials?.email || !credentials.password) {
-//           throw new Error("Invalid email or password");
-//         }
-
-//         const normalizedEmail = credentials.email.trim().toLowerCase();
-
-//         const user = await prisma.user.findUnique({
-//           where: { email: normalizedEmail },
-//         });
-
-//         if (!user) {
-//           throw new Error("Invalid email or password");
-//         }
-
-//         const isValid = await bcrypt.compare(credentials.password, user.password);
-
-//         if (!isValid) {
-//           throw new Error("Invalid email or password");
-//         }
-
-//         if (!user.emailVerified) {
-//           throw new Error("EMAIL_NOT_VERIFIED");
-//         }
-
-//         return {
-//           id: user.id,
-//           name: user.name,
-//           email: user.email,
-//           role: user.role,
-//           username: user.username,
-//           profileImageUrl: user.profileImageUrl,
-//         };
-//       },
-//     }),
-//   ],
-
-//   callbacks: {
-//     async jwt({ token, user }) {
-//       if (user) {
-//         token.id = user.id;
-//         token.role = user.role;
-//         token.username = user.username;
-//         token.profileImageUrl = user.profileImageUrl;
-//       }
-//       return token;
-//     },
-
-//     async session({ session, token }) {
-//       if (session.user) {
-//         session.user.id = token.id as string;
-//         session.user.role = token.role as any;
-//         session.user.username = token.username as string;
-//         session.user.profileImageUrl =
-//           (token.profileImageUrl as string | null) ?? null;
-//       }
-//       return session;
-//     },
-//   },
-
-//   pages: {
-//     signIn: "/login",
-//   },
-// };
-
-// const handler = NextAuth(authOptions);
-// export { handler as GET, handler as POST };
-
-
-
-
-
-
-// import NextAuth from "next-auth";
-// import type { AuthOptions } from "next-auth";
-// import CredentialsProvider from "next-auth/providers/credentials";
-// import { prisma } from "@/lib/prisma";
-// import bcrypt from "bcryptjs";
-// import {
-//   clearRateLimit,
-//   consumeRateLimit,
-//   getClientIp,
-// } from "@/lib/rateLimit";
+// import { clearRateLimit, consumeRateLimit } from "@/lib/rateLimit";
 
 // const LOGIN_LIMIT = 5;
 // const LOGIN_WINDOW_MS = 10 * 60 * 1000;
@@ -125,7 +28,7 @@
 //         password: {},
 //       },
 
-//       async authorize(credentials, req) {
+//       async authorize(credentials) {
 //         const rawEmail = String(credentials?.email || "");
 //         const rawPassword = String(credentials?.password || "");
 
@@ -134,20 +37,6 @@
 
 //         if (!normalizedEmail || !password || !isValidEmail(normalizedEmail)) {
 //           throw new Error("Invalid email or password");
-//         }
-
-//         const clientIp = getClientIp(req as Request);
-
-//         const ipLimit = consumeRateLimit(
-//           `login:ip:${clientIp}`,
-//           LOGIN_LIMIT,
-//           LOGIN_WINDOW_MS
-//         );
-
-//         if (!ipLimit.allowed) {
-//           throw new Error(
-//             `Too many login attempts. Try again in ${ipLimit.retryAfterSeconds} seconds.`
-//           );
 //         }
 
 //         const emailLimit = consumeRateLimit(
@@ -162,8 +51,13 @@
 //           );
 //         }
 
-//         const user = await prisma.user.findUnique({
-//           where: { email: normalizedEmail },
+//         const user = await prisma.user.findFirst({
+//           where: {
+//             email: {
+//               equals: normalizedEmail,
+//               mode: "insensitive",
+//             },
+//           },
 //         });
 
 //         if (!user) {
@@ -181,7 +75,6 @@
 //         }
 
 //         clearRateLimit(`login:email:${normalizedEmail}`);
-//         clearRateLimit(`login:ip:${clientIp}`);
 
 //         return {
 //           id: user.id,
@@ -225,9 +118,6 @@
 
 // const handler = NextAuth(authOptions);
 // export { handler as GET, handler as POST };
-
-
-
 
 
 
@@ -293,6 +183,14 @@ export const authOptions: AuthOptions = {
           throw new Error("Invalid email or password");
         }
 
+        if (user.accountStatus !== "ACTIVE") {
+          throw new Error(
+            user.accountStatus === "DEACTIVATED"
+              ? "Your account has been deactivated."
+              : "Your account has been deleted."
+          );
+        }
+
         const isValid = await bcrypt.compare(password, user.password);
 
         if (!isValid) {
@@ -325,6 +223,7 @@ export const authOptions: AuthOptions = {
         token.username = user.username;
         token.profileImageUrl = user.profileImageUrl;
       }
+
       return token;
     },
 
@@ -336,6 +235,7 @@ export const authOptions: AuthOptions = {
         session.user.profileImageUrl =
           (token.profileImageUrl as string | null) ?? null;
       }
+
       return session;
     },
   },
@@ -346,4 +246,5 @@ export const authOptions: AuthOptions = {
 };
 
 const handler = NextAuth(authOptions);
+
 export { handler as GET, handler as POST };
