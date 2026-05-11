@@ -1,6 +1,11 @@
 
 
 
+
+
+
+
+
 // import { NextResponse } from "next/server";
 // import crypto from "crypto";
 // import { prisma } from "@/lib/prisma";
@@ -85,12 +90,18 @@
 //     },
 //   });
 
+//   const deliveryStartedAt = new Date();
+//   const deliveryDays = awaitingApplication?.project.deliveryDays ?? 7;
+//   const deliveryDueAt = new Date(
+//     deliveryStartedAt.getTime() + deliveryDays * 24 * 60 * 60 * 1000
+//   );
+
 //   await prisma.$transaction(async (tx) => {
 //     await tx.projectFunding.update({
 //       where: { id: funding.id },
 //       data: {
 //         status: "HELD",
-//         paidAt: new Date(),
+//         paidAt: deliveryStartedAt,
 //         volunteerId: awaitingApplication?.volunteerId ?? funding.volunteerId,
 //       },
 //     });
@@ -103,9 +114,15 @@
 
 //       await tx.project.update({
 //         where: { id: funding.projectId },
-//         data: { status: "IN_PROGRESS" },
+//         data: {
+//           status: "IN_PROGRESS",
+//           deliveryStartedAt,
+//           deliveryDueAt,
+//         },
 //       });
 
+
+    
 //       const chat =
 //         (await tx.projectChat.findUnique({
 //           where: { projectId: funding.projectId },
@@ -117,8 +134,9 @@
 //       await tx.chatMessage.create({
 //         data: {
 //           chatId: chat.id,
-//           content:
-//             "✅ Project funded. Volunteer accepted and project is now in progress.",
+//           content: `✅ Project funded. Volunteer accepted and project is now in progress. Delivery countdown has started for ${deliveryDays} day${
+//             deliveryDays === 1 ? "" : "s"
+//           }.`,
 //           isSystem: true,
 //         },
 //       });
@@ -127,7 +145,7 @@
 //         data: {
 //           userId: awaitingApplication.volunteerId,
 //           title: "Application accepted 🎉",
-//           message: `Payment is complete. You can now start work on "${awaitingApplication.project.title}".`,
+//           message: `Payment is complete. You can now start work on "${awaitingApplication.project.title}". Delivery countdown has started.`,
 //           type: "APPLICATION",
 //           link: "/dashboard/volunteer",
 //         },
@@ -252,8 +270,6 @@
 
 
 
-
-
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
@@ -319,6 +335,7 @@ async function handleChargeSuccess(event: any) {
       where: { id: funding.id },
       data: { status: "DISPUTED" },
     });
+
     return;
   }
 
@@ -355,6 +372,9 @@ async function handleChargeSuccess(event: any) {
     });
 
     if (awaitingApplication) {
+      const project = awaitingApplication.project;
+      const volunteerId = awaitingApplication.volunteerId;
+
       await tx.application.update({
         where: { id: awaitingApplication.id },
         data: { status: "ACCEPTED" },
@@ -389,11 +409,23 @@ async function handleChargeSuccess(event: any) {
 
       await tx.notification.create({
         data: {
-          userId: awaitingApplication.volunteerId,
-          title: "Application accepted 🎉",
-          message: `Payment is complete. You can now start work on "${awaitingApplication.project.title}". Delivery countdown has started.`,
-          type: "APPLICATION",
-          link: "/dashboard/volunteer",
+          userId: volunteerId,
+          type: "PAYMENT",
+          title: "Project officially started",
+          message: `Payment has been completed for "${project.title}". Your delivery countdown has started.`,
+          link: `/dashboard/volunteer/projects/${project.id}`,
+        },
+      });
+
+      await tx.notification.create({
+        data: {
+          userId: volunteerId,
+          type: "PROJECT",
+          title: "Delivery countdown started",
+          message: `You have ${deliveryDays} day${
+            deliveryDays === 1 ? "" : "s"
+          } to deliver "${project.title}".`,
+          link: `/dashboard/volunteer/projects/${project.id}`,
         },
       });
     }

@@ -489,6 +489,9 @@ enum NotificationType {
   PROJECT
   REVIEW
   BADGE
+  PAYMENT
+  SUBMISSION
+  MESSAGE
   SYSTEM
 }
 
