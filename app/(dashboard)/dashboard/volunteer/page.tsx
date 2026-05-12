@@ -128,23 +128,51 @@ function formatDeliveryDuration(days?: number | null) {
   return `${safeDays} ${safeDays === 1 ? "day" : "days"}`;
 }
 
+// function getDeliveryCountdown(project: {
+//   deliveryDays?: number | null;
+//   deliveryStartedAt?: Date | string | null;
+//   deliveryDueAt?: Date | string | null;
+// }) {
+//   const safeDays = project.deliveryDays && project.deliveryDays > 0 ? project.deliveryDays : 7;
+
+//   if (!project.deliveryStartedAt || !project.deliveryDueAt) {
+//     // return `Delivery starts after funding • ${safeDays} ${
+//     //   safeDays === 1 ? "day" : "days"
+//     // } duration`;
+
+//     if (!project.deliveryStartedAt || !project.deliveryDueAt) {
+//       return `Delivery starts after funding • ${formatDeliveryDuration(
+//         project.deliveryDays
+//       )} duration`;
+//     }
+//   }
+
+//   const dueAt = new Date(project.deliveryDueAt).getTime();
+//   const difference = dueAt - Date.now();
+
+//   if (difference <= 0) return "Delivery overdue";
+
+//   const totalMinutes = Math.floor(difference / (1000 * 60));
+//   const days = Math.floor(totalMinutes / (60 * 24));
+//   const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+//   const minutes = totalMinutes % 60;
+
+//   if (days > 0) return `${days}d ${hours}h ${minutes}m remaining`;
+//   if (hours > 0) return `${hours}h ${minutes}m remaining`;
+
+//   return `${minutes}m remaining`;
+// }
+
+
 function getDeliveryCountdown(project: {
   deliveryDays?: number | null;
   deliveryStartedAt?: Date | string | null;
   deliveryDueAt?: Date | string | null;
 }) {
-  const safeDays = project.deliveryDays && project.deliveryDays > 0 ? project.deliveryDays : 7;
-
   if (!project.deliveryStartedAt || !project.deliveryDueAt) {
-    // return `Delivery starts after funding • ${safeDays} ${
-    //   safeDays === 1 ? "day" : "days"
-    // } duration`;
-
-    if (!project.deliveryStartedAt || !project.deliveryDueAt) {
-  return `Delivery starts after funding • ${formatDeliveryDuration(
-    project.deliveryDays
-  )} duration`;
-}
+    return `Delivery starts after funding • ${formatDeliveryDuration(
+      project.deliveryDays
+    )} duration`;
   }
 
   const dueAt = new Date(project.deliveryDueAt).getTime();
@@ -162,6 +190,12 @@ function getDeliveryCountdown(project: {
 
   return `${minutes}m remaining`;
 }
+
+
+
+
+
+
 
 function getDeliveryStyles(project: {
   deliveryStartedAt?: Date | string | null;
@@ -244,12 +278,12 @@ export default async function VolunteerDashboard() {
   const volunteerSkills =
     typeof volunteer.skills === "string" && volunteer.skills.trim().length > 0
       ? volunteer.skills
-          .split(",")
-          .map((skill) => skill.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((skill) => skill.trim())
+        .filter(Boolean)
       : [];
 
-  const lastSeen = volunteer.lastActivitySeenAt ?? new Date(0);
+  // const lastSeen = volunteer.lastActivitySeenAt ?? new Date(0);
   const safeRating = volunteer.rating ?? 0;
   const safeRatingCount = volunteer.ratingCount ?? 0;
 
@@ -296,6 +330,50 @@ export default async function VolunteerDashboard() {
 
 
 
+  // const projectIds = applications.map((app) => app.projectId);
+
+  // const projectFundings = await prisma.projectFunding.findMany({
+  //   where: {
+  //     projectId: {
+  //       in: projectIds,
+  //     },
+  //   },
+  // });
+
+  // const fundingMap = new Map(
+  //   projectFundings.map((funding) => [funding.projectId, funding])
+  // );
+
+  // const applicationsWithDelivery = applications.map((app) => {
+  //   const funding = fundingMap.get(app.projectId);
+
+  //   if (
+  //     app.project.deliveryStartedAt ||
+  //     app.project.deliveryDueAt ||
+  //     !funding?.paidAt
+  //   ) {
+  //     return app;
+  //   }
+
+  //   const deliveryDays = app.project.deliveryDays ?? 7;
+  //   const deliveryStartedAt = funding.paidAt;
+  //   const deliveryDueAt = new Date(
+  //     deliveryStartedAt.getTime() + deliveryDays * 24 * 60 * 60 * 1000
+  //   );
+
+  //   return {
+  //     ...app,
+  //     project: {
+  //       ...app.project,
+  //       deliveryStartedAt,
+  //       deliveryDueAt,
+  //     },
+  //   };
+  // });
+
+
+
+
   const projectIds = applications.map((app) => app.projectId);
 
 const projectFundings = await prisma.projectFunding.findMany({
@@ -313,11 +391,11 @@ const fundingMap = new Map(
 const applicationsWithDelivery = applications.map((app) => {
   const funding = fundingMap.get(app.projectId);
 
-  if (
-    app.project.deliveryStartedAt ||
-    app.project.deliveryDueAt ||
-    !funding?.paidAt
-  ) {
+  if (!funding?.paidAt) {
+    return app;
+  }
+
+  if (app.project.deliveryStartedAt && app.project.deliveryDueAt) {
     return app;
   }
 
@@ -336,8 +414,6 @@ const applicationsWithDelivery = applications.map((app) => {
     },
   };
 });
-
-
 
 
 
@@ -378,11 +454,20 @@ const applicationsWithDelivery = applications.map((app) => {
 
   // const activeApps = applications.filter(
 
+  // const activeApps = applicationsWithDelivery.filter(
+  //   (a) =>
+  //     a.status === "ACCEPTED" &&
+  //     (a.project.status === "OPEN" || a.project.status === "IN_PROGRESS")
+  // );
+
+
   const activeApps = applicationsWithDelivery.filter(
-    (a) =>
-      a.status === "ACCEPTED" &&
-      (a.project.status === "OPEN" || a.project.status === "IN_PROGRESS")
-  );
+  (a) =>
+    (a.status === "ACCEPTED" || a.status === "COMPLETED") &&
+    (a.project.status === "OPEN" ||
+      a.project.status === "IN_PROGRESS" ||
+      a.project.status === "COMPLETED")
+);
 
   // const pendingApps = applications.filter((a) => a.status === "PENDING");
 
@@ -391,8 +476,8 @@ const applicationsWithDelivery = applications.map((app) => {
   const pendingApps = applicationsWithDelivery.filter(
 
 
-  (a) => a.status === "PENDING" || a.status === "AWAITING_PAYMENT"
-);
+    (a) => a.status === "PENDING" || a.status === "AWAITING_PAYMENT"
+  );
 
   const invitedPendingApps = pendingApps.filter(
     (a) => a.source === "ORGANIZATION"
@@ -458,22 +543,22 @@ const applicationsWithDelivery = applications.map((app) => {
   //   .slice(0, 4);
 
   const recommendedProjects = openProjects
-  .map((project) => {
-    const matchedSkills = project.skills.filter((projectSkill) =>
-      volunteerSkills.some((volunteerSkill) =>
-        skillsMatch(projectSkill, volunteerSkill)
-      )
-    );
+    .map((project) => {
+      const matchedSkills = project.skills.filter((projectSkill) =>
+        volunteerSkills.some((volunteerSkill) =>
+          skillsMatch(projectSkill, volunteerSkill)
+        )
+      );
 
-    return {
-      ...project,
-      matchScore: matchedSkills.length,
-      matchedSkills,
-    };
-  })
-  .filter((project) => project.matchScore > 0)
-  .sort((a, b) => b.matchScore - a.matchScore)
-  .slice(0, 4);
+      return {
+        ...project,
+        matchScore: matchedSkills.length,
+        matchedSkills,
+      };
+    })
+    .filter((project) => project.matchScore > 0)
+    .sort((a, b) => b.matchScore - a.matchScore)
+    .slice(0, 4);
 
   const profileChecklist = [
     {
@@ -544,7 +629,7 @@ const applicationsWithDelivery = applications.map((app) => {
     {
       label: "Apply to your first live project",
       // done: applications.length > 0,
-        done: applicationsWithDelivery.length > 0,
+      done: applicationsWithDelivery.length > 0,
       href: "/projects",
       description: "Start gaining real-world experience on active opportunities.",
       icon: "💼",
@@ -854,7 +939,7 @@ const applicationsWithDelivery = applications.map((app) => {
                   Your active and pending project engagements.
                 </p>
 
-     
+
               </div>
 
               <Link
@@ -888,9 +973,8 @@ const applicationsWithDelivery = applications.map((app) => {
                       className="relative min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 transition hover:shadow-lg sm:p-6"
                     >
                       <div
-                        className={`absolute bottom-5 left-0 top-5 w-1 rounded-full ${
-                          isActive ? "bg-blue-500" : "bg-yellow-500"
-                        }`}
+                        className={`absolute bottom-5 left-0 top-5 w-1 rounded-full ${isActive ? "bg-blue-500" : "bg-yellow-500"
+                          }`}
                       />
 
                       <div className="min-w-0 pl-3">
@@ -904,18 +988,18 @@ const applicationsWithDelivery = applications.map((app) => {
                               {project.organization.name}
                             </p>
 
-                                       <p className="mt-2 text-sm font-semibold text-emerald-700">
-  Project Amount: {formatNairaFromKobo(project.stipendAmount)}
-</p>
+                            <p className="mt-2 text-sm font-semibold text-emerald-700">
+                              Project Amount: {formatNairaFromKobo(project.stipendAmount)}
+                            </p>
 
 
-<span
-  className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getDeliveryStyles(
-    project
-  )}`}
->
-  ⏱ {getDeliveryCountdown(project)}
-</span>
+                            <span
+                              className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getDeliveryStyles(
+                                project
+                              )}`}
+                            >
+                              ⏱ {getDeliveryCountdown(project)}
+                            </span>
 
 
 
@@ -934,16 +1018,16 @@ const applicationsWithDelivery = applications.map((app) => {
                               )} */}
 
                               {!isInvited && app.status === "PENDING" && (
-  <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-    Applied by you
-  </span>
-)}
+                                <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                                  Applied by you
+                                </span>
+                              )}
 
-{app.status === "AWAITING_PAYMENT" && (
-  <span className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-    Selected — payment pending
-  </span>
-)}
+                              {app.status === "AWAITING_PAYMENT" && (
+                                <span className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                                  Selected — payment pending
+                                </span>
+                              )}
                             </div>
 
                             {canRespondToInvite && (
@@ -954,11 +1038,10 @@ const applicationsWithDelivery = applications.map((app) => {
                           </div>
 
                           <span
-                            className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${
-                              isActive
+                            className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${isActive
                                 ? "bg-blue-50 text-blue-700"
                                 : "bg-yellow-50 text-yellow-700"
-                            }`}
+                              }`}
                           >
                             {isActive ? "Active" : "Pending"}
                           </span>
@@ -978,13 +1061,12 @@ const applicationsWithDelivery = applications.map((app) => {
 
                                   {latestSubmission && (
                                     <span
-                                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                        latestSubmission.status === "APPROVED"
+                                      className={`rounded-full px-3 py-1 text-xs font-semibold ${latestSubmission.status === "APPROVED"
                                           ? "bg-emerald-50 text-emerald-700"
                                           : latestSubmission.status === "REJECTED"
                                             ? "bg-rose-50 text-rose-700"
                                             : "bg-amber-50 text-amber-700"
-                                      }`}
+                                        }`}
                                     >
                                       {latestSubmission.status === "APPROVED" &&
                                         "🟢 Approved"}
@@ -1133,11 +1215,10 @@ const applicationsWithDelivery = applications.map((app) => {
                         <span className="text-2xl">{tier.icon}</span>
 
                         <span
-                          className={`rounded-full px-2 py-1 text-[11px] font-bold ${
-                            earned
+                          className={`rounded-full px-2 py-1 text-[11px] font-bold ${earned
                               ? "bg-green-100 text-green-700"
                               : "bg-blue-100 text-blue-700"
-                          }`}
+                            }`}
                         >
                           {earned ? "Earned" : `${Math.round(progress)}%`}
                         </span>
@@ -1154,9 +1235,8 @@ const applicationsWithDelivery = applications.map((app) => {
 
                       <div className="mt-4 h-2 overflow-hidden rounded-full bg-gray-200">
                         <div
-                          className={`h-full rounded-full ${
-                            earned ? "bg-green-500" : "bg-blue-500"
-                          }`}
+                          className={`h-full rounded-full ${earned ? "bg-green-500" : "bg-blue-500"
+                            }`}
                           style={{ width: `${progress}%` }}
                         />
                       </div>
@@ -1229,11 +1309,10 @@ function MobileNavLink({
   return (
     <Link
       href={href}
-      className={`inline-flex items-center gap-2 whitespace-nowrap rounded-2xl border px-3 py-2 text-xs font-medium transition sm:px-4 sm:py-2.5 sm:text-sm ${
-        active
+      className={`inline-flex items-center gap-2 whitespace-nowrap rounded-2xl border px-3 py-2 text-xs font-medium transition sm:px-4 sm:py-2.5 sm:text-sm ${active
           ? "border-blue-200 bg-blue-50 text-blue-700"
           : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-      }`}
+        }`}
     >
       <span>{icon}</span>
       <span>{label}</span>
