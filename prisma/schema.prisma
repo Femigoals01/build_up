@@ -115,6 +115,12 @@ deliveryDueAt     DateTime?
   chat               ProjectChat?
   reviews            Review[]
   submissions        ProjectSubmission[]
+
+
+  deadline48hNotifiedAt DateTime?
+deadline24hNotifiedAt DateTime?
+deadline12hNotifiedAt DateTime?
+deadlineOverdueNotifiedAt DateTime?
 }
 
 /// *
@@ -493,6 +499,7 @@ enum NotificationType {
   SUBMISSION
   MESSAGE
   SYSTEM
+  DEADLINE
 }
 
 enum ProjectStatus {

@@ -257,6 +257,12 @@ function getNavItems(role: UserRole): NavItem[] {
         },
 
         {
+          icon: "💬",
+          label: "Notifications",
+          href: "/dashboard/Notifications",
+        },
+
+        {
           icon: "⚙️",
           label: "Settings",
           href: "/dashboard/settings",
@@ -296,6 +302,11 @@ function getNavItems(role: UserRole): NavItem[] {
           label: "Post a Project",
           href: "/projects/new",
         },
+        {
+          icon: "➕",
+          label: "Notifications",
+          href: "/dashboard/Notifications",
+        },
 
         {
           icon: "⚙️",
@@ -329,6 +340,12 @@ function getNavItems(role: UserRole): NavItem[] {
           icon: "💼",
           label: "Projects",
           href: "/projects",
+        },
+
+        {
+          icon: "💼",
+          label: "Notifications",
+          href: "/dashboard/notifications",
         },
 
         {
@@ -371,6 +388,12 @@ function getNavItems(role: UserRole): NavItem[] {
           icon: "💬",
           label: "Messages",
           href: "/dashboard/messages",
+        },
+
+         {
+          icon: "💬",
+          label: "Notifications",
+          href: "/dashboard/notifications",
         },
 
         {

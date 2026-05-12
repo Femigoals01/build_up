@@ -73,35 +73,37 @@ function formatNairaFromKobo(amount?: number | null) {
 
 
 
-function formatDeliveryDuration(days?: number | null) {
-  const safeDays = days && days > 0 ? days : 7;
 
-  return `${safeDays} ${safeDays === 1 ? "day" : "days"}`;
-}
 
-function getDeliveryCountdown(project: {
-  deliveryDays?: number | null;
-  deliveryDueAt?: Date | string | null;
-}) {
-  if (!project.deliveryDueAt) {
-    return `Delivery: ${formatDeliveryDuration(project.deliveryDays)} after funding`;
-  }
+// function formatDeliveryDuration(days?: number | null) {
+//   const safeDays = days && days > 0 ? days : 7;
 
-  const dueAt = new Date(project.deliveryDueAt).getTime();
-  const difference = dueAt - Date.now();
+//   return `${safeDays} ${safeDays === 1 ? "day" : "days"}`;
+// }
 
-  if (difference <= 0) return "Delivery overdue";
+// function getDeliveryCountdown(project: {
+//   deliveryDays?: number | null;
+//   deliveryDueAt?: Date | string | null;
+// }) {
+//   if (!project.deliveryDueAt) {
+//     return `Delivery: ${formatDeliveryDuration(project.deliveryDays)} after funding`;
+//   }
 
-  const totalMinutes = Math.floor(difference / (1000 * 60));
-  const days = Math.floor(totalMinutes / (60 * 24));
-  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
-  const minutes = totalMinutes % 60;
+//   const dueAt = new Date(project.deliveryDueAt).getTime();
+//   const difference = dueAt - Date.now();
 
-  if (days > 0) return `${days}d ${hours}h ${minutes}m remaining`;
-  if (hours > 0) return `${hours}h ${minutes}m remaining`;
+//   if (difference <= 0) return "Delivery overdue";
 
-  return `${minutes}m remaining`;
-}
+//   const totalMinutes = Math.floor(difference / (1000 * 60));
+//   const days = Math.floor(totalMinutes / (60 * 24));
+//   const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+//   const minutes = totalMinutes % 60;
+
+//   if (days > 0) return `${days}d ${hours}h ${minutes}m remaining`;
+//   if (hours > 0) return `${hours}h ${minutes}m remaining`;
+
+//   return `${minutes}m remaining`;
+// }
 
 // function getDeliveryStyles(project: {
 //   deliveryDueAt?: Date | string | null;
@@ -120,33 +122,70 @@ function getDeliveryCountdown(project: {
 // }
 
 
-function getDeliveryStyles(project: {
+function formatDeliveryDuration(days?: number | null) {
+  const safeDays = days && days > 0 ? days : 7;
+
+  return `${safeDays} ${safeDays === 1 ? "day" : "days"}`;
+}
+
+function getDeliveryCountdown(project: {
+  deliveryDays?: number | null;
+  deliveryStartedAt?: Date | string | null;
   deliveryDueAt?: Date | string | null;
 }) {
-  if (!project.deliveryDueAt) {
-    return "bg-slate-50 text-slate-700";
+  const safeDays = project.deliveryDays && project.deliveryDays > 0 ? project.deliveryDays : 7;
+
+  if (!project.deliveryStartedAt || !project.deliveryDueAt) {
+    // return `Delivery starts after funding • ${safeDays} ${
+    //   safeDays === 1 ? "day" : "days"
+    // } duration`;
+
+    if (!project.deliveryStartedAt || !project.deliveryDueAt) {
+  return `Delivery starts after funding • ${formatDeliveryDuration(
+    project.deliveryDays
+  )} duration`;
+}
   }
 
   const dueAt = new Date(project.deliveryDueAt).getTime();
   const difference = dueAt - Date.now();
 
-  // OVERDUE
+  if (difference <= 0) return "Delivery overdue";
+
+  const totalMinutes = Math.floor(difference / (1000 * 60));
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+
+  if (days > 0) return `${days}d ${hours}h ${minutes}m remaining`;
+  if (hours > 0) return `${hours}h ${minutes}m remaining`;
+
+  return `${minutes}m remaining`;
+}
+
+function getDeliveryStyles(project: {
+  deliveryStartedAt?: Date | string | null;
+  deliveryDueAt?: Date | string | null;
+}) {
+  if (!project.deliveryStartedAt || !project.deliveryDueAt) {
+    return "bg-slate-50 text-slate-700 border border-slate-200";
+  }
+
+  const dueAt = new Date(project.deliveryDueAt).getTime();
+  const difference = dueAt - Date.now();
+
   if (difference <= 0) {
     return "bg-rose-100 text-rose-800 border border-rose-200";
   }
 
-  // LESS THAN 12 HOURS REMAINING
   const twelveHours = 12 * 60 * 60 * 1000;
 
   if (difference <= twelveHours) {
     return "bg-red-100 text-red-700 border border-red-200 animate-pulse";
   }
 
-  // NORMAL ACTIVE COUNTDOWN
   return "bg-indigo-50 text-indigo-700 border border-indigo-100";
 }
-
-
 
 
 
@@ -254,6 +293,54 @@ export default async function VolunteerDashboard() {
     orderBy: { createdAt: "desc" },
   });
 
+
+
+
+  const projectIds = applications.map((app) => app.projectId);
+
+const projectFundings = await prisma.projectFunding.findMany({
+  where: {
+    projectId: {
+      in: projectIds,
+    },
+  },
+});
+
+const fundingMap = new Map(
+  projectFundings.map((funding) => [funding.projectId, funding])
+);
+
+const applicationsWithDelivery = applications.map((app) => {
+  const funding = fundingMap.get(app.projectId);
+
+  if (
+    app.project.deliveryStartedAt ||
+    app.project.deliveryDueAt ||
+    !funding?.paidAt
+  ) {
+    return app;
+  }
+
+  const deliveryDays = app.project.deliveryDays ?? 7;
+  const deliveryStartedAt = funding.paidAt;
+  const deliveryDueAt = new Date(
+    deliveryStartedAt.getTime() + deliveryDays * 24 * 60 * 60 * 1000
+  );
+
+  return {
+    ...app,
+    project: {
+      ...app.project,
+      deliveryStartedAt,
+      deliveryDueAt,
+    },
+  };
+});
+
+
+
+
+
   const badges = await prisma.badge.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: "asc" },
@@ -289,7 +376,9 @@ export default async function VolunteerDashboard() {
 
   const totalReviews = ratingHistory.length;
 
-  const activeApps = applications.filter(
+  // const activeApps = applications.filter(
+
+  const activeApps = applicationsWithDelivery.filter(
     (a) =>
       a.status === "ACCEPTED" &&
       (a.project.status === "OPEN" || a.project.status === "IN_PROGRESS")
@@ -297,7 +386,11 @@ export default async function VolunteerDashboard() {
 
   // const pendingApps = applications.filter((a) => a.status === "PENDING");
 
-  const pendingApps = applications.filter(
+  // const pendingApps = applications.filter(
+
+  const pendingApps = applicationsWithDelivery.filter(
+
+
   (a) => a.status === "PENDING" || a.status === "AWAITING_PAYMENT"
 );
 
@@ -307,7 +400,9 @@ export default async function VolunteerDashboard() {
 
   const latestInvite = invitedPendingApps[0] ?? null;
 
-  const completedApps = applications.filter(
+  // const completedApps = applications.filter(
+
+  const completedApps = applicationsWithDelivery.filter(
     (a) => a.status === "COMPLETED" && a.project.status === "COMPLETED"
   );
 
@@ -448,7 +543,8 @@ export default async function VolunteerDashboard() {
     },
     {
       label: "Apply to your first live project",
-      done: applications.length > 0,
+      // done: applications.length > 0,
+        done: applicationsWithDelivery.length > 0,
       href: "/projects",
       description: "Start gaining real-world experience on active opportunities.",
       icon: "💼",
@@ -811,7 +907,6 @@ export default async function VolunteerDashboard() {
                                        <p className="mt-2 text-sm font-semibold text-emerald-700">
   Project Amount: {formatNairaFromKobo(project.stipendAmount)}
 </p>
-
 
 
 <span
