@@ -164,6 +164,35 @@ function formatDeliveryDuration(days?: number | null) {
 // }
 
 
+// function getDeliveryCountdown(project: {
+//   deliveryDays?: number | null;
+//   deliveryStartedAt?: Date | string | null;
+//   deliveryDueAt?: Date | string | null;
+// }) {
+//   if (!project.deliveryStartedAt || !project.deliveryDueAt) {
+//     return `Delivery starts after funding • ${formatDeliveryDuration(
+//       project.deliveryDays
+//     )} duration`;
+//   }
+
+//   const dueAt = new Date(project.deliveryDueAt).getTime();
+//   const difference = dueAt - Date.now();
+
+//   if (difference <= 0) return "Delivery overdue";
+
+//   const totalMinutes = Math.floor(difference / (1000 * 60));
+//   const days = Math.floor(totalMinutes / (60 * 24));
+//   const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+//   const minutes = totalMinutes % 60;
+
+//   if (days > 0) return `${days}d ${hours}h ${minutes}m remaining`;
+//   if (hours > 0) return `${hours}h ${minutes}m remaining`;
+
+//   return `${minutes}m remaining`;
+// }
+
+
+
 function getDeliveryCountdown(project: {
   deliveryDays?: number | null;
   deliveryStartedAt?: Date | string | null;
@@ -374,7 +403,51 @@ export default async function VolunteerDashboard() {
 
 
 
-  const projectIds = applications.map((app) => app.projectId);
+//   const projectIds = applications.map((app) => app.projectId);
+
+// const projectFundings = await prisma.projectFunding.findMany({
+//   where: {
+//     projectId: {
+//       in: projectIds,
+//     },
+//   },
+// });
+
+// const fundingMap = new Map(
+//   projectFundings.map((funding) => [funding.projectId, funding])
+// );
+
+// const applicationsWithDelivery = applications.map((app) => {
+//   const funding = fundingMap.get(app.projectId);
+
+//   if (!funding?.paidAt) {
+//     return app;
+//   }
+
+//   if (app.project.deliveryStartedAt && app.project.deliveryDueAt) {
+//     return app;
+//   }
+
+//   const deliveryDays = app.project.deliveryDays ?? 7;
+//   const deliveryStartedAt = funding.paidAt;
+//   const deliveryDueAt = new Date(
+//     deliveryStartedAt.getTime() + deliveryDays * 24 * 60 * 60 * 1000
+//   );
+
+//   return {
+//     ...app,
+//     project: {
+//       ...app.project,
+//       deliveryStartedAt,
+//       deliveryDueAt,
+//     },
+//   };
+// });
+
+
+
+
+const projectIds = applications.map((app) => app.projectId);
 
 const projectFundings = await prisma.projectFunding.findMany({
   where: {
@@ -389,26 +462,33 @@ const fundingMap = new Map(
 );
 
 const applicationsWithDelivery = applications.map((app) => {
-  const funding = fundingMap.get(app.projectId);
+  const funding = fundingMap.get(app.projectId) ?? null;
+  const paidAt = funding?.paidAt ? new Date(funding.paidAt) : null;
 
-  if (!funding?.paidAt) {
-    return app;
-  }
-
-  if (app.project.deliveryStartedAt && app.project.deliveryDueAt) {
-    return app;
+  if (!paidAt) {
+    return {
+      ...app,
+      project: {
+        ...app.project,
+        funding,
+      },
+    };
   }
 
   const deliveryDays = app.project.deliveryDays ?? 7;
-  const deliveryStartedAt = funding.paidAt;
-  const deliveryDueAt = new Date(
-    deliveryStartedAt.getTime() + deliveryDays * 24 * 60 * 60 * 1000
-  );
+
+  const deliveryStartedAt =
+    app.project.deliveryStartedAt ?? paidAt;
+
+  const deliveryDueAt =
+    app.project.deliveryDueAt ??
+    new Date(paidAt.getTime() + deliveryDays * 24 * 60 * 60 * 1000);
 
   return {
     ...app,
     project: {
       ...app.project,
+      funding,
       deliveryStartedAt,
       deliveryDueAt,
     },
@@ -461,7 +541,16 @@ const applicationsWithDelivery = applications.map((app) => {
   // );
 
 
-  const activeApps = applicationsWithDelivery.filter(
+//   const activeApps = applicationsWithDelivery.filter(
+//   (a) =>
+//     (a.status === "ACCEPTED" || a.status === "COMPLETED") &&
+//     (a.project.status === "OPEN" ||
+//       a.project.status === "IN_PROGRESS" ||
+//       a.project.status === "COMPLETED")
+// );
+
+
+const activeApps = applicationsWithDelivery.filter(
   (a) =>
     (a.status === "ACCEPTED" || a.status === "COMPLETED") &&
     (a.project.status === "OPEN" ||
