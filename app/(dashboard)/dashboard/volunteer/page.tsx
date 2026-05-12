@@ -193,19 +193,66 @@ function formatDeliveryDuration(days?: number | null) {
 
 
 
+// function getDeliveryCountdown(project: {
+//   deliveryDays?: number | null;
+//   deliveryStartedAt?: Date | string | null;
+//   deliveryDueAt?: Date | string | null;
+// }) {
+//   if (!project.deliveryStartedAt || !project.deliveryDueAt) {
+//     return `Delivery starts after funding • ${formatDeliveryDuration(
+//       project.deliveryDays
+//     )} duration`;
+//   }
+
+//   const dueAt = new Date(project.deliveryDueAt).getTime();
+//   const difference = dueAt - Date.now();
+
+//   if (difference <= 0) return "Delivery overdue";
+
+//   const totalMinutes = Math.floor(difference / (1000 * 60));
+//   const days = Math.floor(totalMinutes / (60 * 24));
+//   const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+//   const minutes = totalMinutes % 60;
+
+//   if (days > 0) return `${days}d ${hours}h ${minutes}m remaining`;
+//   if (hours > 0) return `${hours}h ${minutes}m remaining`;
+
+//   return `${minutes}m remaining`;
+// }
+
+
 function getDeliveryCountdown(project: {
   deliveryDays?: number | null;
   deliveryStartedAt?: Date | string | null;
   deliveryDueAt?: Date | string | null;
+  funding?: {
+    paidAt?: Date | string | null;
+    status?: string | null;
+  } | null;
 }) {
-  if (!project.deliveryStartedAt || !project.deliveryDueAt) {
+  const deliveryDays = project.deliveryDays ?? 7;
+
+  const fallbackStartedAt = project.funding?.paidAt
+    ? new Date(project.funding.paidAt)
+    : null;
+
+  const startedAt = project.deliveryStartedAt
+    ? new Date(project.deliveryStartedAt)
+    : fallbackStartedAt;
+
+  const dueAt = project.deliveryDueAt
+    ? new Date(project.deliveryDueAt)
+    : fallbackStartedAt
+    ? new Date(fallbackStartedAt.getTime() + deliveryDays * 24 * 60 * 60 * 1000)
+    : null;
+
+  if (!startedAt || !dueAt) {
     return `Delivery starts after funding • ${formatDeliveryDuration(
       project.deliveryDays
     )} duration`;
   }
 
-  const dueAt = new Date(project.deliveryDueAt).getTime();
-  const difference = dueAt - Date.now();
+  const difference = dueAt.getTime() - Date.now();
 
   if (difference <= 0) return "Delivery overdue";
 
@@ -226,16 +273,56 @@ function getDeliveryCountdown(project: {
 
 
 
+// function getDeliveryStyles(project: {
+//   deliveryStartedAt?: Date | string | null;
+//   deliveryDueAt?: Date | string | null;
+// }) {
+//   if (!project.deliveryStartedAt || !project.deliveryDueAt) {
+//     return "bg-slate-50 text-slate-700 border border-slate-200";
+//   }
+
+//   const dueAt = new Date(project.deliveryDueAt).getTime();
+//   const difference = dueAt - Date.now();
+
+//   if (difference <= 0) {
+//     return "bg-rose-100 text-rose-800 border border-rose-200";
+//   }
+
+//   const twelveHours = 12 * 60 * 60 * 1000;
+
+//   if (difference <= twelveHours) {
+//     return "bg-red-100 text-red-700 border border-red-200 animate-pulse";
+//   }
+
+//   return "bg-indigo-50 text-indigo-700 border border-indigo-100";
+// }
+
+
+
 function getDeliveryStyles(project: {
   deliveryStartedAt?: Date | string | null;
   deliveryDueAt?: Date | string | null;
+  funding?: {
+    paidAt?: Date | string | null;
+  } | null;
 }) {
-  if (!project.deliveryStartedAt || !project.deliveryDueAt) {
+  const fallbackStartedAt = project.funding?.paidAt
+    ? new Date(project.funding.paidAt)
+    : null;
+
+  const deliveryDays = "deliveryDays" in project ? (project as any).deliveryDays ?? 7 : 7;
+
+  const dueAt = project.deliveryDueAt
+    ? new Date(project.deliveryDueAt)
+    : fallbackStartedAt
+    ? new Date(fallbackStartedAt.getTime() + deliveryDays * 24 * 60 * 60 * 1000)
+    : null;
+
+  if (!dueAt) {
     return "bg-slate-50 text-slate-700 border border-slate-200";
   }
 
-  const dueAt = new Date(project.deliveryDueAt).getTime();
-  const difference = dueAt - Date.now();
+  const difference = dueAt.getTime() - Date.now();
 
   if (difference <= 0) {
     return "bg-rose-100 text-rose-800 border border-rose-200";
