@@ -1092,7 +1092,7 @@ const applicationsWithDelivery = applications.map((app) => {
                                     href={`/dashboard/messages/start?userId=${project.organizationId}`}
                                     className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                                   >
-                                    💬 Message Organization
+                                    💬 Message Organizations
                                   </Link>
 
                                   <Link
