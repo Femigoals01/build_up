@@ -1131,7 +1131,7 @@ const activeApps = applicationsWithDelivery.filter(
                 </h2>
 
                 <p className="mt-1 text-sm text-gray-500">
-                  Projects matched to your current skill set.
+                  Projects matched to your current skill set
                 </p>
               </div>
 
