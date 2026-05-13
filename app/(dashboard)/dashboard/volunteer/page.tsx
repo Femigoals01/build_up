@@ -938,7 +938,7 @@ const activeApps = applicationsWithDelivery.filter(
               </p>
 
               <h1 className="truncate text-base font-bold text-slate-900">
-                Welcome, {session.user.name}
+                Welcomedd, {session.user.name}
               </h1>
             </div>
 
