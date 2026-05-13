@@ -938,7 +938,7 @@ const activeApps = applicationsWithDelivery.filter(
               </p>
 
               <h1 className="truncate text-base font-bold text-slate-900">
-                Welcomedd, {session.user.name}
+                Welcome, {session.user.name}
               </h1>
             </div>
 
@@ -1014,7 +1014,7 @@ const activeApps = applicationsWithDelivery.filter(
                 </div>
 
                 <h1 className="mt-4 break-words text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">
-                  Welcome back, {session.user.name}
+                  Welcome backed, {session.user.name}
                 </h1>
 
                 <p className="mt-3 max-w-xl text-sm leading-relaxed text-blue-100 sm:text-base">
