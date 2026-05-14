@@ -1,4 +1,5 @@
 
+
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
@@ -53,14 +54,15 @@ export async function POST(req: Request) {
       );
     }
 
-    await prisma.user.update({
-      where: { email },
-      data: {
-        emailVerified: true,
-        emailOtp: null,
-        emailOtpExpiry: null,
-      },
-    });
+    // await prisma.user.update({
+    //   where: { email },
+    //   data: {
+    //     emailVerified: true,
+    //     emailOtp: null,
+    //     emailOtpExpiry: null,
+    //   },
+    // });
+    
 
     return NextResponse.json(
       { message: "Email verified successfully" },

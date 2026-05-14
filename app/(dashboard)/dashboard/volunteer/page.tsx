@@ -727,12 +727,19 @@ const applicationsWithDelivery = applications.map((app) => {
 // );
 
 
+// const activeApps = applicationsWithDelivery.filter(
+//   (a) =>
+//     (a.status === "ACCEPTED" || a.status === "COMPLETED") &&
+//     (a.project.status === "OPEN" ||
+//       a.project.status === "IN_PROGRESS" ||
+//       a.project.status === "COMPLETED")
+// );
+
+
 const activeApps = applicationsWithDelivery.filter(
   (a) =>
-    (a.status === "ACCEPTED" || a.status === "COMPLETED") &&
-    (a.project.status === "OPEN" ||
-      a.project.status === "IN_PROGRESS" ||
-      a.project.status === "COMPLETED")
+    a.status === "ACCEPTED" &&
+    (a.project.status === "OPEN" || a.project.status === "IN_PROGRESS")
 );
 
   // const pendingApps = applications.filter((a) => a.status === "PENDING");
@@ -1225,10 +1232,14 @@ const activeApps = applicationsWithDelivery.filter(
                 {dashboardProjects.map((app) => {
                   const project = app.project;
 
+                  // const isActive =
+                  //   app.status === "ACCEPTED" &&
+                  //   (project.status === "OPEN" ||
+                  //     project.status === "IN_PROGRESS");
+
                   const isActive =
-                    app.status === "ACCEPTED" &&
-                    (project.status === "OPEN" ||
-                      project.status === "IN_PROGRESS");
+  app.status === "ACCEPTED" &&
+  (project.status === "OPEN" || project.status === "IN_PROGRESS");
 
                   const isInvited = app.source === "ORGANIZATION";
                   const canRespondToInvite = isInvited && app.status === "PENDING";
