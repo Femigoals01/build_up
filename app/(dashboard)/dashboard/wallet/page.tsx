@@ -4,8 +4,10 @@
 
 
 
+
 // import { getServerSession } from "next-auth";
 // import { redirect } from "next/navigation";
+// import Link from "next/link";
 // import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 // import { prisma } from "@/lib/prisma";
 // import WithdrawForm from "./WithdrawForm";
@@ -25,6 +27,10 @@
 //   }
 
 //   const wallet = await prisma.wallet.findUnique({
+//     where: { userId: session.user.id },
+//   });
+
+//   const bankAccount = await prisma.bankAccount.findUnique({
 //     where: { userId: session.user.id },
 //   });
 
@@ -78,19 +84,32 @@
 //     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40 px-4 py-6 md:px-8 lg:px-10">
 //       <div className="mx-auto max-w-6xl space-y-8">
 //         <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-//           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
-//             BuildUp Wallet
-//           </p>
+//           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+//             <div>
+//               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+//                 BuildUp Wallet
+//               </p>
 
-//           <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-//             Your earnings wallet
-//           </h1>
+//               <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+//                 Your earnings wallet
+//               </h1>
 
-//           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-//             Earnings are added here after an organization approves your work and
-//             releases payment. You can request withdrawal once your available
-//             balance reaches ₦20,000.
-//           </p>
+//               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+//                 Earnings are added here after an organization approves your work
+//                 and releases payment. You can request withdrawal once your
+//                 available balance reaches ₦20,000.
+//               </p>
+//             </div>
+
+//             <Link
+//               href="/dashboard/wallet/bank"
+//               className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+//             >
+//               {bankAccount?.paystackRecipientCode
+//                 ? "Manage Bank Account"
+//                 : "Set Up Bank Account"}
+//             </Link>
+//           </div>
 //         </section>
 
 //         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
@@ -109,9 +128,33 @@
 
 //         <section className="grid gap-6 lg:grid-cols-[1fr_380px]">
 //           <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-//             <h2 className="text-xl font-bold text-slate-900">
-//               Wallet Transactions
-//             </h2>
+//             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+//               <div>
+//                 <h2 className="text-xl font-bold text-slate-900">
+//                   Wallet Transactions
+//                 </h2>
+
+//                 <p className="mt-1 text-sm text-slate-500">
+//                   Track earnings, withdrawals, and project payments.
+//                 </p>
+//               </div>
+
+//               {bankAccount ? (
+//                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+//                   <p className="font-semibold">Bank account connected</p>
+//                   <p className="mt-1 text-xs">
+//                     {bankAccount.bankName} • {bankAccount.accountNumber}
+//                   </p>
+//                 </div>
+//               ) : (
+//                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+//                   <p className="font-semibold">Bank account required</p>
+//                   <p className="mt-1 text-xs">
+//                     Add your bank account before payout processing.
+//                   </p>
+//                 </div>
+//               )}
+//             </div>
 
 //             <div className="mt-5 space-y-3">
 //               {transactions.length === 0 ? (
@@ -162,6 +205,8 @@
 // }
 
 
+
+
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -176,12 +221,25 @@ function formatNaira(amount: number) {
   return `₦${(amount / 100).toLocaleString("en-NG")}`;
 }
 
+function formatNairaPlain(amount: number) {
+  return `₦${amount.toLocaleString("en-NG")}`;
+}
+
 export default async function WalletPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session || session.user.role !== "VOLUNTEER" || !session.user.id) {
+  if (!session?.user?.id) {
     redirect("/login");
   }
+
+  const currentUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      role: true,
+      referralBalance: true,
+      referralCount: true,
+    },
+  });
 
   const wallet = await prisma.wallet.findUnique({
     where: { userId: session.user.id },
@@ -197,27 +255,33 @@ export default async function WalletPage() {
     take: 20,
   });
 
-  const acceptedApplications = await prisma.application.findMany({
-    where: {
-      volunteerId: session.user.id,
-      status: "ACCEPTED",
-      project: {
-        status: {
-          in: ["OPEN", "IN_PROGRESS"],
-        },
-      },
-    },
-    include: {
-      project: true,
-    },
-  });
+  const isVolunteer = currentUser?.role === "VOLUNTEER";
 
-  const activeProjectFundings = await prisma.projectFunding.findMany({
-    where: {
-      volunteerId: session.user.id,
-      status: "HELD",
-    },
-  });
+  const acceptedApplications = isVolunteer
+    ? await prisma.application.findMany({
+        where: {
+          volunteerId: session.user.id,
+          status: "ACCEPTED",
+          project: {
+            status: {
+              in: ["OPEN", "IN_PROGRESS"],
+            },
+          },
+        },
+        include: {
+          project: true,
+        },
+      })
+    : [];
+
+  const activeProjectFundings = isVolunteer
+    ? await prisma.projectFunding.findMany({
+        where: {
+          volunteerId: session.user.id,
+          status: "HELD",
+        },
+      })
+    : [];
 
   const activeProjectFundFromAssignedProjects = acceptedApplications.reduce(
     (sum, application) => {
@@ -233,6 +297,9 @@ export default async function WalletPage() {
   const balance = wallet?.balance ?? 0;
   const pending = wallet?.pending ?? 0;
   const withdrawn = wallet?.withdrawn ?? 0;
+
+  const referralBalance = currentUser?.referralBalance ?? 0;
+  const referralCount = currentUser?.referralCount ?? 0;
 
   const activeProjectFund = activeProjectFundFromAssignedProjects;
   const canceledProjectFund = 0;
@@ -252,34 +319,66 @@ export default async function WalletPage() {
               </h1>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                Earnings are added here after an organization approves your work
-                and releases payment. You can request withdrawal once your
-                available balance reaches ₦20,000.
+                Track project earnings, referral rewards, withdrawals, and
+                payout activity from one place.
               </p>
             </div>
 
-            <Link
-              href="/dashboard/wallet/bank"
-              className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
-            >
-              {bankAccount?.paystackRecipientCode
-                ? "Manage Bank Account"
-                : "Set Up Bank Account"}
-            </Link>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/dashboard/referrals"
+                className="inline-flex h-11 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 px-5 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100"
+              >
+                View Referrals
+              </Link>
+
+              <Link
+                href="/dashboard/wallet/bank"
+                className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+              >
+                {bankAccount?.paystackRecipientCode
+                  ? "Manage Bank Account"
+                  : "Set Up Bank Account"}
+              </Link>
+            </div>
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <WalletStat title="Available Balance" value={formatNaira(balance)} />
           <WalletStat title="Pending Withdrawal" value={formatNaira(pending)} />
           <WalletStat title="Total Withdrawn" value={formatNaira(withdrawn)} />
           <WalletStat
-            title="Active Project Fund"
-            value={formatNaira(activeProjectFund)}
+            title="Referral Earnings"
+            value={formatNairaPlain(referralBalance)}
           />
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <WalletStat title="Verified Referrals" value={String(referralCount)} />
+
+          {isVolunteer ? (
+            <>
+              <WalletStat
+                title="Active Project Fund"
+                value={formatNaira(activeProjectFund)}
+              />
+
+              <WalletStat
+                title="Canceled Project Fund"
+                value={formatNaira(canceledProjectFund)}
+              />
+            </>
+          ) : (
+            <>
+              <WalletStat title="Active Project Fund" value="N/A" />
+              <WalletStat title="Canceled Project Fund" value="N/A" />
+            </>
+          )}
+
           <WalletStat
-            title="Canceled Project Fund"
-            value={formatNaira(canceledProjectFund)}
+            title="Bank Status"
+            value={bankAccount ? "Connected" : "Not Set"}
           />
         </section>
 
@@ -292,7 +391,8 @@ export default async function WalletPage() {
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  Track earnings, withdrawals, and project payments.
+                  Track project earnings, referral rewards, withdrawals, and
+                  payout records.
                 </p>
               </div>
 
@@ -319,26 +419,38 @@ export default async function WalletPage() {
                   No wallet transactions yet.
                 </div>
               ) : (
-                transactions.map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 md:flex-row md:items-center md:justify-between"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">
-                        {transaction.description || transaction.type}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {transaction.type} • {transaction.status} •{" "}
-                        {new Date(transaction.createdAt).toLocaleString()}
+                transactions.map((transaction) => {
+                  const isCredit =
+                    transaction.type === "PROJECT_EARNING" ||
+                    transaction.type === "REFUND";
+
+                  return (
+                    <div
+                      key={transaction.id}
+                      className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 md:flex-row md:items-center md:justify-between"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">
+                          {transaction.description || transaction.type}
+                        </p>
+
+                        <p className="mt-1 text-xs text-slate-500">
+                          {transaction.type} • {transaction.status} •{" "}
+                          {new Date(transaction.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+
+                      <p
+                        className={`text-sm font-bold ${
+                          isCredit ? "text-emerald-700" : "text-slate-900"
+                        }`}
+                      >
+                        {isCredit ? "+" : ""}
+                        {formatNaira(transaction.amount)}
                       </p>
                     </div>
-
-                    <p className="text-sm font-bold text-slate-900">
-                      {formatNaira(transaction.amount)}
-                    </p>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
@@ -356,7 +468,9 @@ function WalletStat({ title, value }: { title: string; value: string }) {
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
         {title}
       </p>
-      <p className="mt-3 text-3xl font-bold text-slate-900">{value}</p>
+      <p className="mt-3 break-words text-3xl font-bold text-slate-900">
+        {value}
+      </p>
     </div>
   );
 }

@@ -55,7 +55,11 @@ export async function POST(req: Request) {
     const skills = body.skills?.trim() || undefined;
     const experience = body.experience?.trim() || undefined;
     const bio = body.bio?.trim() || undefined;
-    const referredByCode = body.ref?.trim() || undefined;
+    // const referredByCode = body.ref?.trim() || undefined;
+    const referredByCode =
+  body.referralCode?.trim().toUpperCase() ||
+  body.ref?.trim().toUpperCase() ||
+  undefined;
 
     if (
       !name ||
@@ -160,12 +164,38 @@ while (await prisma.user.findFirst({ where: { referralCode } })) {
         emailOtpExpiry: expiry,
         emailVerified: false,
         referralCode,
-        referredByCode: referredByCode?.toUpperCase() || null,
+        // referredByCode: referredByCode?.toUpperCase() || null,
+        referredByCode: referredByCode || null,
       },
     });
 
 
-    if (referrer) {
+//     if (referrer) {
+//   await prisma.referral.create({
+//     data: {
+//       referrerId: referrer.id,
+//       referredId: newUser.id,
+//       code: referredByCode!,
+//     },
+//   });
+
+//   await prisma.user.update({
+//     where: {
+//       id: referrer.id,
+//     },
+//     data: {
+//       referralCount: {
+//         increment: 1,
+//       },
+//     },
+//   });
+// }
+
+
+if (referrer) {
+  const REFERRAL_REWARD = 5000; // ₦50 if using kobo
+
+  // CREATE REFERRAL RECORD
   await prisma.referral.create({
     data: {
       referrerId: referrer.id,
@@ -174,6 +204,7 @@ while (await prisma.user.findFirst({ where: { referralCode } })) {
     },
   });
 
+  // UPDATE REFERRER STATS
   await prisma.user.update({
     where: {
       id: referrer.id,
@@ -182,6 +213,49 @@ while (await prisma.user.findFirst({ where: { referralCode } })) {
       referralCount: {
         increment: 1,
       },
+
+      referralBalance: {
+        increment: REFERRAL_REWARD / 100,
+      },
+    },
+  });
+
+  // FIND OR CREATE WALLET
+  let wallet = await prisma.wallet.findUnique({
+    where: {
+      userId: referrer.id,
+    },
+  });
+
+  if (!wallet) {
+    wallet = await prisma.wallet.create({
+      data: {
+        userId: referrer.id,
+        balance: 0,
+      },
+    });
+  }
+
+  // CREDIT WALLET
+  await prisma.wallet.update({
+    where: {
+      userId: referrer.id,
+    },
+    data: {
+      balance: {
+        increment: REFERRAL_REWARD,
+      },
+    },
+  });
+
+  // CREATE WALLET TRANSACTION
+  await prisma.walletTransaction.create({
+    data: {
+      userId: referrer.id,
+      type: "PROJECT_EARNING",
+      status: "COMPLETED",
+      amount: REFERRAL_REWARD,
+      description: `Referral reward for inviting ${newUser.name}`,
     },
   });
 }

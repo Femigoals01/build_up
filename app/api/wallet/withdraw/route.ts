@@ -1,5 +1,7 @@
 
 
+
+
 // import { NextResponse } from "next/server";
 // import { getServerSession } from "next-auth";
 // import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -27,11 +29,22 @@
 //       );
 //     }
 
-//     const wallet = await prisma.wallet.findUnique({
-//       where: {
-//         userId: session.user.id,
-//       },
-//     });
+//     const [wallet, bankAccount] = await Promise.all([
+//       prisma.wallet.findUnique({
+//         where: { userId: session.user.id },
+//       }),
+
+//       prisma.bankAccount.findUnique({
+//         where: { userId: session.user.id },
+//       }),
+//     ]);
+
+//     if (!bankAccount?.paystackRecipientCode) {
+//       return NextResponse.json(
+//         { error: "Please set up your bank account before requesting withdrawal." },
+//         { status: 400 }
+//       );
+//     }
 
 //     if (!wallet || wallet.balance < amountKobo) {
 //       return NextResponse.json(
@@ -42,26 +55,33 @@
 
 //     await prisma.$transaction(async (tx) => {
 //       await tx.wallet.update({
-//         where: {
-//           userId: session.user.id,
-//         },
+//         where: { userId: session.user.id },
 //         data: {
-//           balance: {
-//             decrement: amountKobo,
-//           },
-//           pending: {
-//             increment: amountKobo,
-//           },
+//           balance: { decrement: amountKobo },
+//           pending: { increment: amountKobo },
 //         },
 //       });
 
-//       await tx.walletTransaction.create({
+//       const transaction = await tx.walletTransaction.create({
 //         data: {
 //           userId: session.user.id,
 //           type: "WITHDRAWAL",
 //           amount: amountKobo,
 //           status: "PENDING",
 //           description: "Withdrawal request submitted",
+//         },
+//       });
+
+//       await tx.withdrawalRequest.create({
+//         data: {
+//           userId: session.user.id,
+//           amount: amountKobo,
+//           status: "PENDING",
+//           bankName: bankAccount.bankName,
+//           accountNumber: bankAccount.accountNumber,
+//           accountName: bankAccount.accountName,
+//           paystackRecipientCode: bankAccount.paystackRecipientCode,
+//           walletTransactionId: transaction.id,
 //         },
 //       });
 
@@ -93,6 +113,8 @@
 // }
 
 
+
+
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -104,7 +126,7 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== "VOLUNTEER" || !session.user.id) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -132,7 +154,10 @@ export async function POST(req: Request) {
 
     if (!bankAccount?.paystackRecipientCode) {
       return NextResponse.json(
-        { error: "Please set up your bank account before requesting withdrawal." },
+        {
+          error:
+            "Please set up your bank account before requesting withdrawal.",
+        },
         { status: 400 }
       );
     }
