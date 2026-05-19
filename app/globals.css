@@ -118,3 +118,19 @@ body {
     transform: translateY(-50%) scaleY(1);
   }
 }
+
+
+
+
+
+
+
+/* 🔥 Hide horizontal scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

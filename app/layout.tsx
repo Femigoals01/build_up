@@ -6,6 +6,7 @@
 
 
 import type { Metadata, Viewport } from "next";
+// @ts-ignore: global CSS import without dedicated type declarations
 import "./globals.css";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import { Analytics } from "@vercel/analytics/next";
@@ -18,7 +19,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.buildup.com"),
+  metadataBase: new URL("https://www.builduponline.com"),
 
   title: {
     default: "BuildUp | Build real experience. Not just certificates.",
@@ -65,7 +66,7 @@ export const metadata: Metadata = {
 
   openGraph: {
     type: "website",
-    url: "https://www.buildup.com",
+    url: "https://www.builduponline.com",
     siteName: "BuildUp",
     title: "BuildUp | Build real experience. Not just certificates.",
     description:
