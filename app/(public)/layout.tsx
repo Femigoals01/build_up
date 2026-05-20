@@ -15,7 +15,7 @@ export default function PublicLayout({
     <>
       <Navbar />
  {/* 🔥 DISCOVERY BAR */}
-        <DiscoveryBar />
+        {/* <DiscoveryBar /> */}
       <div className="min-h-screen">{children}</div>
 
       <Footer />

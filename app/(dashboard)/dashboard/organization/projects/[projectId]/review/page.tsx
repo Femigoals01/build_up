@@ -1,5 +1,6 @@
 
 
+
 // import { getServerSession } from "next-auth";
 // import { redirect } from "next/navigation";
 // import Link from "next/link";
@@ -8,20 +9,19 @@
 // import ProjectReviewForm from "./ProjectReviewForm";
 
 // export const dynamic = "force-dynamic";
-// export const revalidate = 0;
 
-// export default async function OrganizationProjectReviewPage({
+// export default async function ReviewPage({
 //   params,
 // }: {
-//   params: Promise<{ id: string }>;
+//   params: Promise<{ projectId: string }>;
 // }) {
 //   const session = await getServerSession(authOptions);
 
-//   if (!session || session.user.role !== "ORGANIZATION" || !session.user.id) {
+//   if (!session || session.user.role !== "ORGANIZATION") {
 //     redirect("/login");
 //   }
 
-//   const { id: projectId } = await params;
+//   const { projectId } = await params;
 
 //   const project = await prisma.project.findFirst({
 //     where: {
@@ -34,25 +34,12 @@
 //           status: { in: ["ACCEPTED", "COMPLETED"] },
 //         },
 //         include: {
-//           volunteer: {
-//             select: {
-//               id: true,
-//               name: true,
-//               email: true,
-//               profileImageUrl: true,
-//               headline: true,
-//               username: true,
-//             },
-//           },
+//           volunteer: true,
 //         },
-//         take: 1,
 //       },
 //       reviews: {
 //         where: {
 //           organizationId: session.user.id,
-//         },
-//         select: {
-//           id: true,
 //         },
 //       },
 //     },
@@ -62,135 +49,70 @@
 //     redirect("/dashboard/organization");
 //   }
 
-//   const assignedVolunteer = project.applications[0]?.volunteer ?? null;
-//   const reviewAlreadySubmitted = project.reviews.length > 0;
+//   const volunteer = project.applications[0]?.volunteer;
+//   const alreadyReviewed = project.reviews.length > 0;
 
 //   return (
-//     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40 px-4 py-8 md:px-8 lg:px-10">
-//       <div className="mx-auto max-w-4xl space-y-8">
+//     <main className="min-h-screen px-6 py-10 bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
+//       <div className="max-w-4xl mx-auto space-y-8">
+
 //         <Link
 //           href="/dashboard/organization"
-//           className="inline-flex text-sm font-semibold text-blue-600 hover:underline"
+//           className="text-sm text-blue-600 font-semibold hover:underline"
 //         >
-//           ← Back to Organization Dashboard
+//           ← Back to Dashboard
 //         </Link>
 
-//         <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
-//           <div className="relative bg-gradient-to-br from-slate-950 via-blue-950 to-blue-700 px-6 py-8 text-white md:px-8">
-//             <div className="absolute right-[-3rem] top-[-3rem] h-40 w-40 rounded-full bg-white/10 blur-3xl" />
-//             <div className="relative">
-//               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-100">
-//                 Project Review
-//               </p>
-//               <h1 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">
-//                 Review completed work
-//               </h1>
-//               <p className="mt-3 max-w-2xl text-sm leading-7 text-blue-100 md:text-base">
-//                 Rate the volunteer’s contribution and leave feedback that will
-//                 strengthen their BuildUp profile and portfolio proof.
-//               </p>
+//         {/* HEADER */}
+//         <div className="rounded-3xl bg-gradient-to-br from-slate-900 to-blue-700 text-white p-8 shadow-lg">
+//           <h1 className="text-3xl font-bold">Review Project</h1>
+//           <p className="mt-2 text-sm text-blue-100">
+//             Rate the volunteer and leave feedback.
+//           </p>
+//         </div>
+
+//         {/* PROJECT */}
+//         <div className="bg-white border rounded-2xl p-6">
+//           <h2 className="text-xl font-semibold">{project.title}</h2>
+//           <p className="text-sm text-gray-600 mt-2">
+//             {project.description}
+//           </p>
+//         </div>
+
+//         {/* VOLUNTEER */}
+//         {volunteer && (
+//           <div className="bg-white border rounded-2xl p-6 flex items-center gap-4">
+//             <div className="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center font-bold text-blue-600">
+//               {volunteer.name?.charAt(0)}
+//             </div>
+//             <div>
+//               <p className="font-semibold">{volunteer.name}</p>
+//               <p className="text-sm text-gray-500">{volunteer.email}</p>
 //             </div>
 //           </div>
+//         )}
 
-//           <div className="grid gap-6 p-6 md:p-8 lg:grid-cols-[0.9fr_1.1fr]">
-//             <aside className="space-y-5">
-//               <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-//                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-//                   Project
-//                 </p>
-//                 <h2 className="mt-3 text-xl font-bold text-slate-900">
-//                   {project.title}
-//                 </h2>
-//                 <p className="mt-2 text-sm leading-6 text-slate-600">
-//                   {project.description ||
-//                     "This project has been marked as completed."}
-//                 </p>
+//         {/* FORM */}
+//         <div className="bg-white border rounded-2xl p-6">
+//           {alreadyReviewed ? (
+//             <div className="text-center text-green-600 font-semibold">
+//               Review already submitted
+//             </div>
+//           ) : volunteer ? (
+//             <ProjectReviewForm projectId={projectId} />
+//           ) : (
+//             <p className="text-gray-500">
+//               No volunteer found for this project.
+//             </p>
+//           )}
+//         </div>
 
-//                 <span className="mt-4 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-//                   {project.status.replaceAll("_", " ")}
-//                 </span>
-//               </div>
-
-//               <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
-//                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-//                   Volunteer
-//                 </p>
-
-//                 {assignedVolunteer ? (
-//                   <div className="mt-4 flex items-start gap-4">
-//                     {assignedVolunteer.profileImageUrl ? (
-//                       <img
-//                         src={assignedVolunteer.profileImageUrl}
-//                         alt={assignedVolunteer.name ?? "Volunteer"}
-//                         className="h-14 w-14 rounded-2xl object-cover"
-//                       />
-//                     ) : (
-//                       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-lg font-bold text-blue-700">
-//                         {(assignedVolunteer.name ?? "U")
-//                           .charAt(0)
-//                           .toUpperCase()}
-//                       </div>
-//                     )}
-
-//                     <div className="min-w-0">
-//                       <p className="font-semibold text-slate-900">
-//                         {assignedVolunteer.name ?? "Unnamed volunteer"}
-//                       </p>
-//                       <p className="mt-1 truncate text-sm text-slate-500">
-//                         {assignedVolunteer.email}
-//                       </p>
-//                       {assignedVolunteer.headline ? (
-//                         <p className="mt-2 text-sm text-slate-600">
-//                           {assignedVolunteer.headline}
-//                         </p>
-//                       ) : null}
-//                     </div>
-//                   </div>
-//                 ) : (
-//                   <p className="mt-3 text-sm text-slate-500">
-//                     No completed volunteer was found for this project.
-//                   </p>
-//                 )}
-//               </div>
-//             </aside>
-
-//             <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-//               {reviewAlreadySubmitted ? (
-//                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-6 text-center">
-//                   <h3 className="text-lg font-bold text-emerald-800">
-//                     Review already submitted
-//                   </h3>
-//                   <p className="mt-2 text-sm leading-6 text-emerald-700">
-//                     You have already reviewed this completed project.
-//                   </p>
-
-//                   <Link
-//                     href="/dashboard/organization"
-//                     className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white transition hover:bg-emerald-700"
-//                   >
-//                     Back to Dashboard
-//                   </Link>
-//                 </div>
-//               ) : assignedVolunteer ? (
-//                 <ProjectReviewForm projectId={project.id} />
-//               ) : (
-//                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-6 text-center">
-//                   <h3 className="text-lg font-bold text-amber-800">
-//                     No volunteer to review
-//                   </h3>
-//                   <p className="mt-2 text-sm leading-6 text-amber-700">
-//                     This project needs an accepted or completed volunteer before
-//                     a review can be submitted.
-//                   </p>
-//                 </div>
-//               )}
-//             </section>
-//           </div>
-//         </section>
 //       </div>
 //     </main>
 //   );
 // }
+
+
 
 
 
@@ -202,6 +124,17 @@ import { prisma } from "@/lib/prisma";
 import ProjectReviewForm from "./ProjectReviewForm";
 
 export const dynamic = "force-dynamic";
+
+function getInitials(name?: string | null) {
+  if (!name) return "BU";
+
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 export default async function ReviewPage({
   params,
@@ -224,12 +157,15 @@ export default async function ReviewPage({
     include: {
       applications: {
         where: {
-          status: { in: ["ACCEPTED", "COMPLETED"] },
+          status: {
+            in: ["ACCEPTED", "COMPLETED"],
+          },
         },
         include: {
           volunteer: true,
         },
       },
+
       reviews: {
         where: {
           organizationId: session.user.id,
@@ -243,63 +179,188 @@ export default async function ReviewPage({
   }
 
   const volunteer = project.applications[0]?.volunteer;
+
   const alreadyReviewed = project.reviews.length > 0;
 
   return (
-    <main className="min-h-screen px-6 py-10 bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
-      <div className="max-w-4xl mx-auto space-y-8">
-
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40 px-4 py-6 md:px-8 lg:px-10">
+      <div className="mx-auto max-w-5xl space-y-6">
         <Link
           href="/dashboard/organization"
-          className="text-sm text-blue-600 font-semibold hover:underline"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 transition hover:text-blue-700"
         >
-          ← Back to Dashboard
+          <span>←</span>
+          Back to Dashboard
         </Link>
 
-        {/* HEADER */}
-        <div className="rounded-3xl bg-gradient-to-br from-slate-900 to-blue-700 text-white p-8 shadow-lg">
-          <h1 className="text-3xl font-bold">Review Project</h1>
-          <p className="mt-2 text-sm text-blue-100">
-            Rate the volunteer and leave feedback.
-          </p>
-        </div>
+        {/* HERO */}
+        <section className="relative overflow-hidden rounded-[36px] border border-white/40 bg-gradient-to-br from-slate-950 via-blue-950 to-blue-700 px-6 py-8 text-white shadow-[0_25px_80px_rgba(15,23,42,0.28)] md:px-8 md:py-10">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_28%)]" />
 
-        {/* PROJECT */}
-        <div className="bg-white border rounded-2xl p-6">
-          <h2 className="text-xl font-semibold">{project.title}</h2>
-          <p className="text-sm text-gray-600 mt-2">
-            {project.description}
-          </p>
-        </div>
+          <div className="absolute -right-20 top-0 h-60 w-60 rounded-full bg-blue-400/10 blur-3xl" />
+          <div className="absolute bottom-0 left-0 h-52 w-52 rounded-full bg-indigo-500/10 blur-3xl" />
 
-        {/* VOLUNTEER */}
-        {volunteer && (
-          <div className="bg-white border rounded-2xl p-6 flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center font-bold text-blue-600">
-              {volunteer.name?.charAt(0)}
+          <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-blue-100 backdrop-blur">
+                ⭐ Review & Evaluation
+              </div>
+
+              <h1 className="mt-5 text-4xl font-black tracking-tight md:text-5xl">
+                Evaluate project contribution
+              </h1>
+
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-blue-100 md:text-base">
+                Your review strengthens trust, validates real-world experience,
+                and contributes to the volunteer’s public proof-of-work
+                reputation across BuildUp.
+              </p>
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-100">
+                    Project Status
+                  </p>
+
+                  <p className="mt-1 text-sm font-bold text-white">
+                    Successfully Delivered
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-100">
+                    Proof System
+                  </p>
+
+                  <p className="mt-1 text-sm font-bold text-white">
+                    Portfolio Verification Enabled
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="font-semibold">{volunteer.name}</p>
-              <p className="text-sm text-gray-500">{volunteer.email}</p>
+
+            <div className="w-full max-w-sm rounded-[30px] border border-white/10 bg-white/10 p-5 backdrop-blur-xl">
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white/15 text-xl font-black text-white">
+                  {getInitials(volunteer?.name)}
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-100">
+                    Volunteer
+                  </p>
+
+                  <h3 className="mt-1 text-xl font-bold text-white">
+                    {volunteer?.name || "No Volunteer"}
+                  </h3>
+
+                  <p className="mt-1 text-sm text-blue-100">
+                    {volunteer?.email || "No email"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="rounded-2xl bg-white/10 px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-100">
+                    Reputation
+                  </p>
+
+                  <p className="mt-2 text-2xl font-black text-white">
+                    Trust
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-white/10 px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-100">
+                    Outcome
+                  </p>
+
+                  <p className="mt-2 text-2xl font-black text-white">
+                    Verified
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        )}
+        </section>
+
+        {/* PROJECT */}
+        <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm md:p-7">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
+                Project Summary
+              </p>
+
+              <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-900">
+                {project.title}
+              </h2>
+
+              <p className="mt-4 text-sm leading-7 text-slate-600 md:text-base">
+                {project.description}
+              </p>
+            </div>
+
+            <div className="grid w-full max-w-sm grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                  Applicants
+                </p>
+
+                <p className="mt-2 text-3xl font-black text-slate-900">
+                  {project.applications.length}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                  Reviews
+                </p>
+
+                <p className="mt-2 text-3xl font-black text-slate-900">
+                  {project.reviews.length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* FORM */}
-        <div className="bg-white border rounded-2xl p-6">
+        <section className="space-y-6">
           {alreadyReviewed ? (
-            <div className="text-center text-green-600 font-semibold">
-              Review already submitted
+            <div className="rounded-[32px] border border-emerald-200 bg-emerald-50 px-6 py-8 text-center shadow-sm">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-4xl">
+                🎉
+              </div>
+
+              <h3 className="mt-5 text-3xl font-black text-emerald-900">
+                Review already submitted
+              </h3>
+
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-emerald-700">
+                Thank you for contributing to BuildUp’s trust and proof-of-work
+                ecosystem. Your review has already been recorded successfully.
+              </p>
             </div>
           ) : volunteer ? (
             <ProjectReviewForm projectId={projectId} />
           ) : (
-            <p className="text-gray-500">
-              No volunteer found for this project.
-            </p>
-          )}
-        </div>
+            <div className="rounded-[32px] border border-slate-200 bg-white px-6 py-10 text-center shadow-sm">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-4xl">
+                📭
+              </div>
 
+              <h3 className="mt-5 text-2xl font-black text-slate-900">
+                No volunteer found
+              </h3>
+
+              <p className="mt-3 text-sm leading-7 text-slate-500">
+                There is currently no volunteer assigned to this project review.
+              </p>
+            </div>
+          )}
+        </section>
       </div>
     </main>
   );

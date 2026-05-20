@@ -3,10 +3,14 @@
 
 // "use client";
 
-// import { useRouter } from "next/navigation";
 // import { useState } from "react";
+// import { useRouter } from "next/navigation";
 
-// export default function ProjectReviewForm({ projectId }: { projectId: string }) {
+// export default function ProjectReviewForm({
+//   projectId,
+// }: {
+//   projectId: string;
+// }) {
 //   const router = useRouter();
 
 //   const [rating, setRating] = useState(5);
@@ -14,17 +18,12 @@
 //   const [loading, setLoading] = useState(false);
 //   const [error, setError] = useState("");
 
-//   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+//   async function handleSubmit(e: React.FormEvent) {
 //     e.preventDefault();
 //     setError("");
 
-//     if (!rating || rating < 1 || rating > 5) {
-//       setError("Please select a rating between 1 and 5.");
-//       return;
-//     }
-
 //     if (!comment.trim()) {
-//       setError("Please write a short review comment.");
+//       setError("Please enter a comment");
 //       return;
 //     }
 
@@ -38,22 +37,22 @@
 //         },
 //         body: JSON.stringify({
 //           rating,
-//           comment: comment.trim(),
+//           comment,
 //         }),
 //       });
 
-//       const data = await res.json().catch(() => null);
+//       const data = await res.json();
 
 //       if (!res.ok) {
-//         setError(data?.error || "Failed to submit review.");
+//         setError(data.error || "Failed to submit review");
 //         return;
 //       }
 
 //       router.push("/dashboard/organization");
 //       router.refresh();
-//     } catch (error) {
-//       console.error("Submit review error:", error);
-//       setError("Something went wrong while submitting the review.");
+//     } catch (err) {
+//       console.error(err);
+//       setError("Something went wrong");
 //     } finally {
 //       setLoading(false);
 //     }
@@ -61,86 +60,56 @@
 
 //   return (
 //     <form onSubmit={handleSubmit} className="space-y-6">
-//       <div>
-//         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-//           Leave Review
-//         </p>
-//         <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
-//           Rate the volunteer
-//         </h2>
-//         <p className="mt-2 text-sm leading-6 text-slate-500">
-//           Your review helps the volunteer build credible proof of work on
-//           BuildUp.
-//         </p>
-//       </div>
 
-//       {error ? (
-//         <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-//           {error}
-//         </div>
-//       ) : null}
+//       {error && (
+//         <div className="text-red-600 text-sm">{error}</div>
+//       )}
 
+//       {/* RATING */}
 //       <div>
-//         <label className="mb-3 block text-sm font-semibold text-slate-800">
+//         <label className="block text-sm font-semibold mb-2">
 //           Rating
 //         </label>
 
-//         <div className="flex flex-wrap gap-2">
-//           {[1, 2, 3, 4, 5].map((value) => (
+//         <div className="flex gap-2">
+//           {[1, 2, 3, 4, 5].map((r) => (
 //             <button
-//               key={value}
+//               key={r}
 //               type="button"
-//               onClick={() => setRating(value)}
-//               className={`inline-flex h-12 min-w-12 items-center justify-center rounded-2xl border px-4 text-lg font-bold transition ${
-//                 rating === value
-//                   ? "border-amber-300 bg-amber-50 text-amber-600 shadow-sm"
-//                   : "border-slate-200 bg-white text-slate-400 hover:bg-slate-50"
+//               onClick={() => setRating(r)}
+//               className={`px-3 py-2 rounded-lg border ${
+//                 rating === r
+//                   ? "bg-yellow-100 border-yellow-400"
+//                   : "bg-white border-gray-200"
 //               }`}
 //             >
-//               ★
+//               ⭐
 //             </button>
 //           ))}
 //         </div>
-
-//         <p className="mt-2 text-sm font-medium text-slate-500">
-//           {rating} out of 5 selected
-//         </p>
 //       </div>
 
+//       {/* COMMENT */}
 //       <div>
-//         <label
-//           htmlFor="comment"
-//           className="mb-2 block text-sm font-semibold text-slate-800"
-//         >
-//           Review Comment
+//         <label className="block text-sm font-semibold mb-2">
+//           Comment
 //         </label>
-
 //         <textarea
-//           id="comment"
 //           value={comment}
 //           onChange={(e) => setComment(e.target.value)}
-//           placeholder="Write honest feedback about the volunteer’s contribution, communication, quality of work, and reliability..."
-//           className="min-h-[160px] w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-7 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+//           className="w-full border rounded-xl p-3"
+//           rows={5}
+//           placeholder="Write feedback..."
 //         />
 //       </div>
 
-//       <div className="flex flex-col gap-3 sm:flex-row">
-//         <button
-//           type="submit"
-//           disabled={loading}
-//           className="inline-flex h-12 flex-1 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-//         >
-//           {loading ? "Submitting Review..." : "Submit Review"}
-//         </button>
-
-//         <button
-//           type="button"
-//           onClick={() => router.push("/dashboard/organization")}
-//           className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-//         >
-//           Cancel
-//         </button>
-//       </div>
+//       <button
+//         type="submit"
+//         disabled={loading}
+//         className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold"
+//       >
+//         {loading ? "Submitting..." : "Submit Review"}
+//       </button>
 //     </form>
 //   );
 // }
@@ -148,10 +117,19 @@
 
 
 
+
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+
+const ratingLabels: Record<number, string> = {
+  1: "Needs Improvement",
+  2: "Fair Effort",
+  3: "Good Delivery",
+  4: "Excellent Work",
+  5: "Outstanding",
+};
 
 export default function ProjectReviewForm({
   projectId,
@@ -161,21 +139,47 @@ export default function ProjectReviewForm({
   const router = useRouter();
 
   const [rating, setRating] = useState(5);
+  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [comment, setComment] = useState("");
+  const [wouldRecommend, setWouldRecommend] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const activeRating = hoveredRating ?? rating;
+
+  const characterCount = comment.trim().length;
+
+  const feedbackQuality = useMemo(() => {
+    if (characterCount >= 180) return "Strong feedback";
+    if (characterCount >= 80) return "Good detail";
+    if (characterCount >= 1) return "Add a little more detail";
+    return "No feedback yet";
+  }, [characterCount]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
     if (!comment.trim()) {
-      setError("Please enter a comment");
+      setError("Please enter a short review before submitting.");
+      return;
+    }
+
+    if (comment.trim().length < 20) {
+      setError("Please add a little more detail to make the review useful.");
       return;
     }
 
     try {
       setLoading(true);
+
+      const finalComment = `${comment.trim()}
+
+Recommendation: ${
+        wouldRecommend
+          ? "Yes, we would recommend this volunteer."
+          : "Not yet, more improvement is needed."
+      }`;
 
       const res = await fetch(`/api/projects/${projectId}/review`, {
         method: "POST",
@@ -184,14 +188,14 @@ export default function ProjectReviewForm({
         },
         body: JSON.stringify({
           rating,
-          comment,
+          comment: finalComment,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Failed to submit review");
+        setError(data.error || "Failed to submit review.");
         return;
       }
 
@@ -199,7 +203,7 @@ export default function ProjectReviewForm({
       router.refresh();
     } catch (err) {
       console.error(err);
-      setError("Something went wrong");
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -207,56 +211,198 @@ export default function ProjectReviewForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {error ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+          {error}
+        </div>
+      ) : null}
 
-      {error && (
-        <div className="text-red-600 text-sm">{error}</div>
-      )}
+      <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
+              Performance Rating
+            </p>
 
-      {/* RATING */}
-      <div>
-        <label className="block text-sm font-semibold mb-2">
-          Rating
-        </label>
+            <h3 className="mt-2 text-2xl font-bold text-slate-900">
+              How did the volunteer perform?
+            </h3>
 
-        <div className="flex gap-2">
-          {[1, 2, 3, 4, 5].map((r) => (
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Your rating helps strengthen trust, visibility, and the
+              volunteer’s proof-of-work profile.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-center">
+            <p className="text-3xl font-black text-blue-700">{rating}.0</p>
+            <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-blue-500">
+              {ratingLabels[rating]}
+            </p>
+          </div>
+        </div>
+
+        <div
+          className="mt-6 flex flex-wrap items-center gap-3"
+          onMouseLeave={() => setHoveredRating(null)}
+        >
+          {[1, 2, 3, 4, 5].map((value) => {
+            const active = value <= activeRating;
+
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setRating(value)}
+                onMouseEnter={() => setHoveredRating(value)}
+                className={`group flex h-14 w-14 items-center justify-center rounded-2xl border text-2xl transition-all duration-200 ${
+                  active
+                    ? "border-amber-300 bg-amber-50 text-amber-500 shadow-sm"
+                    : "border-slate-200 bg-slate-50 text-slate-300 hover:border-amber-200 hover:bg-amber-50 hover:text-amber-400"
+                }`}
+                aria-label={`Rate ${value} star${value > 1 ? "s" : ""}`}
+              >
+                <span className="transition group-hover:scale-110">★</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <p className="mt-4 text-sm font-semibold text-slate-700">
+          {ratingLabels[activeRating]}
+        </p>
+      </section>
+
+      <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
+              Written Feedback
+            </p>
+
+            <h3 className="mt-2 text-2xl font-bold text-slate-900">
+              Leave a helpful review
+            </h3>
+
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+              Mention delivery quality, communication, creativity, reliability,
+              and whether the work met expectations.
+            </p>
+          </div>
+
+          <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-500">
+            {feedbackQuality}
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          {[
+            "What impressed you most?",
+            "How was communication?",
+            "Would you work with them again?",
+          ].map((prompt) => (
             <button
-              key={r}
+              key={prompt}
               type="button"
-              onClick={() => setRating(r)}
-              className={`px-3 py-2 rounded-lg border ${
-                rating === r
-                  ? "bg-yellow-100 border-yellow-400"
-                  : "bg-white border-gray-200"
-              }`}
+              onClick={() =>
+                setComment((prev) =>
+                  prev
+                    ? `${prev}\n${prompt} `
+                    : `${prompt} `
+                )
+              }
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-xs font-semibold leading-5 text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
             >
-              ⭐
+              {prompt}
             </button>
           ))}
         </div>
-      </div>
 
-      {/* COMMENT */}
-      <div>
-        <label className="block text-sm font-semibold mb-2">
-          Comment
-        </label>
-        <textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          className="w-full border rounded-xl p-3"
-          rows={5}
-          placeholder="Write feedback..."
-        />
-      </div>
+        <div className="mt-5">
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            className="min-h-[170px] w-full resize-none rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-7 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+            placeholder="Example: The volunteer communicated clearly, followed the project requirements, delivered on time, and showed strong attention to detail..."
+          />
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold"
-      >
-        {loading ? "Submitting..." : "Submit Review"}
-      </button>
+          <div className="mt-2 flex items-center justify-between gap-3 text-xs text-slate-500">
+            <span>{characterCount} characters</span>
+            <span>Minimum recommended: 20 characters</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
+          Recommendation
+        </p>
+
+        <h3 className="mt-2 text-2xl font-bold text-slate-900">
+          Would you recommend this volunteer?
+        </h3>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setWouldRecommend(true)}
+            className={`rounded-2xl border px-5 py-4 text-left transition ${
+              wouldRecommend
+                ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-white"
+            }`}
+          >
+            <p className="font-bold">Yes, recommended</p>
+            <p className="mt-1 text-sm leading-6">
+              This volunteer delivered value and should be trusted for future
+              opportunities.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setWouldRecommend(false)}
+            className={`rounded-2xl border px-5 py-4 text-left transition ${
+              !wouldRecommend
+                ? "border-amber-300 bg-amber-50 text-amber-800"
+                : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-white"
+            }`}
+          >
+            <p className="font-bold">Needs more growth</p>
+            <p className="mt-1 text-sm leading-6">
+              The volunteer made an effort, but more improvement is needed
+              before strong recommendation.
+            </p>
+          </button>
+        </div>
+      </section>
+
+      <div className="rounded-[28px] border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-5 md:p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
+              Proof-of-work impact
+            </p>
+
+            <h3 className="mt-2 text-xl font-bold text-slate-900">
+              Your review becomes part of this volunteer’s credibility.
+            </h3>
+
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+              Strong reviews help volunteers build verified proof, increase
+              trust, and grow into stronger contributors.
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="inline-flex h-13 min-h-13 items-center justify-center rounded-2xl bg-blue-600 px-7 py-4 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? "Submitting Review..." : "Submit Review"}
+          </button>
+        </div>
+      </div>
     </form>
   );
 }
