@@ -1,12 +1,12 @@
 
 
 
-
 // import { NextResponse } from "next/server";
 // import { getServerSession } from "next-auth";
 // import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 // import { prisma } from "@/lib/prisma";
 // import { pusherServer } from "@/lib/pusher-server";
+// import { sendEmail } from "@/lib/sendEmail";
 
 // type RespondBody = {
 //   submissionId?: string;
@@ -97,6 +97,10 @@
 //       );
 //     }
 
+//     // =========================
+//     // REVISION REQUEST
+//     // =========================
+
 //     if (action === "reject") {
 //       await prisma.$transaction(async (tx) => {
 //         await tx.projectSubmission.update({
@@ -148,8 +152,70 @@
 
 //       await notifyUser(submission.volunteerId);
 
+//       // EMAIL
+//       await sendEmail({
+//         to: submission.volunteer.email,
+//         subject: "Revision requested on your BuildUp submission",
+//         text: `Revision was requested for "${submission.project.title}". Feedback: ${feedback}`,
+//         html: `
+//           <div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px;">
+//             <h2 style="color:#dc2626;">
+//               🔁 Revision Requested
+//             </h2>
+
+//             <p style="line-height:1.7;color:#475569;">
+//               Hi ${submission.volunteer.name || "there"},
+//             </p>
+
+//             <p style="line-height:1.7;color:#475569;">
+//               Your submission for:
+//             </p>
+
+//             <div style="background:#f8fafc;padding:16px;border-radius:16px;margin:16px 0;">
+//               <strong style="font-size:18px;color:#0f172a;">
+//                 ${submission.project.title}
+//               </strong>
+//             </div>
+
+//             <p style="line-height:1.7;color:#475569;">
+//               requires some updates before approval.
+//             </p>
+
+//             <div style="background:#fef2f2;padding:16px;border-radius:16px;margin-top:20px;">
+//               <strong style="display:block;margin-bottom:8px;color:#991b1b;">
+//                 Feedback:
+//               </strong>
+
+//               <p style="margin:0;color:#7f1d1d;">
+//                 ${feedback}
+//               </p>
+//             </div>
+
+//             <a
+//               href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/volunteer/projects/${submission.projectId}"
+//               style="
+//                 display:inline-block;
+//                 margin-top:24px;
+//                 background:#2563eb;
+//                 color:white;
+//                 padding:12px 18px;
+//                 border-radius:12px;
+//                 text-decoration:none;
+//                 font-weight:bold;
+//               "
+//             >
+//               View Project
+//             </a>
+//           </div>
+//         `,
+//       });
+
 //       return NextResponse.json({ success: true });
 //     }
+
+//     // =========================
+//     // APPROVAL FLOW
+//     // =========================
 
 //     const funding = await prisma.projectFunding.findUnique({
 //       where: {
@@ -168,7 +234,7 @@
 //       return NextResponse.json(
 //         {
 //           error:
-//             "Project funds must be HELD before approval can release payment. Please fund the project first.",
+//             "Project funds must be HELD before approval can release payment.",
 //         },
 //         { status: 400 }
 //       );
@@ -302,6 +368,60 @@
 //     });
 
 //     await notifyUser(submission.volunteerId);
+
+//     // EMAIL
+//     await sendEmail({
+//       to: submission.volunteer.email,
+//       subject: "Your BuildUp submission was approved",
+//       text: `Your submission for "${submission.project.title}" was approved and your earning has been released.`,
+//       html: `
+//         <div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px;">
+//           <h2 style="color:#16a34a;">
+//             🎉 Submission Approved
+//           </h2>
+
+//           <p style="line-height:1.7;color:#475569;">
+//             Hi ${submission.volunteer.name || "there"},
+//           </p>
+
+//           <p style="line-height:1.7;color:#475569;">
+//             Your work for:
+//           </p>
+
+//           <div style="background:#ecfdf5;padding:16px;border-radius:16px;margin:16px 0;">
+//             <strong style="font-size:18px;color:#166534;">
+//               ${submission.project.title}
+//             </strong>
+//           </div>
+
+//           <p style="line-height:1.7;color:#475569;">
+//             has been approved successfully.
+//           </p>
+
+//           <div style="background:#eff6ff;padding:16px;border-radius:16px;margin-top:20px;">
+//             <strong style="color:#1d4ed8;">
+//               💰 Your earning has been released to your wallet.
+//             </strong>
+//           </div>
+
+//           <a
+//             href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/wallet"
+//             style="
+//               display:inline-block;
+//               margin-top:24px;
+//               background:#2563eb;
+//               color:white;
+//               padding:12px 18px;
+//               border-radius:12px;
+//               text-decoration:none;
+//               font-weight:bold;
+//             "
+//           >
+//             Open Wallet
+//           </a>
+//         </div>
+//       `,
+//     });
 
 //     return NextResponse.json({
 //       success: true,
@@ -471,7 +591,6 @@ export async function POST(req: Request) {
 
       await notifyUser(submission.volunteerId);
 
-      // EMAIL
       await sendEmail({
         to: submission.volunteer.email,
         subject: "Revision requested on your BuildUp submission",
@@ -583,20 +702,6 @@ export async function POST(req: Request) {
         },
       });
 
-      await tx.project.update({
-        where: { id: submission.projectId },
-        data: {
-          status: "COMPLETED",
-        },
-      });
-
-      await tx.application.update({
-        where: { id: acceptedApplication.id },
-        data: {
-          status: "COMPLETED",
-        },
-      });
-
       await tx.projectFunding.update({
         where: { id: funding.id },
         data: {
@@ -671,7 +776,7 @@ export async function POST(req: Request) {
             chatId: submission.project.chat.id,
             senderId: session.user.id,
             content:
-              "✅ Work approved. Project completed and payment released to the volunteer wallet.",
+              "✅ Work approved. Payment released. Proceeding to completion verification.",
           },
         });
 
@@ -679,7 +784,7 @@ export async function POST(req: Request) {
           data: {
             chatId: submission.project.chat.id,
             content:
-              "🎉 Project completed. The volunteer has been notified and the earning has been released to wallet.",
+              "🎉 Submission approved. The organization can now finalize project completion and review.",
             isSystem: true,
           },
         });
@@ -688,7 +793,6 @@ export async function POST(req: Request) {
 
     await notifyUser(submission.volunteerId);
 
-    // EMAIL
     await sendEmail({
       to: submission.volunteer.email,
       subject: "Your BuildUp submission was approved",
@@ -744,7 +848,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      redirectTo: `/dashboard/organization/projects/${submission.projectId}/review?volunteerId=${submission.volunteerId}`,
+      redirectTo: `/dashboard/organization/projects/${submission.projectId}/complete`,
     });
   } catch (error) {
     console.error("SUBMISSION RESPOND ERROR:", error);

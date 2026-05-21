@@ -1,12 +1,16 @@
 
 
 
+
 // import Image from "next/image";
 // import { getServerSession } from "next-auth";
 // import { redirect } from "next/navigation";
 // import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 // import { prisma } from "@/lib/prisma";
 // import EligibleProjectsList from "@/components/portfolio/EligibleProjectsList";
+
+// export const dynamic = "force-dynamic";
+// export const revalidate = 0;
 
 // async function addToPortfolio(formData: FormData) {
 //   "use server";
@@ -680,95 +684,9 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
-import EligibleProjectsList from "@/components/portfolio/EligibleProjectsList";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-async function addToPortfolio(formData: FormData) {
-  "use server";
-
-  const session = await getServerSession(authOptions);
-
-  if (!session || session.user.role !== "VOLUNTEER" || !session.user.id) {
-    redirect("/login");
-  }
-
-  const projectId = String(formData.get("projectId") || "");
-  if (!projectId) return;
-
-  const application = await prisma.application.findFirst({
-    where: {
-      volunteerId: session.user.id,
-      projectId,
-      status: "COMPLETED",
-      project: {
-        status: "COMPLETED",
-      },
-    },
-  });
-
-  if (!application) return;
-
-  const existingPortfolioItem = await prisma.portfolioItem.findFirst({
-    where: {
-      volunteerId: session.user.id,
-      projectId,
-    },
-  });
-
-  if (existingPortfolioItem) return;
-
-  const review = await prisma.review.findFirst({
-    where: {
-      volunteerId: session.user.id,
-      projectId,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  const lastItem = await prisma.portfolioItem.findFirst({
-    where: { volunteerId: session.user.id },
-    orderBy: { order: "desc" },
-  });
-
-  await prisma.portfolioItem.create({
-    data: {
-      volunteerId: session.user.id,
-      projectId,
-      reviewId: review?.id,
-      order: (lastItem?.order ?? -1) + 1,
-    },
-  });
-}
-
-async function removeFromPortfolio(formData: FormData) {
-  "use server";
-
-  const session = await getServerSession(authOptions);
-
-  if (!session || session.user.role !== "VOLUNTEER" || !session.user.id) {
-    redirect("/login");
-  }
-
-  const portfolioItemId = String(formData.get("portfolioItemId") || "");
-  if (!portfolioItemId) return;
-
-  const item = await prisma.portfolioItem.findFirst({
-    where: {
-      id: portfolioItemId,
-      volunteerId: session.user.id,
-    },
-  });
-
-  if (!item) return;
-
-  await prisma.portfolioItem.delete({
-    where: { id: portfolioItemId },
-  });
-}
 
 async function movePortfolioItem(formData: FormData) {
   "use server";
@@ -847,12 +765,52 @@ async function savePortfolioDetails(formData: FormData) {
 
 function getInitials(name?: string | null, username?: string | null) {
   const source = name || username || "U";
+
   return source
     .split(" ")
     .map((part) => part[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
+}
+
+function getProofConfidence({
+  hasReview,
+  hasProofUrl,
+  hasImageUrl,
+  hasContribution,
+}: {
+  hasReview: boolean;
+  hasProofUrl: boolean;
+  hasImageUrl: boolean;
+  hasContribution: boolean;
+}) {
+  const score = [hasReview, hasProofUrl, hasImageUrl, hasContribution].filter(
+    Boolean
+  ).length;
+
+  if (score >= 4) return { label: "Very High", value: 100 };
+  if (score === 3) return { label: "High", value: 80 };
+  if (score === 2) return { label: "Good", value: 60 };
+  if (score === 1) return { label: "Basic", value: 35 };
+
+  return { label: "Growing", value: 20 };
+}
+
+function getOutcomeLabel(rating?: number | null) {
+  if (!rating) return "Awaiting Review";
+  if (rating >= 5) return "Excellent Delivery";
+  if (rating >= 4) return "Strong Delivery";
+  if (rating >= 3) return "Good Delivery";
+  return "Needs Growth";
+}
+
+function getOutcomeClass(rating?: number | null) {
+  if (!rating) return "border-slate-200 bg-slate-50 text-slate-600";
+  if (rating >= 5) return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (rating >= 4) return "border-blue-200 bg-blue-50 text-blue-700";
+  if (rating >= 3) return "border-amber-200 bg-amber-50 text-amber-700";
+  return "border-rose-200 bg-rose-50 text-rose-700";
 }
 
 export default async function PortfolioPage() {
@@ -893,16 +851,7 @@ export default async function PortfolioPage() {
     include: {
       project: true,
     },
-    orderBy: {
-      createdAt: "desc",
-    },
   });
-
-  const portfolioProjectIds = new Set(portfolio.map((item) => item.projectId));
-
-  const eligibleProjects = completedApplications.filter(
-    (app) => !portfolioProjectIds.has(app.projectId)
-  );
 
   const completedCount = completedApplications.length;
   const portfolioCount = portfolio.length;
@@ -914,14 +863,16 @@ export default async function PortfolioPage() {
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-10 lg:px-10">
         <section className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/80 shadow-[0_10px_40px_rgba(15,23,42,0.06)] backdrop-blur">
           <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(37,99,235,0.08),rgba(15,23,42,0.02),rgba(16,185,129,0.05))]" />
+
           <div className="relative grid gap-8 px-6 py-8 md:px-8 md:py-10 lg:grid-cols-[1.35fr_0.65fr] lg:px-10">
             <div className="space-y-6">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold tracking-wide text-blue-700">
-                  BUILDUP PORTFOLIO
+                  VERIFIED CAREER LEDGER
                 </span>
-                <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
-                  Volunteer Profile Showcase
+
+                <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                  Auto-added completed projects
                 </span>
               </div>
 
@@ -944,55 +895,23 @@ export default async function PortfolioPage() {
 
                 <div className="space-y-2">
                   <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
-                    My Portfolio
+                    My Verified Portfolio
                   </h1>
+
                   <p className="max-w-2xl text-sm leading-6 text-slate-600 md:text-base">
-                    Build a strong public profile that shows your completed work,
-                    project contributions, proof links, and earned credibility on
-                    BuildUp.
+                    Every completed BuildUp project is automatically added here.
+                    You can enrich each project with contribution notes,
+                    screenshots, and proof links, but completed work cannot be
+                    hidden or removed from your verified history.
                   </p>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-3">
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-                    Rating
-                  </p>
-                  <p className="mt-1 text-lg font-bold text-slate-900">
-                    ⭐ {averageRating}
-                    <span className="ml-2 text-sm font-medium text-slate-500">
-                      / 5
-                    </span>
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Reviews
-                  </p>
-                  <p className="mt-1 text-lg font-bold text-slate-900">
-                    {user.ratingCount}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Portfolio Items
-                  </p>
-                  <p className="mt-1 text-lg font-bold text-slate-900">
-                    {portfolioCount}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Completed Projects
-                  </p>
-                  <p className="mt-1 text-lg font-bold text-slate-900">
-                    {completedCount}
-                  </p>
-                </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <StatCard title="Rating" value={`⭐ ${averageRating}`} note="/ 5" />
+                <StatCard title="Reviews" value={String(user.ratingCount)} />
+                <StatCard title="Portfolio Items" value={String(portfolioCount)} />
+                <StatCard title="Completed Projects" value={String(completedCount)} />
               </div>
 
               {badgesCount > 0 && (
@@ -1002,10 +921,12 @@ export default async function PortfolioPage() {
                       <h2 className="text-sm font-semibold text-slate-900">
                         Earned Badges
                       </h2>
+
                       <p className="mt-1 text-sm text-slate-500">
                         Your credibility markers visible on your public profile.
                       </p>
                     </div>
+
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
                       {badgesCount} total
                     </span>
@@ -1019,10 +940,12 @@ export default async function PortfolioPage() {
                         className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 transition hover:border-blue-300 hover:bg-blue-50"
                       >
                         <span className="text-2xl">{badge.icon}</span>
+
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-slate-900">
                             {badge.name}
                           </p>
+
                           <p className="truncate text-xs text-slate-500">
                             {badge.description}
                           </p>
@@ -1037,14 +960,17 @@ export default async function PortfolioPage() {
             <div className="flex flex-col justify-between gap-5 rounded-[1.75rem] border border-slate-200 bg-slate-950 p-6 text-white shadow-[0_20px_50px_rgba(15,23,42,0.18)]">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-200/80">
-                  Public Presence
+                  Accountability System
                 </p>
+
                 <h2 className="mt-3 text-2xl font-bold leading-tight">
-                  Share a portfolio that feels credible, polished, and hiring-ready
+                  Your portfolio reflects real responsibility, not only selected
+                  wins.
                 </h2>
+
                 <p className="mt-3 text-sm leading-6 text-slate-300">
-                  Make your profile stronger with real project outcomes, concise
-                  contribution summaries, screenshots, and proof links.
+                  BuildUp automatically records completed project outcomes to
+                  create a credible history of growth, delivery, and trust.
                 </p>
               </div>
 
@@ -1059,9 +985,9 @@ export default async function PortfolioPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                     <p className="text-xs uppercase tracking-wide text-slate-400">
-                      Ready to add
+                      Verified Items
                     </p>
-                    <p className="mt-1 text-2xl font-bold">{eligibleProjects.length}</p>
+                    <p className="mt-1 text-2xl font-bold">{portfolioCount}</p>
                   </div>
 
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -1076,61 +1002,39 @@ export default async function PortfolioPage() {
           </div>
         </section>
 
-        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.05)] md:p-8">
-          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">
-                Portfolio Builder
-              </p>
-              <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
-                Add Completed Work
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                Select from your completed BuildUp projects and turn them into
-                polished portfolio entries that strengthen your public profile.
-              </p>
-            </div>
+        <section className="mt-8 rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 shadow-sm md:p-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">
+            Portfolio Policy
+          </p>
 
-            <div className="inline-flex w-fit items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
-              {eligibleProjects.length} available to add
-            </div>
-          </div>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
+            Completed projects are added automatically
+          </h2>
 
-          {eligibleProjects.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
-              <div className="mx-auto max-w-md">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white">
-                  ✓
-                </div>
-                <h3 className="mt-4 text-lg font-semibold text-slate-900">
-                  No completed projects available right now
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Once you complete more projects that are marked completed on the
-                  platform, they will appear here for quick addition.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <EligibleProjectsList
-              projects={eligibleProjects}
-              addToPortfolio={addToPortfolio}
-            />
-          )}
+          <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-600">
+            To protect trust and accountability, volunteers cannot manually add
+            or remove completed BuildUp projects from this portfolio. This helps
+            organizations evaluate real growth, consistency, performance, and
+            proof of work. You can still improve each project entry by adding
+            your contribution statement, screenshot, live demo, repository, or
+            proof link.
+          </p>
         </section>
 
         <section className="mt-8">
           <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                Public Showcase
+                Verified Project History
               </p>
+
               <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
                 Portfolio Items
               </h2>
+
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                These entries are the projects currently visible in your portfolio
-                arrangement.
+                These entries are automatically created from completed BuildUp
+                projects and represent your verified project journey.
               </p>
             </div>
 
@@ -1145,206 +1049,266 @@ export default async function PortfolioPage() {
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-2xl text-white shadow-lg shadow-blue-600/20">
                   ✨
                 </div>
+
                 <h3 className="mt-5 text-xl font-semibold text-slate-900">
-                  You haven’t added any portfolio items yet
+                  No verified portfolio items yet
                 </h3>
+
                 <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Start by adding your completed work above, then enrich each entry
-                  with your contribution summary, screenshot, and proof link.
+                  Once an organization marks your project as completed and
+                  submits a review, it will automatically appear here.
                 </p>
               </div>
             </div>
           ) : (
             <div className="space-y-6">
-              {portfolio.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_10px_35px_rgba(15,23,42,0.05)]"
-                >
-                  <div className="grid gap-0 xl:grid-cols-[1.15fr_0.85fr]">
-                    <div className="p-6 md:p-8">
-                      <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div>
-                          <div className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700">
-                            Position {index + 1}
+              {portfolio.map((item, index) => {
+                const proofConfidence = getProofConfidence({
+                  hasReview: Boolean(item.review),
+                  hasProofUrl: Boolean(item.proofUrl),
+                  hasImageUrl: Boolean(item.imageUrl),
+                  hasContribution: Boolean(item.contribution),
+                });
+
+                return (
+                  <div
+                    key={item.id}
+                    className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_10px_35px_rgba(15,23,42,0.05)]"
+                  >
+                    <div className="grid gap-0 xl:grid-cols-[1.15fr_0.85fr]">
+                      <div className="p-6 md:p-8">
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                          <div>
+                            <div className="flex flex-wrap gap-2">
+                              <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700">
+                                Verified #{index + 1}
+                              </span>
+
+                              <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                                ✅ Auto-added
+                              </span>
+
+                              <span
+                                className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${getOutcomeClass(
+                                  item.review?.rating
+                                )}`}
+                              >
+                                {getOutcomeLabel(item.review?.rating)}
+                              </span>
+                            </div>
+
+                            <h3 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
+                              {item.project.title}
+                            </h3>
                           </div>
-                          <h3 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
-                            {item.project.title}
-                          </h3>
+
+                          {item.review ? (
+                            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-right">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                                Latest Review
+                              </p>
+
+                              <p className="mt-1 text-lg font-bold text-slate-900">
+                                ⭐ {item.review.rating} / 5
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-right">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Review
+                              </p>
+
+                              <p className="mt-1 text-sm font-medium text-slate-600">
+                                Awaiting review
+                              </p>
+                            </div>
+                          )}
                         </div>
 
-                        {item.review ? (
-                          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-right">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-                              Latest Review
-                            </p>
-                            <p className="mt-1 text-lg font-bold text-slate-900">
-                              ⭐ {item.review.rating} / 5
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-right">
+                        {item.review?.comment && (
+                          <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                              Review
+                              Organization Feedback
                             </p>
-                            <p className="mt-1 text-sm font-medium text-slate-600">
-                              No review yet
+
+                            <p className="mt-2 text-sm italic leading-6 text-slate-600">
+                              “{item.review.comment}”
                             </p>
                           </div>
                         )}
+
+                        <form
+                          action={savePortfolioDetails}
+                          className="mt-6 space-y-5"
+                        >
+                          <input
+                            type="hidden"
+                            name="portfolioItemId"
+                            value={item.id}
+                          />
+
+                          <div>
+                            <label className="mb-2 block text-sm font-semibold text-slate-800">
+                              My contribution
+                            </label>
+
+                            <textarea
+                              name="contribution"
+                              defaultValue={item.contribution ?? ""}
+                              rows={5}
+                              placeholder="Explain exactly what you worked on in this project."
+                              className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                            />
+                          </div>
+
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <div>
+                              <label className="mb-2 block text-sm font-semibold text-slate-800">
+                                Project image / screenshot URL
+                              </label>
+
+                              <input
+                                type="url"
+                                name="imageUrl"
+                                defaultValue={item.imageUrl ?? ""}
+                                placeholder="https://..."
+                                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="mb-2 block text-sm font-semibold text-slate-800">
+                                Proof link / live demo / repo
+                              </label>
+
+                              <input
+                                type="url"
+                                name="proofUrl"
+                                defaultValue={item.proofUrl ?? ""}
+                                placeholder="https://..."
+                                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                              />
+                            </div>
+                          </div>
+
+                          <button
+                            type="submit"
+                            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                          >
+                            Save Proof Details
+                          </button>
+                        </form>
                       </div>
 
-                      {item.review?.comment && (
-                        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            Feedback
-                          </p>
-                          <p className="mt-2 text-sm italic leading-6 text-slate-600">
-                            “{item.review.comment}”
-                          </p>
-                        </div>
-                      )}
-
-                      <form action={savePortfolioDetails} className="mt-6 space-y-5">
-                        <input
-                          type="hidden"
-                          name="portfolioItemId"
-                          value={item.id}
-                        />
-
-                        <div>
-                          <label className="mb-2 block text-sm font-semibold text-slate-800">
-                            My contribution
-                          </label>
-                          <textarea
-                            name="contribution"
-                            defaultValue={item.contribution ?? ""}
-                            rows={5}
-                            placeholder="Explain exactly what you worked on in this project."
-                            className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                          />
-                        </div>
-
-                        <div className="grid gap-4 md:grid-cols-2">
+                      <div className="border-t border-slate-200 bg-slate-50 p-6 md:p-8 xl:border-l xl:border-t-0">
+                        <div className="flex h-full flex-col justify-between gap-6">
                           <div>
-                            <label className="mb-2 block text-sm font-semibold text-slate-800">
-                              Project image / screenshot URL
-                            </label>
-                            <input
-                              type="url"
-                              name="imageUrl"
-                              defaultValue={item.imageUrl ?? ""}
-                              placeholder="https://..."
-                              className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                            />
+                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                              Proof Strength
+                            </p>
+
+                            <h4 className="mt-2 text-xl font-bold text-slate-900">
+                              {proofConfidence.label} confidence
+                            </h4>
+
+                            <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-200">
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500"
+                                style={{ width: `${proofConfidence.value}%` }}
+                              />
+                            </div>
+
+                            <p className="mt-3 text-sm leading-6 text-slate-500">
+                              Add a clear contribution, project screenshot, and
+                              proof link to strengthen this item.
+                            </p>
                           </div>
 
-                          <div>
-                            <label className="mb-2 block text-sm font-semibold text-slate-800">
-                              Proof link / live demo / repo
-                            </label>
-                            <input
-                              type="url"
-                              name="proofUrl"
-                              defaultValue={item.proofUrl ?? ""}
-                              placeholder="https://..."
-                              className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                            />
+                          <div className="grid gap-3">
+                            <form action={movePortfolioItem}>
+                              <input
+                                type="hidden"
+                                name="portfolioItemId"
+                                value={item.id}
+                              />
+                              <input type="hidden" name="direction" value="up" />
+                              <button
+                                type="submit"
+                                disabled={index === 0}
+                                className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                              >
+                                Move Up
+                              </button>
+                            </form>
+
+                            <form action={movePortfolioItem}>
+                              <input
+                                type="hidden"
+                                name="portfolioItemId"
+                                value={item.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="direction"
+                                value="down"
+                              />
+                              <button
+                                type="submit"
+                                disabled={index === portfolio.length - 1}
+                                className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                              >
+                                Move Down
+                              </button>
+                            </form>
                           </div>
-                        </div>
 
-                        <button
-                          type="submit"
-                          className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-                        >
-                          Save Details
-                        </button>
-                      </form>
-                    </div>
+                          <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                              Accountability note
+                            </p>
 
-                    <div className="border-t border-slate-200 bg-slate-50 p-6 md:p-8 xl:border-l xl:border-t-0">
-                      <div className="flex h-full flex-col justify-between gap-6">
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                            Manage Item
-                          </p>
-                          <h4 className="mt-2 text-xl font-bold text-slate-900">
-                            Reorder or remove this project
-                          </h4>
-                          <p className="mt-2 text-sm leading-6 text-slate-500">
-                            Control how this appears on your public profile by
-                            moving it up or down in the list, or removing it
-                            entirely.
-                          </p>
-                        </div>
-
-                        <div className="grid gap-3">
-                          <form action={movePortfolioItem}>
-                            <input
-                              type="hidden"
-                              name="portfolioItemId"
-                              value={item.id}
-                            />
-                            <input type="hidden" name="direction" value="up" />
-                            <button
-                              type="submit"
-                              disabled={index === 0}
-                              className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                              Move Up
-                            </button>
-                          </form>
-
-                          <form action={movePortfolioItem}>
-                            <input
-                              type="hidden"
-                              name="portfolioItemId"
-                              value={item.id}
-                            />
-                            <input type="hidden" name="direction" value="down" />
-                            <button
-                              type="submit"
-                              disabled={index === portfolio.length - 1}
-                              className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                              Move Down
-                            </button>
-                          </form>
-
-                          <form action={removeFromPortfolio}>
-                            <input
-                              type="hidden"
-                              name="portfolioItemId"
-                              value={item.id}
-                            />
-                            <button
-                              type="submit"
-                              className="inline-flex w-full items-center justify-center rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
-                            >
-                              Remove Item
-                            </button>
-                          </form>
-                        </div>
-
-                        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            Portfolio tip
-                          </p>
-                          <p className="mt-2 text-sm leading-6 text-slate-600">
-                            Strong entries usually include a clear contribution
-                            summary, one visual proof, and one verifiable project
-                            link.
-                          </p>
+                            <p className="mt-2 text-sm leading-6 text-blue-700">
+                              This item cannot be removed because it is part of
+                              your verified BuildUp project history.
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
       </div>
     </main>
+  );
+}
+
+function StatCard({
+  title,
+  value,
+  note,
+}: {
+  title: string;
+  value: string;
+  note?: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {title}
+      </p>
+
+      <p className="mt-1 text-lg font-bold text-slate-900">
+        {value}
+        {note ? (
+          <span className="ml-2 text-sm font-medium text-slate-500">
+            {note}
+          </span>
+        ) : null}
+      </p>
+    </div>
   );
 }
