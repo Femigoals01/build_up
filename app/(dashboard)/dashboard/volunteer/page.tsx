@@ -25,6 +25,7 @@ import InviteResponseButtons from "@/components/projects/InviteResponseButtons";
 import VolunteerInviteHeroCard from "@/components/dashboard/VolunteerInviteHeroCard";
 import VolunteerRealtimeRefresh from "@/components/volunteer/VolunteerRealtimeRefresh";
 import ProfileCompletionCompact from "@/components/dashboard/ProfileCompletionCompact";
+import VolunteerHeroQuickLinks from "@/components/volunteer/VolunteerHeroQuickLinks";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -495,6 +496,9 @@ export default async function VolunteerDashboard() {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const portfolioUrl = `${appUrl}/portfolio/${volunteer.username}`;
+
+  const referralCode = volunteer.username.toUpperCase();
+const referralUrl = `${appUrl}/register/volunteer?ref=${referralCode}`;
 
   const applications = await prisma.application.findMany({
     where: { volunteerId: session.user.id },
@@ -1055,7 +1059,7 @@ const activeApps = applicationsWithDelivery.filter(
                 </div>
               </div>
 
-              <div className="relative z-20 hidden flex-wrap items-center gap-4 xl:flex">
+              {/* <div className="relative z-20 hidden flex-wrap items-center gap-4 xl:flex">
                 <NotificationBell
                   userId={session.user.id}
                   notifications={notifications}
@@ -1063,7 +1067,17 @@ const activeApps = applicationsWithDelivery.filter(
                 />
 
                 <PortfolioShare url={portfolioUrl} />
-              </div>
+              </div> */}
+
+
+<div className="relative z-20 hidden xl:block">
+  <VolunteerHeroQuickLinks
+    referralUrl={referralUrl}
+    portfolioUrl={portfolioUrl}
+  />
+</div>
+
+              
             </div>
           </section>
 
