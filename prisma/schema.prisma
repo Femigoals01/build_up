@@ -96,6 +96,11 @@ model User {
   referralBalance Float @default(0)
 
   submissionComments ProjectSubmissionComment[]
+
+
+  certificates Certificate[]
+
+  supportTickets SupportTicket[]
 }
 
 /// *
@@ -130,6 +135,10 @@ model Project {
   deadline24hNotifiedAt     DateTime?
   deadline12hNotifiedAt     DateTime?
   deadlineOverdueNotifiedAt DateTime?
+
+  referenceNo String? @unique
+
+  supportTickets SupportTicket[]
 }
 
 /// *
@@ -470,6 +479,51 @@ model Referral {
   referred User @relation("ReferredUser", fields: [referredId], references: [id])
 }
 
+
+model Certificate {
+  id            String   @id @default(cuid())
+  certificateNo String   @unique
+
+  volunteerId  String
+  issuedAt     DateTime @default(now())
+
+  completedProjectsCount Int @default(0)
+  skillsSummary          String?
+
+  volunteer User @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+
+  @@index([volunteerId])
+}
+
+
+
+model SupportTicket {
+  id          String @id @default(cuid())
+  ticketNo    String @unique
+
+  subject     String
+  description String
+
+  status      SupportTicketStatus @default(OPEN)
+  priority    SupportTicketPriority @default(NORMAL)
+
+  userId      String
+  projectId   String?
+
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([ticketNo])
+}
+
+
+
+
 enum WithdrawalStatus {
   PENDING
   PROCESSING
@@ -571,4 +625,20 @@ enum WalletTransactionStatus {
   PENDING
   COMPLETED
   FAILED
+}
+
+
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum SupportTicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
 }

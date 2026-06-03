@@ -339,6 +339,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
+import { issueOrUpdateVolunteerCertificate } from "@/lib/certificates";
 
 export async function POST(
   req: Request,
@@ -408,109 +409,229 @@ export async function POST(
       );
     }
 
+    // await prisma.$transaction(async (tx) => {
+    //   await tx.project.update({
+    //     where: { id: projectId },
+    //     data: { status: "COMPLETED" },
+    //   });
+
+    //   const acceptedApplications = await tx.application.findMany({
+    //     where: {
+    //       projectId,
+    //       status: {
+    //         in: ["ACCEPTED", "COMPLETED"],
+    //       },
+    //     },
+    //     select: {
+    //       id: true,
+    //       volunteerId: true,
+    //     },
+    //   });
+
+    //   await tx.application.updateMany({
+    //     where: {
+    //       projectId,
+    //       status: "ACCEPTED",
+    //     },
+    //     data: {
+    //       status: "COMPLETED",
+    //     },
+    //   });
+
+    //   for (const application of acceptedApplications) {
+    //     const latestApprovedSubmission = approvedSubmissions.find(
+    //       (submission) => submission.volunteerId === application.volunteerId
+    //     );
+
+    //     if (!latestApprovedSubmission) continue;
+
+    //     const existingPortfolioItem = await tx.portfolioItem.findFirst({
+    //       where: {
+    //         volunteerId: application.volunteerId,
+    //         projectId,
+    //       },
+    //     });
+
+    //     const proofUrl =
+    //       latestApprovedSubmission.workUrl ||
+    //       latestApprovedSubmission.fileUrl ||
+    //       `/dashboard/projects/${projectId}`;
+
+    //     if (!existingPortfolioItem) {
+    //       const lastItem = await tx.portfolioItem.findFirst({
+    //         where: {
+    //           volunteerId: application.volunteerId,
+    //         },
+    //         orderBy: {
+    //           order: "desc",
+    //         },
+    //       });
+
+    //       await tx.portfolioItem.create({
+    //         data: {
+    //           volunteerId: application.volunteerId,
+    //           projectId,
+    //           order: (lastItem?.order ?? -1) + 1,
+    //           proofUrl,
+    //           imageUrl: latestApprovedSubmission.fileUrl || null,
+    //           contribution: latestApprovedSubmission.message || null,
+    //         },
+    //       });
+    //     } else {
+    //       await tx.portfolioItem.update({
+    //         where: {
+    //           id: existingPortfolioItem.id,
+    //         },
+    //         data: {
+    //           proofUrl: existingPortfolioItem.proofUrl || proofUrl,
+    //           imageUrl:
+    //             existingPortfolioItem.imageUrl ||
+    //             latestApprovedSubmission.fileUrl ||
+    //             null,
+    //           contribution:
+    //             existingPortfolioItem.contribution ||
+    //             latestApprovedSubmission.message ||
+    //             null,
+    //         },
+    //       });
+    //     }
+
+    //     await tx.notification.create({
+    //       data: {
+    //         userId: application.volunteerId,
+    //         title: "Project marked completed",
+    //         message: `Your project "${project.title}" has been marked completed and added to your verified portfolio.`,
+    //         type: "PROJECT",
+    //         link: "/dashboard/portfolio",
+    //       },
+    //     });
+    //   }
+    // });
+
+    // return NextResponse.json({
+    //   success: true,
+    //   message: "Project completed and portfolio updated.",
+    // });
+
+
     await prisma.$transaction(async (tx) => {
-      await tx.project.update({
-        where: { id: projectId },
-        data: { status: "COMPLETED" },
+  await tx.project.update({
+    where: { id: projectId },
+    data: { status: "COMPLETED" },
+  });
+
+  const acceptedApplications = await tx.application.findMany({
+    where: {
+      projectId,
+      status: {
+        in: ["ACCEPTED", "COMPLETED"],
+      },
+    },
+    select: {
+      id: true,
+      volunteerId: true,
+    },
+  });
+
+  await tx.application.updateMany({
+    where: {
+      projectId,
+      status: "ACCEPTED",
+    },
+    data: {
+      status: "COMPLETED",
+    },
+  });
+
+  for (const application of acceptedApplications) {
+    const latestApprovedSubmission = approvedSubmissions.find(
+      (submission) => submission.volunteerId === application.volunteerId
+    );
+
+    if (!latestApprovedSubmission) continue;
+
+    const existingPortfolioItem = await tx.portfolioItem.findFirst({
+      where: {
+        volunteerId: application.volunteerId,
+        projectId,
+      },
+    });
+
+    const proofUrl =
+      latestApprovedSubmission.workUrl ||
+      latestApprovedSubmission.fileUrl ||
+      `/dashboard/projects/${projectId}`;
+
+    if (!existingPortfolioItem) {
+      const lastItem = await tx.portfolioItem.findFirst({
+        where: {
+          volunteerId: application.volunteerId,
+        },
+        orderBy: {
+          order: "desc",
+        },
       });
 
-      const acceptedApplications = await tx.application.findMany({
-        where: {
+      await tx.portfolioItem.create({
+        data: {
+          volunteerId: application.volunteerId,
           projectId,
-          status: {
-            in: ["ACCEPTED", "COMPLETED"],
-          },
-        },
-        select: {
-          id: true,
-          volunteerId: true,
+          order: (lastItem?.order ?? -1) + 1,
+          proofUrl,
+          imageUrl: latestApprovedSubmission.fileUrl || null,
+          contribution: latestApprovedSubmission.message || null,
         },
       });
-
-      await tx.application.updateMany({
+    } else {
+      await tx.portfolioItem.update({
         where: {
-          projectId,
-          status: "ACCEPTED",
+          id: existingPortfolioItem.id,
         },
         data: {
-          status: "COMPLETED",
+          proofUrl: existingPortfolioItem.proofUrl || proofUrl,
+          imageUrl:
+            existingPortfolioItem.imageUrl ||
+            latestApprovedSubmission.fileUrl ||
+            null,
+          contribution:
+            existingPortfolioItem.contribution ||
+            latestApprovedSubmission.message ||
+            null,
         },
       });
+    }
 
-      for (const application of acceptedApplications) {
-        const latestApprovedSubmission = approvedSubmissions.find(
-          (submission) => submission.volunteerId === application.volunteerId
-        );
-
-        if (!latestApprovedSubmission) continue;
-
-        const existingPortfolioItem = await tx.portfolioItem.findFirst({
-          where: {
-            volunteerId: application.volunteerId,
-            projectId,
-          },
-        });
-
-        const proofUrl =
-          latestApprovedSubmission.workUrl ||
-          latestApprovedSubmission.fileUrl ||
-          `/dashboard/projects/${projectId}`;
-
-        if (!existingPortfolioItem) {
-          const lastItem = await tx.portfolioItem.findFirst({
-            where: {
-              volunteerId: application.volunteerId,
-            },
-            orderBy: {
-              order: "desc",
-            },
-          });
-
-          await tx.portfolioItem.create({
-            data: {
-              volunteerId: application.volunteerId,
-              projectId,
-              order: (lastItem?.order ?? -1) + 1,
-              proofUrl,
-              imageUrl: latestApprovedSubmission.fileUrl || null,
-              contribution: latestApprovedSubmission.message || null,
-            },
-          });
-        } else {
-          await tx.portfolioItem.update({
-            where: {
-              id: existingPortfolioItem.id,
-            },
-            data: {
-              proofUrl: existingPortfolioItem.proofUrl || proofUrl,
-              imageUrl:
-                existingPortfolioItem.imageUrl ||
-                latestApprovedSubmission.fileUrl ||
-                null,
-              contribution:
-                existingPortfolioItem.contribution ||
-                latestApprovedSubmission.message ||
-                null,
-            },
-          });
-        }
-
-        await tx.notification.create({
-          data: {
-            userId: application.volunteerId,
-            title: "Project marked completed",
-            message: `Your project "${project.title}" has been marked completed and added to your verified portfolio.`,
-            type: "PROJECT",
-            link: "/dashboard/portfolio",
-          },
-        });
-      }
+    await tx.notification.create({
+      data: {
+        userId: application.volunteerId,
+        title: "Project marked completed",
+        message: `Your project "${project.title}" has been marked completed and added to your verified portfolio.`,
+        type: "PROJECT",
+        link: "/dashboard/portfolio",
+      },
     });
+  }
+});
 
-    return NextResponse.json({
-      success: true,
-      message: "Project completed and portfolio updated.",
-    });
+/* ===========================================================
+   BUILDUP CERTIFICATE GENERATION
+   =========================================================== */
+
+const volunteerIds = [
+  ...new Set(
+    approvedSubmissions.map((submission) => submission.volunteerId)
+  ),
+];
+
+for (const volunteerId of volunteerIds) {
+  await issueOrUpdateVolunteerCertificate(volunteerId);
+}
+
+return NextResponse.json({
+  success: true,
+  message:
+    "Project completed, portfolio updated, and certificate generated.",
+});
   } catch (error) {
     console.error("PROJECT COMPLETE ERROR:", error);
 

@@ -56,6 +56,7 @@ type ProjectFunding = {
 
 type OrganizationProject = {
   id: string;
+  referenceNo?: string | null;
   title: string;
   description?: string | null;
   location?: string | null;
@@ -312,6 +313,54 @@ function FundProjectButton({ projectId }: { projectId: string }) {
 
 
 
+function DeleteProjectButton({ projectId }: { projectId: string }) {
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this project? This action cannot be undone."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDeleting(true);
+
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        alert(data?.error || "Failed to delete project.");
+        return;
+      }
+
+      window.location.reload();
+    } catch (error) {
+      console.error("Delete project error:", error);
+      alert("Something went wrong while deleting the project.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleDelete}
+      disabled={deleting}
+      className="inline-flex h-10 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {deleting ? "Deleting..." : "Delete Project"}
+    </button>
+  );
+}
+
+
+
+
 
 
 function FundingSummary({ project }: { project: OrganizationProject }) {
@@ -492,11 +541,38 @@ function VolunteerInfoCard({
   );
 }
 
+// function PendingVolunteerCard({
+//   app,
+// }: {
+//   app: ProjectApplication;
+//   projectId: string;
+// }) {
+//   const volunteer = app.volunteer;
+
+//   return (
+//     <ApplicantCard
+//       applicationId={app.id}
+//       name={volunteer.name ?? "Unnamed volunteer"}
+//       email={volunteer.email}
+//       status={app.status}
+//       username={volunteer.username}
+//       bio={volunteer.bio}
+//       skills={volunteer.skills}
+//       country={volunteer.country}
+//       profileImageUrl={volunteer.profileImageUrl}
+//       experience={volunteer.experience}
+//     />
+//   );
+// }
+
+
 function PendingVolunteerCard({
   app,
+  projectLocked = false,
 }: {
   app: ProjectApplication;
   projectId: string;
+  projectLocked?: boolean;
 }) {
   const volunteer = app.volunteer;
 
@@ -512,9 +588,17 @@ function PendingVolunteerCard({
       country={volunteer.country}
       profileImageUrl={volunteer.profileImageUrl}
       experience={volunteer.experience}
+      projectLocked={projectLocked}
     />
   );
 }
+
+
+
+
+
+
+
 
 function LatestSubmissionCard({
   projectId,
@@ -875,6 +959,15 @@ export default function OrganizationProjectsTabs({
 
               const hasAssignedVolunteer = assignedOrSelectedApps.length > 0;
 
+              const fundingStarted =
+  Boolean(project.funding?.paidAt) ||
+  ["HELD", "RELEASED", "DISPUTED", "REFUNDED"].includes(
+    getFundingStatus(project)
+  );
+
+const canEditOrDeleteProject =
+  project.status === "OPEN" && !hasAssignedVolunteer && !fundingStarted;
+
               if (awaitingPaymentApp) {
                 return (
                   <div key={project.id}>
@@ -911,9 +1004,25 @@ export default function OrganizationProjectsTabs({
                           </div>
 
                           <div className="min-w-0">
-                            <h3 className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl">
+                            {/* <h3 className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl">
                               {project.title}
-                            </h3>
+                            </h3> */}
+
+                            <div>
+  <h3 className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl">
+    {project.title}
+  </h3>
+
+  <div className="mt-2 inline-flex items-center rounded-lg border border-blue-200 bg-blue-50 px-3 py-1">
+    <span className="mr-2 text-[10px] font-bold uppercase tracking-wider text-blue-600">
+      Ref
+    </span>
+
+    <span className="font-mono text-xs font-bold text-blue-900">
+      {project.referenceNo || "Not Assigned"}
+    </span>
+  </div>
+</div>
 
                             <p className="mt-1 text-sm text-slate-500">
                               {project.description ||
@@ -1049,7 +1158,7 @@ export default function OrganizationProjectsTabs({
                               </p>
                             </div>
 
-                            <div className="flex flex-wrap gap-2">
+                            {/* <div className="flex flex-wrap gap-2">
                               {hasAssignedVolunteer ? (
                                 <span className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 px-4 text-sm font-semibold text-slate-500">
                                   Volunteer Selected
@@ -1069,7 +1178,49 @@ export default function OrganizationProjectsTabs({
                               >
                                 View Project
                               </Link>
-                            </div>
+                            </div> */}
+
+
+                            <div className="flex flex-wrap gap-2">
+  {hasAssignedVolunteer ? (
+    <span className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 px-4 text-sm font-semibold text-slate-500">
+      🔒 Project Locked
+    </span>
+  ) : (
+    <>
+      <Link
+        href={`/dashboard/organization/projects/${project.id}/invite`}
+        className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+      >
+        Invite Volunteers
+      </Link>
+
+      {canEditOrDeleteProject ? (
+        <>
+          <Link
+            href={`/dashboard/organization/projects/${project.id}/edit`}
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+          >
+            Edit Project
+          </Link>
+
+          <DeleteProjectButton projectId={project.id} />
+        </>
+      ) : null}
+    </>
+  )}
+
+  <Link
+    href={`/dashboard/projects/${project.id}`}
+    className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+  >
+    View Project
+  </Link>
+</div>
+
+
+
+
                           </div>
 
                           {pendingApps.length === 0 ? (
@@ -1086,11 +1237,18 @@ export default function OrganizationProjectsTabs({
                           ) : (
                             <div className="space-y-4">
                               {pendingApps.map((app) => (
+                                // <PendingVolunteerCard
+                                //   key={app.id}
+                                //   app={app}
+                                //   projectId={project.id}
+                                // />
+
                                 <PendingVolunteerCard
-                                  key={app.id}
-                                  app={app}
-                                  projectId={project.id}
-                                />
+  key={app.id}
+  app={app}
+  projectId={project.id}
+  projectLocked={hasAssignedVolunteer}
+/>
                               ))}
                             </div>
                           )}
