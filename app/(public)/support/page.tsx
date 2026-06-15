@@ -1,130 +1,6 @@
 
 
 
-// import type { Metadata } from "next";
-// import Link from "next/link";
-
-// export const metadata: Metadata = {
-//   title: "Support",
-//   description:
-//     "Get help with BuildUp. Contact support, ask questions, or report an issue.",
-// };
-
-// const supportItems = [
-//   {
-//     title: "General Support",
-//     description:
-//       "Get help with using the platform, navigation, account access, or project participation.",
-//   },
-//   {
-//     title: "Technical Issues",
-//     description:
-//       "Report bugs, broken pages, login issues, or other platform-related problems.",
-//   },
-//   {
-//     title: "Account & Profile Help",
-//     description:
-//       "Ask about your profile, portfolio, visibility settings, or account information.",
-//   },
-//   {
-//     title: "Organization & Project Support",
-//     description:
-//       "Get help posting projects, reviewing applications, or managing collaboration.",
-//   },
-// ];
-
-// export default function SupportPage() {
-//   return (
-//     <main className="bg-white text-slate-900">
-//       <section className="border-b border-slate-200 bg-slate-50/70">
-//         <div className="mx-auto max-w-5xl px-6 py-16 lg:px-8 lg:py-20">
-//           <span className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-600">
-//             Support
-//           </span>
-//           <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-//             We’re here to help
-//           </h1>
-//           <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-//             Need help with BuildUp? Reach out for support, report an issue, or
-//             contact us about your account, projects, or platform experience.
-//           </p>
-//         </div>
-//       </section>
-
-//       <section className="mx-auto max-w-5xl px-6 py-16 lg:px-8">
-//         <div className="grid gap-6 md:grid-cols-2">
-//           {supportItems.map((item) => (
-//             <div
-//               key={item.title}
-//               className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm"
-//             >
-//               <h2 className="text-xl font-semibold text-slate-900">
-//                 {item.title}
-//               </h2>
-//               <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">
-//                 {item.description}
-//               </p>
-//             </div>
-//           ))}
-//         </div>
-
-//         <div className="mt-10 rounded-[2rem] border border-slate-200 bg-gradient-to-r from-white via-blue-50 to-indigo-50 p-8 shadow-sm">
-//           <h2 className="text-2xl font-semibold text-slate-900">
-//             Contact BuildUp Support
-//           </h2>
-//           <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-//             For now, you can direct support requests through your platform
-//             contact flow or add your official support email here once ready.
-//           </p>
-
-//           <div className="mt-6 flex flex-col gap-4 sm:flex-row">
-//             <Link
-//               href="/"
-//               className="inline-flex h-12 items-center justify-center rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white transition hover:bg-blue-700"
-//             >
-//               Back to Home
-//             </Link>
-
-//             <Link
-//               href="/privacy"
-//               className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-//             >
-//               View Privacy Policy
-//             </Link>
-//           </div>
-//         </div>
-
-//         <div className="mt-10 grid gap-4 sm:grid-cols-2">
-//   <Link
-//     href="/privacy"
-//     className="rounded-2xl border border-slate-200 bg-white p-5 transition hover:bg-slate-50"
-//   >
-//     <h3 className="text-sm font-semibold text-slate-900">
-//       Privacy Policy
-//     </h3>
-//     <p className="mt-1 text-sm text-slate-600">
-//       Learn how your data is handled and protected.
-//     </p>
-//   </Link>
-
-//   <Link
-//     href="/terms"
-//     className="rounded-2xl border border-slate-200 bg-white p-5 transition hover:bg-slate-50"
-//   >
-//     <h3 className="text-sm font-semibold text-slate-900">
-//       Terms & Conditions
-//     </h3>
-//     <p className="mt-1 text-sm text-slate-600">
-//       Understand the rules and responsibilities of using BuildUp.
-//     </p>
-//   </Link>
-// </div>
-//       </section>
-//     </main>
-//   );
-// }
-
-
 
 
 "use client";
@@ -207,7 +83,14 @@ export default function SupportPage() {
         return;
       }
 
-      setSuccessMessage("Your support request has been submitted successfully.");
+      // setSuccessMessage("Your support request has been submitted successfully.");
+      setSuccessMessage(
+  `✅ Support request submitted successfully.
+
+Ticket Number: ${data.ticketNo}
+
+Please save this reference number. Our team may ask for it when following up on your request.`
+);
       setForm({
         name: "",
         email: "",
@@ -397,11 +280,43 @@ export default function SupportPage() {
                 />
               </div>
 
-              {successMessage ? (
+              {/* {successMessage ? (
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
                   {successMessage}
                 </div>
-              ) : null}
+              ) : null} */}
+
+
+              {/* {successMessage ? (
+  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+    <div className="text-sm font-bold text-emerald-700">
+      Support Request Submitted
+    </div>
+
+    <div className="mt-2 whitespace-pre-line text-sm text-emerald-800">
+      {successMessage}
+    </div>
+  </div>
+) : null} */}
+
+{successMessage ? (
+  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+    <p className="text-sm font-bold text-emerald-700">
+      Support Request Submitted
+    </p>
+
+    <p className="mt-2 whitespace-pre-line text-sm leading-6 text-emerald-800">
+      {successMessage}
+    </p>
+
+    <Link
+      href="/dashboard/support"
+      className="mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white transition hover:bg-emerald-700"
+    >
+      View My Support Tickets →
+    </Link>
+  </div>
+) : null}
 
               {errorMessage ? (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">

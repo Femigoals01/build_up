@@ -1,121 +1,6 @@
 
 
 
-// "use client";
-
-// import { useState } from "react";
-// import { useRouter } from "next/navigation";
-
-// export default function ProjectReviewForm({
-//   projectId,
-// }: {
-//   projectId: string;
-// }) {
-//   const router = useRouter();
-
-//   const [rating, setRating] = useState(5);
-//   const [comment, setComment] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState("");
-
-//   async function handleSubmit(e: React.FormEvent) {
-//     e.preventDefault();
-//     setError("");
-
-//     if (!comment.trim()) {
-//       setError("Please enter a comment");
-//       return;
-//     }
-
-//     try {
-//       setLoading(true);
-
-//       const res = await fetch(`/api/projects/${projectId}/review`, {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({
-//           rating,
-//           comment,
-//         }),
-//       });
-
-//       const data = await res.json();
-
-//       if (!res.ok) {
-//         setError(data.error || "Failed to submit review");
-//         return;
-//       }
-
-//       router.push("/dashboard/organization");
-//       router.refresh();
-//     } catch (err) {
-//       console.error(err);
-//       setError("Something went wrong");
-//     } finally {
-//       setLoading(false);
-//     }
-//   }
-
-//   return (
-//     <form onSubmit={handleSubmit} className="space-y-6">
-
-//       {error && (
-//         <div className="text-red-600 text-sm">{error}</div>
-//       )}
-
-//       {/* RATING */}
-//       <div>
-//         <label className="block text-sm font-semibold mb-2">
-//           Rating
-//         </label>
-
-//         <div className="flex gap-2">
-//           {[1, 2, 3, 4, 5].map((r) => (
-//             <button
-//               key={r}
-//               type="button"
-//               onClick={() => setRating(r)}
-//               className={`px-3 py-2 rounded-lg border ${
-//                 rating === r
-//                   ? "bg-yellow-100 border-yellow-400"
-//                   : "bg-white border-gray-200"
-//               }`}
-//             >
-//               ⭐
-//             </button>
-//           ))}
-//         </div>
-//       </div>
-
-//       {/* COMMENT */}
-//       <div>
-//         <label className="block text-sm font-semibold mb-2">
-//           Comment
-//         </label>
-//         <textarea
-//           value={comment}
-//           onChange={(e) => setComment(e.target.value)}
-//           className="w-full border rounded-xl p-3"
-//           rows={5}
-//           placeholder="Write feedback..."
-//         />
-//       </div>
-
-//       <button
-//         type="submit"
-//         disabled={loading}
-//         className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold"
-//       >
-//         {loading ? "Submitting..." : "Submit Review"}
-//       </button>
-//     </form>
-//   );
-// }
-
-
-
 
 
 "use client";
@@ -144,6 +29,17 @@ export default function ProjectReviewForm({
   const [wouldRecommend, setWouldRecommend] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const [technicalSkill, setTechnicalSkill] = useState(5);
+const [communication, setCommunication] = useState(5);
+const [professionalism, setProfessionalism] = useState(5);
+const [timeliness, setTimeliness] = useState(5);
+
+const [strengths, setStrengths] = useState("");
+const [improvementAreas, setImprovementAreas] = useState("");
+
+
+
 
   const activeRating = hoveredRating ?? rating;
 
@@ -186,10 +82,24 @@ Recommendation: ${
         headers: {
           "Content-Type": "application/json",
         },
+        // body: JSON.stringify({
+        //   rating,
+        //   comment: finalComment,
+        // }),
+
         body: JSON.stringify({
-          rating,
-          comment: finalComment,
-        }),
+  rating,
+
+  technicalSkill,
+  communication,
+  professionalism,
+  timeliness,
+
+  strengths,
+  improvementAreas,
+
+  comment: finalComment,
+}),
       });
 
       const data = await res.json();
@@ -332,6 +242,104 @@ Recommendation: ${
           </div>
         </div>
       </section>
+
+
+      <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+  <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
+    Professional Feedback
+  </p>
+
+  <div className="mt-5 grid gap-5 md:grid-cols-2">
+    <div>
+      <label className="mb-2 block text-sm font-semibold text-slate-700">
+        Strengths
+      </label>
+
+      <textarea
+        value={strengths}
+        onChange={(e) => setStrengths(e.target.value)}
+        className="min-h-[120px] w-full rounded-2xl border border-slate-200 p-4"
+        placeholder="What did the volunteer do exceptionally well?"
+      />
+    </div>
+
+    <div>
+      <label className="mb-2 block text-sm font-semibold text-slate-700">
+        Areas for Improvement
+      </label>
+
+      <textarea
+        value={improvementAreas}
+        onChange={(e) => setImprovementAreas(e.target.value)}
+        className="min-h-[120px] w-full rounded-2xl border border-slate-200 p-4"
+        placeholder="Any areas where growth is recommended?"
+      />
+    </div>
+  </div>
+</section>
+
+
+
+      <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+  <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
+    Detailed Evaluation
+  </p>
+
+  <h3 className="mt-2 text-2xl font-bold text-slate-900">
+    Rate key performance areas
+  </h3>
+
+  <div className="mt-6 grid gap-4 md:grid-cols-2">
+    {[
+      {
+        label: "Technical Skill",
+        value: technicalSkill,
+        setter: setTechnicalSkill,
+      },
+      {
+        label: "Communication",
+        value: communication,
+        setter: setCommunication,
+      },
+      {
+        label: "Professionalism",
+        value: professionalism,
+        setter: setProfessionalism,
+      },
+      {
+        label: "Timeliness",
+        value: timeliness,
+        setter: setTimeliness,
+      },
+    ].map((item) => (
+      <div
+        key={item.label}
+        className="rounded-2xl border border-slate-200 p-4"
+      >
+        <p className="font-semibold text-slate-800">
+          {item.label}
+        </p>
+
+        <div className="mt-3 flex gap-2">
+          {[1, 2, 3, 4, 5].map((score) => (
+            <button
+              key={score}
+              type="button"
+              onClick={() => item.setter(score)}
+              className={`h-10 w-10 rounded-xl text-sm font-bold ${
+                item.value >= score
+                  ? "bg-blue-600 text-white"
+                  : "bg-slate-100 text-slate-500"
+              }`}
+            >
+              {score}
+            </button>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
 
       <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">

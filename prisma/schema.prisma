@@ -1,7 +1,3 @@
-
-
-
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,24 +7,33 @@ datasource db {
 }
 
 model User {
-  id                         String           @id @default(cuid())
-  name                       String
-  email                      String           @unique
-  password                   String
-  role                       Role
-  createdAt                  DateTime         @default(now())
-  bio                        String?
-  experience                 String?
-  skills                     String?
-  rating                     Float            @default(0)
-  ratingCount                Int              @default(0)
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  password    String
+  role        Role
+  createdAt   DateTime @default(now())
+  bio         String?
+  experience  String?
+  skills      String?
+  rating      Float    @default(0)
+  ratingCount Int      @default(0)
+
+  mentorRating Float @default(0)
+
+  mentorRatingCount Int @default(0)
+
+  mentorshipPoints Int @default(0)
+
+  mentorLevel Int @default(1)
+
   username                   String           @unique
   lastActivitySeenAt         DateTime         @default(now())
   mentorStatus               MentorStatus?
   country                    String?
   mobileNumber               String?
   countryCode                String?
-  phoneE164                  String? @unique
+  phoneE164                  String?          @unique
   availabilityStatus         String?
   passwordResetToken         String?
   passwordResetExpiry        DateTime?
@@ -85,7 +90,7 @@ model User {
   reviewsGiven         Review[]            @relation("OrganizationReviews")
   reviewsReceived      Review[]            @relation("VolunteerReviews")
 
-  referralCode String?  
+  referralCode String?
 
   referredByCode String?
 
@@ -95,12 +100,37 @@ model User {
   referralCount   Int   @default(0)
   referralBalance Float @default(0)
 
+  
+
   submissionComments ProjectSubmissionComment[]
 
+  mentorReviewsReceived MentorReview[] @relation("MentorReviewsReceived")
+
+  mentorReviewsGiven MentorReview[] @relation("MentorReviewsGiven")
 
   certificates Certificate[]
 
-  supportTickets SupportTicket[]
+  level Int @default(1)
+
+  points Int @default(0)
+
+  mentorAvailabilities MentorAvailability[]
+mentorBookingsReceived MentorBooking[] @relation("MentorBookingsReceived")
+mentorBookingsMade MentorBooking[] @relation("MentorBookingsMade")
+
+mentorCertifications MentorCertification[]
+
+
+opportunities Opportunity[] @relation("OrganizationOpportunities")
+opportunityLeads OpportunityLead[] @relation("OpportunityLeads")
+
+organizationVerified Boolean @default(false)
+
+organizationVerifiedAt DateTime?
+
+organizationVerificationStatus String @default("PENDING")
+
+organizationVerification OrganizationVerification?
 }
 
 /// *
@@ -131,6 +161,8 @@ model Project {
   reviews            Review[]
   submissions        ProjectSubmission[]
 
+  mentorReviews MentorReview[]
+
   deadline48hNotifiedAt     DateTime?
   deadline24hNotifiedAt     DateTime?
   deadline12hNotifiedAt     DateTime?
@@ -138,7 +170,9 @@ model Project {
 
   referenceNo String? @unique
 
-  supportTickets SupportTicket[]
+  supportMessages SupportMessage[]
+
+  mentorBookings MentorBooking[]
 }
 
 /// *
@@ -296,18 +330,33 @@ model Notification {
 /// * =======================
 /// * REVIEW
 /// * =======================
+
 model Review {
-  id             String         @id @default(cuid())
+  id String @id @default(cuid())
+
   volunteerId    String
   organizationId String
   projectId      String
-  rating         Int
-  comment        String
-  createdAt      DateTime       @default(now())
-  portfolioItem  PortfolioItem?
-  organization   User           @relation("OrganizationReviews", fields: [organizationId], references: [id])
-  project        Project        @relation(fields: [projectId], references: [id])
-  volunteer      User           @relation("VolunteerReviews", fields: [volunteerId], references: [id])
+
+  rating        Int
+  overallRating Float?
+
+  technicalSkill  Int?
+  communication   Int?
+  professionalism Int?
+  timeliness      Int?
+
+  strengths        String?
+  improvementAreas String?
+
+  comment   String
+  createdAt DateTime @default(now())
+
+  portfolioItem PortfolioItem?
+
+  organization User    @relation("OrganizationReviews", fields: [organizationId], references: [id])
+  project      Project @relation(fields: [projectId], references: [id])
+  volunteer    User    @relation("VolunteerReviews", fields: [volunteerId], references: [id])
 }
 
 /// *
@@ -334,14 +383,17 @@ model PortfolioItem {
 /// * =======================
 /// * BADGE
 /// * =======================
+
 model Badge {
   id          String   @id @default(cuid())
   name        String
   description String
   icon        String
+  category    String?
   createdAt   DateTime @default(now())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model playing_with_neon {
@@ -351,18 +403,32 @@ model playing_with_neon {
 }
 
 model SupportMessage {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  subject   String
-  category  String?
-  message   String
-  status    String   @default("OPEN")
+  id       String  @id @default(cuid())
+  ticketNo String? @unique
+
+  name     String
+  email    String
+  subject  String
+  category String?
+  message  String
+  status   String  @default("OPEN")
+  priority String  @default("NORMAL")
+
+  adminReply String?
+  repliedAt  DateTime?
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   userId String?
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([ticketNo])
+  @@index([userId])
+  @@index([projectId])
 }
 
 model ProjectSubmission {
@@ -479,15 +545,14 @@ model Referral {
   referred User @relation("ReferredUser", fields: [referredId], references: [id])
 }
 
-
 model Certificate {
-  id            String   @id @default(cuid())
-  certificateNo String   @unique
+  id            String @id @default(cuid())
+  certificateNo String @unique
 
-  volunteerId  String
-  issuedAt     DateTime @default(now())
+  volunteerId String
+  issuedAt    DateTime @default(now())
 
-  completedProjectsCount Int @default(0)
+  completedProjectsCount Int     @default(0)
   skillsSummary          String?
 
   volunteer User @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
@@ -495,33 +560,238 @@ model Certificate {
   @@index([volunteerId])
 }
 
+model MentorReview {
+  id String @id @default(cuid())
 
+  mentorId    String
+  volunteerId String
+  projectId   String
 
-model SupportTicket {
-  id          String @id @default(cuid())
-  ticketNo    String @unique
+  rating Int
 
-  subject     String
-  description String
+  guidance        Int
+  communication   Int
+  availability    Int
+  professionalism Int
 
-  status      SupportTicketStatus @default(OPEN)
-  priority    SupportTicketPriority @default(NORMAL)
+  comment String
 
-  userId      String
-  projectId   String?
+  createdAt DateTime @default(now())
 
-  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  mentor User @relation("MentorReviewsReceived", fields: [mentorId], references: [id])
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  volunteer User @relation("MentorReviewsGiven", fields: [volunteerId], references: [id])
 
-  @@index([userId])
-  @@index([projectId])
-  @@index([ticketNo])
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@unique([mentorId, volunteerId, projectId])
 }
 
 
+
+model MentorAvailability {
+  id        String   @id @default(cuid())
+  mentorId String
+  dayOfWeek String
+  startTime String
+  endTime   String
+  isActive  Boolean @default(true)
+  createdAt DateTime @default(now())
+
+  mentor User @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  @@index([mentorId])
+}
+
+
+model MentorBooking {
+  id          String   @id @default(cuid())
+  mentorId    String
+  volunteerId String
+  projectId   String?
+
+  date        DateTime
+  startTime   String
+  endTime     String
+  status      String   @default("PENDING")
+
+  meetingLink String?
+  note        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mentor    User     @relation("MentorBookingsReceived", fields: [mentorId], references: [id])
+  volunteer User     @relation("MentorBookingsMade", fields: [volunteerId], references: [id])
+  project   Project? @relation(fields: [projectId], references: [id])
+
+  @@index([mentorId])
+  @@index([volunteerId])
+  @@index([projectId])
+}
+
+
+model MentorCertification {
+  id         String   @id @default(cuid())
+
+  mentorId  String
+  mentor    User     @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  status     String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  notes      String?
+  reviewedBy String?
+  reviewedAt DateTime?
+
+  appliedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([mentorId])
+  @@index([status])
+}
+
+
+model Opportunity {
+  id String @id @default(cuid())
+
+  organizationId String
+  organization   User   @relation("OrganizationOpportunities", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String
+
+  type   OpportunityType
+  status OpportunityStatus @default(PUBLISHED)
+
+  workMode WorkMode?
+  location String?
+
+  compensation String?
+  applicationUrl String?
+  contactEmail String?
+
+  imageUrl String?
+
+  featured Boolean @default(false)
+
+  featuredUntil DateTime?
+  sponsoredTier String?
+  sponsoredAt DateTime?
+
+  views Int @default(0)
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  leads OpportunityLead[]
+
+  @@index([organizationId])
+  @@index([type])
+  @@index([status])
+  @@index([featured])
+
+    sponsorships OpportunitySponsorship[]
+}
+
+model OpportunityLead {
+  id String @id @default(cuid())
+
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User?   @relation("OpportunityLeads", fields: [userId], references: [id], onDelete: SetNull)
+
+  name    String?
+  email   String?
+  phone   String?
+  message String?
+
+  source String @default("BUILDUP")
+
+  createdAt DateTime @default(now())
+
+  @@index([opportunityId])
+  @@index([userId])
+
+
+}
+
+
+model OrganizationVerification {
+  id String @id @default(cuid())
+
+  organizationId String @unique
+  organization User @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  businessName String
+  registrationNumber String?
+  websiteUrl String?
+  linkedinUrl String?
+  businessAddress String?
+  certificateUrl String?
+
+  status String @default("PENDING")
+  adminNotes String?
+
+  submittedAt DateTime @default(now())
+  reviewedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+
+model OpportunitySponsorship {
+  id String @id @default(cuid())
+
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  organizationId String
+
+  tier String
+  amount Int
+  days Int
+
+  status String @default("UNPAID") // UNPAID, PAID, FAILED, DISPUTED
+
+  paystackReference String @unique
+
+  paidAt DateTime?
+  expiresAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([opportunityId])
+  @@index([organizationId])
+  @@index([status])
+}
+
+
+model OpportunityAnalytics {
+  id String @id @default(cuid())
+
+  opportunityId String
+  eventType String // SPONSORED_VIEW, VIEW_DETAILS_CLICK, MARKETPLACE_CLICK
+
+  source String? // HOME_SPONSORED_SLIDER, MARKETPLACE_CARD, DETAILS_PAGE
+  userId String?
+  sessionId String?
+
+  createdAt DateTime @default(now())
+
+  @@index([opportunityId])
+  @@index([eventType])
+  @@index([createdAt])
+}
 
 
 enum WithdrawalStatus {
@@ -628,17 +898,23 @@ enum WalletTransactionStatus {
 }
 
 
+enum OpportunityType {
+  PROJECT
+  JOB
+  PROMOTION
+  EVENT
+  COURSE
+}
 
-enum SupportTicketStatus {
-  OPEN
-  IN_PROGRESS
-  RESOLVED
+enum OpportunityStatus {
+  DRAFT
+  PUBLISHED
+  PAUSED
   CLOSED
 }
 
-enum SupportTicketPriority {
-  LOW
-  NORMAL
-  HIGH
-  URGENT
+enum WorkMode {
+  REMOTE
+  HYBRID
+  ONSITE
 }

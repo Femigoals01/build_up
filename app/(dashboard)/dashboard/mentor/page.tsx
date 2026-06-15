@@ -2,16 +2,11 @@
 
 
 
-
-
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
-import UnreadBadge from "@/components/chat/UnreadBadge";
-import SidebarShell from "@/components/sidebar/SidebarShell";
-import SidebarContent from "@/components/sidebar/SidebarContent";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -44,6 +39,7 @@ function getInitials(name: string) {
 
 function parseSkills(skills: string | null | undefined) {
   if (!skills) return [];
+
   return skills
     .split(",")
     .map((skill) => skill.trim())
@@ -84,7 +80,7 @@ export default async function MentorDashboard() {
     redirect("/login");
   }
 
-  const [projects, pendingRequestsCount] = await Promise.all([
+  const [projects, pendingRequestsCount, mentorReviews] = await Promise.all([
     prisma.project.findMany({
       where: {
         mentorId: session.user.id,
@@ -122,31 +118,70 @@ export default async function MentorDashboard() {
         status: "PENDING",
       },
     }),
+
+    prisma.mentorReview.findMany({
+      where: {
+        mentorId: session.user.id,
+      },
+      include: {
+        volunteer: {
+          select: {
+            name: true,
+            username: true,
+          },
+        },
+        project: {
+          select: {
+            title: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 10,
+    }),
   ]);
 
   const totalVolunteers = projects.flatMap(
     (project) => project.applications
   ).length;
+
   const activeProjects = projects.filter(
     (project) => project.status !== "COMPLETED"
   ).length;
+
   const completedProjects = projects.filter(
     (project) => project.status === "COMPLETED"
   ).length;
 
+  const reviewCount = mentorReviews.length;
+
+  const averageRating =
+    reviewCount > 0
+      ? mentorReviews.reduce((sum, review) => sum + review.rating, 0) /
+        reviewCount
+      : 0;
+
+  const averageGuidance =
+    reviewCount > 0
+      ? mentorReviews.reduce((sum, review) => sum + review.guidance, 0) /
+        reviewCount
+      : 0;
+
+  const averageCommunication =
+    reviewCount > 0
+      ? mentorReviews.reduce(
+          (sum, review) => sum + review.communication,
+          0
+        ) / reviewCount
+      : 0;
+
   return (
     <div className="flex bg-slate-50">
-      {/* <SidebarShell>
-        <SidebarContent
-          user={{
-            name: session.user.name || "User",
-            role: session.user.role || "MENTOR",
-          }}
-        />
-      </SidebarShell> */}
-
       <main className="min-w-0 flex-1 bg-[linear-gradient(180deg,#f8fafc_0%,#ffffff_38%,#eef4ff_100%)] px-4 py-6 md:px-8 lg:px-10 lg:py-8">
         <div className="mx-auto max-w-7xl space-y-8">
+          {/* HERO */}
           <section className="relative overflow-hidden rounded-[32px] border border-white/70 bg-white/90 shadow-[0_20px_70px_rgba(15,23,42,0.08)] backdrop-blur">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.14),transparent_28%)]" />
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent" />
@@ -176,6 +211,7 @@ export default async function MentorDashboard() {
                   helper="Awaiting your review"
                   tone="blue"
                 />
+
                 <QuickInfoCard
                   label="Active Volunteers"
                   value={totalVolunteers}
@@ -186,58 +222,90 @@ export default async function MentorDashboard() {
             </div>
           </section>
 
-          <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1.3fr_2fr]">
-            <div className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_12px_35px_rgba(15,23,42,0.05)]">
-              <div className="flex h-full flex-col justify-between gap-5">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    Quick Access
-                  </p>
-                  <h2 className="mt-2 text-xl font-semibold text-slate-900">
-                    Stay on top of new mentorship activity
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-500">
-                    Review incoming mentorship requests and respond faster
-                    without digging through multiple screens.
-                  </p>
-                </div>
+          {/* DASHBOARD STATS */}
+          <section className="space-y-5">
+            <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_420px]">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                <Stat
+                  title="Mentor Rating"
+                  value={Number(averageRating.toFixed(1))}
+                  icon="⭐"
+                  tone="amber"
+                />
 
-                <div className="flex flex-wrap gap-3">
-                  <Link
-                    href="/dashboard/mentor/requests"
-                    className="group relative inline-flex h-12 items-center gap-2 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
-                  >
-                    <span>Open Mentorship Requests</span>
-                    <UnreadBadge />
-                    {pendingRequestsCount > 0 && (
-                      <span className="inline-flex min-w-[24px] items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
-                        {pendingRequestsCount}
-                      </span>
-                    )}
-                  </Link>
-                </div>
+                <Stat
+                  title="Reviews"
+                  value={reviewCount}
+                  icon="💬"
+                  tone="blue"
+                />
+
+                <Stat
+                  title="Guidance"
+                  value={Number(averageGuidance.toFixed(1))}
+                  icon="🎯"
+                  tone="emerald"
+                />
+
+                <Stat
+                  title="Communication"
+                  value={Number(averageCommunication.toFixed(1))}
+                  icon="📢"
+                  tone="slate"
+                />
+              </div>
+
+              <div className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_12px_35px_rgba(15,23,42,0.05)]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Quick Access
+                </p>
+
+                <h2 className="mt-2 text-xl font-semibold text-slate-900">
+                  Stay on top of new mentorship activity
+                </h2>
+
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  Review incoming mentorship requests and respond faster without
+                  digging through multiple screens.
+                </p>
+
+                <Link
+                  href="/dashboard/mentor/requests"
+                  className="mt-6 inline-flex h-12 items-center gap-2 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                  <span>Open Mentorship Requests</span>
+
+                  {pendingRequestsCount > 0 && (
+                    <span className="inline-flex min-w-[24px] items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+                      {pendingRequestsCount}
+                    </span>
+                  )}
+                </Link>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
               <Stat
                 title="Total Projects"
                 value={projects.length}
                 icon="📁"
                 tone="blue"
               />
+
               <Stat
                 title="Active Projects"
                 value={activeProjects}
                 icon="🚀"
                 tone="emerald"
               />
+
               <Stat
                 title="Completed"
                 value={completedProjects}
                 icon="✅"
                 tone="slate"
               />
+
               <Stat
                 title="Volunteers"
                 value={totalVolunteers}
@@ -247,19 +315,67 @@ export default async function MentorDashboard() {
             </div>
           </section>
 
+          {/* REVIEWS */}
+          {mentorReviews.length > 0 && (
+            <section className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Volunteer Feedback
+                </p>
+
+                <h2 className="mt-1 text-xl font-bold text-slate-900">
+                  Recent Mentor Reviews
+                </h2>
+              </div>
+
+              <div className="space-y-4">
+                {mentorReviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="font-bold text-slate-900">
+                          {review.volunteer.name}
+                        </h3>
+
+                        <p className="text-sm text-slate-500">
+                          {review.project.title}
+                        </p>
+                      </div>
+
+                      <div className="rounded-full bg-amber-50 px-3 py-1 text-sm font-bold text-amber-700">
+                        ⭐ {review.rating.toFixed(1)}
+                      </div>
+                    </div>
+
+                    <p className="mt-4 text-sm leading-6 text-slate-600">
+                      {review.comment}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* PROJECTS */}
           {projects.length === 0 ? (
             <section className="rounded-[28px] border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
               <div className="mx-auto max-w-md">
                 <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100 text-3xl">
                   🧑‍🏫
                 </div>
+
                 <h2 className="text-xl font-semibold text-slate-900">
                   No assigned projects yet
                 </h2>
+
                 <p className="mt-2 text-sm leading-6 text-slate-500">
                   When a project is assigned to you, it will appear here
                   together with the volunteers you are guiding.
                 </p>
+
                 <Link
                   href="/dashboard/mentor/requests"
                   className="mt-6 inline-flex h-11 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700"
@@ -354,8 +470,16 @@ function ProjectCard({ project }: { project: Project }) {
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <MiniMetric label="Project Status" value={formatStatus(project.status)} />
-          <MiniMetric label="Assigned Volunteers" value={String(volunteerCount)} />
+          <MiniMetric
+            label="Project Status"
+            value={formatStatus(project.status)}
+          />
+
+          <MiniMetric
+            label="Assigned Volunteers"
+            value={String(volunteerCount)}
+          />
+
           <MiniMetric
             label="Conversation"
             value={project.chat ? "Available" : "Not started"}
@@ -369,9 +493,11 @@ function ProjectCard({ project }: { project: Project }) {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
               Team Members
             </p>
+
             <h3 className="mt-1 text-lg font-semibold text-slate-900">
               Assigned Volunteers
             </h3>
+
             <p className="mt-1 text-sm text-slate-500">
               Accepted volunteers currently working under your mentorship.
             </p>
@@ -383,9 +509,11 @@ function ProjectCard({ project }: { project: Project }) {
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-xl shadow-sm">
               👥
             </div>
+
             <p className="text-sm font-semibold text-slate-700">
               No volunteers assigned yet
             </p>
+
             <p className="mt-1 text-sm text-slate-500">
               Accepted volunteers will appear here once they join this project.
             </p>
@@ -417,6 +545,7 @@ function VolunteerCard({ volunteer }: { volunteer: Volunteer }) {
           <h4 className="truncate text-base font-semibold text-slate-900 md:text-lg">
             {volunteer.name}
           </h4>
+
           <p className="mt-1 break-all text-sm text-slate-500">
             {volunteer.email}
           </p>
@@ -429,6 +558,7 @@ function VolunteerCard({ volunteer }: { volunteer: Volunteer }) {
           value={volunteer.username ? "Available" : "Not available"}
           tone={volunteer.username ? "blue" : "slate"}
         />
+
         <InfoPill
           label="Reviews"
           value={String(volunteer.ratingCount)}
@@ -441,6 +571,7 @@ function VolunteerCard({ volunteer }: { volunteer: Volunteer }) {
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
             Skills
           </p>
+
           <div className="flex flex-wrap gap-2">
             {skills.slice(0, 6).map((skill) => (
               <span
@@ -450,6 +581,7 @@ function VolunteerCard({ volunteer }: { volunteer: Volunteer }) {
                 {skill}
               </span>
             ))}
+
             {skills.length > 6 && (
               <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
                 +{skills.length - 6} more
@@ -461,7 +593,10 @@ function VolunteerCard({ volunteer }: { volunteer: Volunteer }) {
 
       <div className="mt-5 rounded-[20px] border border-amber-100 bg-amber-50 px-4 py-3">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-medium text-amber-800">Volunteer Rating</p>
+          <p className="text-sm font-medium text-amber-800">
+            Volunteer Rating
+          </p>
+
           <p className="text-sm font-bold text-amber-700">
             {hasRating ? `⭐ ${volunteer.rating.toFixed(1)}` : "No ratings yet"}
           </p>
@@ -503,20 +638,21 @@ function Stat({
   };
 
   return (
-    <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-sm font-medium text-slate-500">{title}</h3>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-            {value}
-          </p>
-        </div>
+    <div className="relative min-h-[150px] overflow-hidden rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+      <div
+        className={`absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-2xl border text-lg ${toneStyles[tone]}`}
+      >
+        {icon}
+      </div>
 
-        <div
-          className={`flex h-12 w-12 items-center justify-center rounded-2xl border text-lg ${toneStyles[tone]}`}
-        >
-          {icon}
-        </div>
+      <div className="pr-12">
+        <h3 className="max-w-[130px] text-sm font-medium leading-5 text-slate-500">
+          {title}
+        </h3>
+
+        <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">
+          {value}
+        </p>
       </div>
     </div>
   );
@@ -543,9 +679,11 @@ function QuickInfoCard({
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
         {label}
       </p>
+
       <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
         {value}
       </p>
+
       <p className="mt-1 text-sm text-slate-500">{helper}</p>
     </div>
   );
@@ -557,6 +695,7 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
         {label}
       </p>
+
       <p className="mt-1 text-sm font-semibold text-slate-800">{value}</p>
     </div>
   );
@@ -582,6 +721,7 @@ function InfoPill({
       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] opacity-70">
         {label}
       </p>
+
       <p className="mt-1 text-sm font-semibold">{value}</p>
     </div>
   );

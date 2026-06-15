@@ -371,7 +371,7 @@ export default async function VolunteerProjectDetailsPage({
                     ⭐ {project.mentor.rating.toFixed(1)} ({project.mentor.ratingCount})
                   </p>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  {/* <div className="mt-4 flex flex-wrap gap-2">
                     <Link
                       href={`/portfolio/${project.mentor.username}`}
                       className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
@@ -385,7 +385,33 @@ export default async function VolunteerProjectDetailsPage({
                     >
                       Message
                     </Link>
-                  </div>
+                  </div> */}
+
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+  <Link
+    href={`/mentor/${project.mentor.username}`}
+    className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+  >
+    View Profile
+  </Link>
+
+  <Link
+    href={`/dashboard/messages/start?userId=${project.mentor.id}`}
+    className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+  >
+    Message
+  </Link>
+
+  {project.status === "COMPLETED" && (
+    <Link
+      href={`/dashboard/volunteer/mentor-reviews/${project.id}`}
+      className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+    >
+      ⭐ Review Mentor
+    </Link>
+  )}
+</div>
                 </div>
               )}
             </div>

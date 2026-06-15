@@ -1,270 +1,6 @@
 
 
-// import { getServerSession } from "next-auth";
-// import { redirect } from "next/navigation";
-// import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-// import { prisma } from "@/lib/prisma";
-// import { SupportMessage } from "@prisma/client";
 
-// /* ================= CONFIG ================= */
-
-// export const dynamic = "force-dynamic";
-// export const revalidate = 0;
-
-// /* ================= TYPES ================= */
-
-// // type SupportMessage = {
-// //   id: string;
-// //   name: string;
-// //   email: string;
-// //   subject: string;
-// //   message: string;
-// //   category: string | null;
-// //   status: "OPEN" | "IN_PROGRESS" | "RESOLVED";
-// //   createdAt: Date;
-// // };
-
-// /* ================= PAGE ================= */
-
-// export default async function AdminSupportPage() {
-//   const session = await getServerSession(authOptions);
-
-//   if (!session || session.user.role !== "ADMIN") {
-//     redirect("/login");
-//   }
-
-//   /* ================= DATA ================= */
-
-//   const messages: SupportMessage[] =
-//     await prisma.supportMessage.findMany({
-//       orderBy: { createdAt: "desc" },
-//     });
-
-//   const openCount = messages.filter((m) => m.status === "OPEN").length;
-//   const progressCount = messages.filter((m) => m.status === "IN_PROGRESS").length;
-//   const resolvedCount = messages.filter((m) => m.status === "RESOLVED").length;
-
-//   /* ================= SERVER ACTION ================= */
-
-//   async function updateStatus(
-//     id: string,
-//     status: "OPEN" | "IN_PROGRESS" | "RESOLVED"
-//   ) {
-//     "use server";
-
-//     await prisma.supportMessage.update({
-//       where: { id },
-//       data: { status },
-//     });
-//   }
-
-//   /* ================= UI ================= */
-
-//   return (
-//     <main className="space-y-8">
-//       {/* HERO */}
-//       <section className="overflow-hidden rounded-[32px] border border-slate-200/80 bg-white/90 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur">
-//         <div className="relative overflow-hidden bg-[linear-gradient(135deg,#0f172a_0%,#1e293b_45%,#2563eb_100%)] px-6 py-8 text-white sm:px-8 lg:px-10">
-//           <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
-
-//           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-100/90">
-//             Support System
-//           </p>
-
-//           <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-//             Support Inbox
-//           </h1>
-
-//           <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-200 sm:text-base">
-//             Manage user requests, track issues, and maintain high-quality
-//             platform support with full visibility and control.
-//           </p>
-//         </div>
-
-//         {/* METRICS */}
-//         <div className="grid gap-4 px-6 py-6 sm:px-8 md:grid-cols-3">
-//           <MetricCard
-//             title="Open"
-//             value={openCount}
-//             tone="blue"
-//           />
-//           <MetricCard
-//             title="In Progress"
-//             value={progressCount}
-//             tone="amber"
-//           />
-//           <MetricCard
-//             title="Resolved"
-//             value={resolvedCount}
-//             tone="emerald"
-//           />
-//         </div>
-//       </section>
-
-//       {/* TABLE */}
-//       <section className="rounded-[32px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-8">
-//         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-//           <div>
-//             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">
-//               Message Queue
-//             </p>
-//             <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
-//               All Support Requests
-//             </h2>
-//             <p className="mt-1 text-sm text-slate-500">
-//               View, track, and update support requests across the platform.
-//             </p>
-//           </div>
-
-//           <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
-//             {messages.length} total
-//           </div>
-//         </div>
-
-//         {messages.length === 0 ? (
-//           <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
-//             <p className="text-slate-600">No support messages yet.</p>
-//           </div>
-//         ) : (
-//           <div className="overflow-hidden rounded-[24px] border border-slate-200">
-//             <div className="overflow-x-auto">
-//               <table className="min-w-full divide-y divide-slate-200">
-//                 <thead className="bg-slate-50/80">
-//                   <tr>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       Subject
-//                     </th>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       User
-//                     </th>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       Category
-//                     </th>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       Status
-//                     </th>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       Date
-//                     </th>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       Action
-//                     </th>
-//                   </tr>
-//                 </thead>
-
-//                 <tbody className="divide-y divide-slate-200 bg-white">
-//                   {messages.map((msg) => (
-//                     <tr key={msg.id} className="hover:bg-slate-50/70">
-//                       {/* SUBJECT */}
-//                       <td className="px-4 py-4 align-top">
-//                         <p className="font-semibold text-slate-900">
-//                           {msg.subject}
-//                         </p>
-
-//                         <p className="mt-2 text-sm text-slate-600 line-clamp-2">
-//                           {msg.message}
-//                         </p>
-//                       </td>
-
-//                       {/* USER */}
-//                       <td className="px-4 py-4 align-top">
-//                         <p className="text-sm font-medium text-slate-800">
-//                           {msg.name}
-//                         </p>
-//                         <p className="mt-1 text-sm text-slate-500">
-//                           {msg.email}
-//                         </p>
-//                       </td>
-
-//                       {/* CATEGORY */}
-//                       <td className="px-4 py-4 align-top text-sm text-slate-700">
-//                         {msg.category || "General"}
-//                       </td>
-
-//                       {/* STATUS */}
-//                       <td className="px-4 py-4 align-top">
-//                         <span
-//                           className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-//                             msg.status === "OPEN"
-//                               ? "bg-blue-50 text-blue-700"
-//                               : msg.status === "IN_PROGRESS"
-//                               ? "bg-amber-50 text-amber-700"
-//                               : "bg-emerald-50 text-emerald-700"
-//                           }`}
-//                         >
-//                           {msg.status.replace("_", " ")}
-//                         </span>
-//                       </td>
-
-//                       {/* DATE */}
-//                       <td className="px-4 py-4 align-top text-sm text-slate-500">
-//                         {new Date(msg.createdAt).toLocaleDateString("en-GB", {
-//                           day: "numeric",
-//                           month: "short",
-//                           year: "numeric",
-//                         })}
-//                       </td>
-
-//                       {/* ACTION */}
-//                       <td className="px-4 py-4 align-top">
-//                         <div className="flex flex-col gap-2">
-//                           <form
-//                             action={updateStatus.bind(null, msg.id, "IN_PROGRESS")}
-//                           >
-//                             <button className="text-xs font-semibold text-amber-600 hover:underline">
-//                               Mark In Progress
-//                             </button>
-//                           </form>
-
-//                           <form
-//                             action={updateStatus.bind(null, msg.id, "RESOLVED")}
-//                           >
-//                             <button className="text-xs font-semibold text-emerald-600 hover:underline">
-//                               Mark Resolved
-//                             </button>
-//                           </form>
-//                         </div>
-//                       </td>
-//                     </tr>
-//                   ))}
-//                 </tbody>
-//               </table>
-//             </div>
-//           </div>
-//         )}
-//       </section>
-//     </main>
-//   );
-// }
-
-// /* ================= COMPONENTS ================= */
-
-// function MetricCard({
-//   title,
-//   value,
-//   tone,
-// }: {
-//   title: string;
-//   value: number;
-//   tone: "blue" | "amber" | "emerald";
-// }) {
-//   const toneMap = {
-//     blue: "from-blue-50 to-white border-blue-100",
-//     amber: "from-amber-50 to-white border-amber-100",
-//     emerald: "from-emerald-50 to-white border-emerald-100",
-//   };
-
-//   return (
-//     <div
-//       className={`rounded-2xl border bg-gradient-to-br p-5 shadow-sm ${toneMap[tone]}`}
-//     >
-//       <p className="text-sm font-medium text-slate-500">{title}</p>
-//       <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-//         {value}
-//       </p>
-//     </div>
-//   );
-// }
 
 
 
@@ -274,10 +10,13 @@
 // import { redirect } from "next/navigation";
 // import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 // import { prisma } from "@/lib/prisma";
-// import { SupportMessage } from "@prisma/client";
+// import type { SupportMessage } from "@prisma/client";
+// import Link from "next/link";
 
 // export const dynamic = "force-dynamic";
 // export const revalidate = 0;
+
+// type SupportStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
 
 // export default async function AdminSupportPage() {
 //   const session = await getServerSession(authOptions);
@@ -293,11 +32,9 @@
 //   const openCount = messages.filter((m) => m.status === "OPEN").length;
 //   const progressCount = messages.filter((m) => m.status === "IN_PROGRESS").length;
 //   const resolvedCount = messages.filter((m) => m.status === "RESOLVED").length;
+//   const closedCount = messages.filter((m) => m.status === "CLOSED").length;
 
-//   async function updateStatus(
-//     id: string,
-//     status: "OPEN" | "IN_PROGRESS" | "RESOLVED"
-//   ) {
+//   async function updateStatus(id: string, status: SupportStatus) {
 //     "use server";
 
 //     await prisma.supportMessage.update({
@@ -307,24 +44,27 @@
 //   }
 
 //   return (
-//     <main className="space-y-8">
-//       <section className="grid gap-4 md:grid-cols-3">
+//     <main className="space-y-8 pb-8">
+//       <section className="grid gap-4 md:grid-cols-4">
 //         <MetricCard title="Open" value={openCount} tone="blue" />
 //         <MetricCard title="In Progress" value={progressCount} tone="amber" />
 //         <MetricCard title="Resolved" value={resolvedCount} tone="emerald" />
+//         <MetricCard title="Closed" value={closedCount} tone="slate" />
 //       </section>
 
 //       <section className="rounded-[32px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-8">
 //         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
 //           <div>
 //             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">
-//               Message Queue
+//               Support Ticket Queue
 //             </p>
+
 //             <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
 //               All Support Requests
 //             </h2>
+
 //             <p className="mt-1 text-sm text-slate-500">
-//               View, track, and update support requests across the platform.
+//               Track support requests using ticket references like BUP-SUP-2026-000001.
 //             </p>
 //           </div>
 
@@ -335,7 +75,7 @@
 
 //         {messages.length === 0 ? (
 //           <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
-//             <p className="text-slate-600">No support messages yet.</p>
+//             <p className="text-slate-600">No support tickets yet.</p>
 //           </div>
 //         ) : (
 //           <div className="overflow-hidden rounded-[24px] border border-slate-200">
@@ -343,24 +83,14 @@
 //               <table className="min-w-full divide-y divide-slate-200">
 //                 <thead className="bg-slate-50/80">
 //                   <tr>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       Subject
-//                     </th>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       User
-//                     </th>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       Category
-//                     </th>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       Status
-//                     </th>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       Date
-//                     </th>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       Action
-//                     </th>
+//                     <TableHead>Ticket</TableHead>
+//                     <TableHead>Subject</TableHead>
+//                     <TableHead>User</TableHead>
+//                     <TableHead>Category</TableHead>
+//                     <TableHead>Priority</TableHead>
+//                     <TableHead>Status</TableHead>
+//                     <TableHead>Date</TableHead>
+//                     <TableHead>Action</TableHead>
 //                   </tr>
 //                 </thead>
 
@@ -368,10 +98,27 @@
 //                   {messages.map((msg) => (
 //                     <tr key={msg.id} className="hover:bg-slate-50/70">
 //                       <td className="px-4 py-4 align-top">
+//                         <p className="font-mono text-xs font-black text-blue-700">
+//                           {msg.ticketNo || "No ticket"}
+//                         </p>
+
+//                         {msg.projectId ? (
+//                           <p className="mt-2 font-mono text-[11px] font-semibold text-slate-500">
+//                             Project: {msg.projectId}
+//                           </p>
+//                         ) : (
+//                           <p className="mt-2 text-[11px] text-slate-400">
+//                             No project linked
+//                           </p>
+//                         )}
+//                       </td>
+
+//                       <td className="max-w-[320px] px-4 py-4 align-top">
 //                         <p className="font-semibold text-slate-900">
 //                           {msg.subject}
 //                         </p>
-//                         <p className="mt-2 line-clamp-2 text-sm text-slate-600">
+
+//                         <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">
 //                           {msg.message}
 //                         </p>
 //                       </td>
@@ -380,6 +127,7 @@
 //                         <p className="text-sm font-medium text-slate-800">
 //                           {msg.name}
 //                         </p>
+
 //                         <p className="mt-1 text-sm text-slate-500">
 //                           {msg.email}
 //                         </p>
@@ -390,17 +138,11 @@
 //                       </td>
 
 //                       <td className="px-4 py-4 align-top">
-//                         <span
-//                           className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-//                             msg.status === "OPEN"
-//                               ? "bg-blue-50 text-blue-700"
-//                               : msg.status === "IN_PROGRESS"
-//                               ? "bg-amber-50 text-amber-700"
-//                               : "bg-emerald-50 text-emerald-700"
-//                           }`}
-//                         >
-//                           {msg.status.replace("_", " ")}
-//                         </span>
+//                         <PriorityBadge priority={msg.priority || "NORMAL"} />
+//                       </td>
+
+//                       <td className="px-4 py-4 align-top">
+//                         <StatusBadge status={msg.status} />
 //                       </td>
 
 //                       <td className="px-4 py-4 align-top text-sm text-slate-500">
@@ -412,26 +154,44 @@
 //                       </td>
 
 //                       <td className="px-4 py-4 align-top">
+
+
+//                         <Link
+//   href={`/dashboard/admin/support/${msg.id}`}
+//   className="text-xs font-semibold text-blue-600 hover:underline"
+// >
+//   Open Ticket
+// </Link>
+
+
 //                         <div className="flex flex-col gap-2">
-//                           <form
-//                             action={updateStatus.bind(null, msg.id, "IN_PROGRESS")}
-//                           >
+//                           <form action={updateStatus.bind(null, msg.id, "IN_PROGRESS")}>
 //                             <button
-//                               className="text-xs font-semibold text-amber-600 hover:underline"
+//                               className="text-xs font-semibold text-amber-600 hover:underline disabled:opacity-40"
 //                               type="submit"
+//                               disabled={msg.status === "IN_PROGRESS"}
 //                             >
 //                               Mark In Progress
 //                             </button>
 //                           </form>
 
-//                           <form
-//                             action={updateStatus.bind(null, msg.id, "RESOLVED")}
-//                           >
+//                           <form action={updateStatus.bind(null, msg.id, "RESOLVED")}>
 //                             <button
-//                               className="text-xs font-semibold text-emerald-600 hover:underline"
+//                               className="text-xs font-semibold text-emerald-600 hover:underline disabled:opacity-40"
 //                               type="submit"
+//                               disabled={msg.status === "RESOLVED"}
 //                             >
 //                               Mark Resolved
+//                             </button>
+//                           </form>
+
+//                           <form action={updateStatus.bind(null, msg.id, "CLOSED")}>
+//                             <button
+//                               className="text-xs font-semibold text-slate-600 hover:underline disabled:opacity-40"
+//                               type="submit"
+//                               disabled={msg.status === "CLOSED"}
+//                             >
+//                               Close Ticket
 //                             </button>
 //                           </form>
 //                         </div>
@@ -448,212 +208,45 @@
 //   );
 // }
 
-// function MetricCard({
-//   title,
-//   value,
-//   tone,
-// }: {
-//   title: string;
-//   value: number;
-//   tone: "blue" | "amber" | "emerald";
-// }) {
-//   const toneMap = {
-//     blue: "from-blue-50 to-white border-blue-100",
-//     amber: "from-amber-50 to-white border-amber-100",
-//     emerald: "from-emerald-50 to-white border-emerald-100",
-//   };
-
+// function TableHead({ children }: { children: React.ReactNode }) {
 //   return (
-//     <div
-//       className={`rounded-2xl border bg-gradient-to-br p-5 shadow-sm ${toneMap[tone]}`}
-//     >
-//       <p className="text-sm font-medium text-slate-500">{title}</p>
-//       <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-//         {value}
-//       </p>
-//     </div>
+//     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+//       {children}
+//     </th>
 //   );
 // }
 
-
-
-// import { getServerSession } from "next-auth";
-// import { redirect } from "next/navigation";
-// import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-// import { prisma } from "@/lib/prisma";
-// import { SupportMessage } from "@prisma/client";
-
-// export const dynamic = "force-dynamic";
-// export const revalidate = 0;
-
-// export default async function AdminSupportPage() {
-//   const session = await getServerSession(authOptions);
-
-//   if (!session || session.user.role !== "ADMIN") {
-//     redirect("/login");
-//   }
-
-//   const messages: SupportMessage[] = await prisma.supportMessage.findMany({
-//     orderBy: { createdAt: "desc" },
-//   });
-
-//   const openCount = messages.filter((m) => m.status === "OPEN").length;
-//   const progressCount = messages.filter((m) => m.status === "IN_PROGRESS").length;
-//   const resolvedCount = messages.filter((m) => m.status === "RESOLVED").length;
-
-//   async function updateStatus(
-//     id: string,
-//     status: "OPEN" | "IN_PROGRESS" | "RESOLVED"
-//   ) {
-//     "use server";
-
-//     await prisma.supportMessage.update({
-//       where: { id },
-//       data: { status },
-//     });
-//   }
+// function StatusBadge({ status }: { status: string }) {
+//   const style =
+//     status === "OPEN"
+//       ? "bg-blue-50 text-blue-700"
+//       : status === "IN_PROGRESS"
+//       ? "bg-amber-50 text-amber-700"
+//       : status === "RESOLVED"
+//       ? "bg-emerald-50 text-emerald-700"
+//       : "bg-slate-100 text-slate-700";
 
 //   return (
-//     <main className="space-y-6 pb-8">
-//       <section className="sticky top-0 z-10 -mx-1 bg-[linear-gradient(180deg,rgba(248,250,252,0.98)_0%,rgba(248,250,252,0.92)_70%,rgba(248,250,252,0)_100%)] px-1 pb-4">
-//         <div className="grid gap-4 md:grid-cols-3">
-//           <MetricCard title="Open" value={openCount} tone="blue" />
-//           <MetricCard title="In Progress" value={progressCount} tone="amber" />
-//           <MetricCard title="Resolved" value={resolvedCount} tone="emerald" />
-//         </div>
-//       </section>
+//     <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${style}`}>
+//       {status.replaceAll("_", " ")}
+//     </span>
+//   );
+// }
 
-//       <section className="rounded-[32px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-8">
-//         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-//           <div>
-//             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">
-//               Message Queue
-//             </p>
-//             <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
-//               All Support Requests
-//             </h2>
-//             <p className="mt-1 text-sm text-slate-500">
-//               View, track, and update support requests across the platform.
-//             </p>
-//           </div>
+// function PriorityBadge({ priority }: { priority: string }) {
+//   const style =
+//     priority === "URGENT"
+//       ? "border-rose-200 bg-rose-50 text-rose-700"
+//       : priority === "HIGH"
+//       ? "border-orange-200 bg-orange-50 text-orange-700"
+//       : priority === "LOW"
+//       ? "border-slate-200 bg-slate-50 text-slate-600"
+//       : "border-blue-200 bg-blue-50 text-blue-700";
 
-//           <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
-//             {messages.length} total
-//           </div>
-//         </div>
-
-//         {messages.length === 0 ? (
-//           <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
-//             <p className="text-slate-600">No support messages yet.</p>
-//           </div>
-//         ) : (
-//           <div className="overflow-hidden rounded-[24px] border border-slate-200">
-//             <div className="max-h-[calc(100vh-360px)] overflow-auto">
-//               <table className="min-w-full divide-y divide-slate-200">
-//                 <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur">
-//                   <tr>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       Subject
-//                     </th>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       User
-//                     </th>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       Category
-//                     </th>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       Status
-//                     </th>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       Date
-//                     </th>
-//                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-//                       Action
-//                     </th>
-//                   </tr>
-//                 </thead>
-
-//                 <tbody className="divide-y divide-slate-200 bg-white">
-//                   {messages.map((msg) => (
-//                     <tr key={msg.id} className="hover:bg-slate-50/70">
-//                       <td className="px-4 py-4 align-top">
-//                         <p className="font-semibold text-slate-900">
-//                           {msg.subject}
-//                         </p>
-//                         <p className="mt-2 line-clamp-2 text-sm text-slate-600">
-//                           {msg.message}
-//                         </p>
-//                       </td>
-
-//                       <td className="px-4 py-4 align-top">
-//                         <p className="text-sm font-medium text-slate-800">
-//                           {msg.name}
-//                         </p>
-//                         <p className="mt-1 text-sm text-slate-500">
-//                           {msg.email}
-//                         </p>
-//                       </td>
-
-//                       <td className="px-4 py-4 align-top text-sm text-slate-700">
-//                         {msg.category || "General"}
-//                       </td>
-
-//                       <td className="px-4 py-4 align-top">
-//                         <span
-//                           className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-//                             msg.status === "OPEN"
-//                               ? "bg-blue-50 text-blue-700"
-//                               : msg.status === "IN_PROGRESS"
-//                               ? "bg-amber-50 text-amber-700"
-//                               : "bg-emerald-50 text-emerald-700"
-//                           }`}
-//                         >
-//                           {msg.status.replace("_", " ")}
-//                         </span>
-//                       </td>
-
-//                       <td className="px-4 py-4 align-top text-sm text-slate-500">
-//                         {new Date(msg.createdAt).toLocaleDateString("en-GB", {
-//                           day: "numeric",
-//                           month: "short",
-//                           year: "numeric",
-//                         })}
-//                       </td>
-
-//                       <td className="px-4 py-4 align-top">
-//                         <div className="flex flex-col gap-2">
-//                           <form
-//                             action={updateStatus.bind(null, msg.id, "IN_PROGRESS")}
-//                           >
-//                             <button
-//                               className="text-xs font-semibold text-amber-600 hover:underline"
-//                               type="submit"
-//                             >
-//                               Mark In Progress
-//                             </button>
-//                           </form>
-
-//                           <form
-//                             action={updateStatus.bind(null, msg.id, "RESOLVED")}
-//                           >
-//                             <button
-//                               className="text-xs font-semibold text-emerald-600 hover:underline"
-//                               type="submit"
-//                             >
-//                               Mark Resolved
-//                             </button>
-//                           </form>
-//                         </div>
-//                       </td>
-//                     </tr>
-//                   ))}
-//                 </tbody>
-//               </table>
-//             </div>
-//           </div>
-//         )}
-//       </section>
-//     </main>
+//   return (
+//     <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${style}`}>
+//       {priority}
+//     </span>
 //   );
 // }
 
@@ -664,18 +257,17 @@
 // }: {
 //   title: string;
 //   value: number;
-//   tone: "blue" | "amber" | "emerald";
+//   tone: "blue" | "amber" | "emerald" | "slate";
 // }) {
 //   const toneMap = {
 //     blue: "from-blue-50 to-white border-blue-100",
 //     amber: "from-amber-50 to-white border-amber-100",
 //     emerald: "from-emerald-50 to-white border-emerald-100",
+//     slate: "from-slate-50 to-white border-slate-200",
 //   };
 
 //   return (
-//     <div
-//       className={`rounded-2xl border bg-gradient-to-br p-5 shadow-sm ${toneMap[tone]}`}
-//     >
+//     <div className={`rounded-2xl border bg-gradient-to-br p-5 shadow-sm ${toneMap[tone]}`}>
 //       <p className="text-sm font-medium text-slate-500">{title}</p>
 //       <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
 //         {value}
@@ -683,6 +275,11 @@
 //     </div>
 //   );
 // }
+
+
+
+
+
 
 
 
@@ -690,10 +287,13 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
-import { SupportMessage } from "@prisma/client";
+import type { SupportMessage } from "@prisma/client";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+type SupportStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
 
 export default async function AdminSupportPage() {
   const session = await getServerSession(authOptions);
@@ -709,11 +309,9 @@ export default async function AdminSupportPage() {
   const openCount = messages.filter((m) => m.status === "OPEN").length;
   const progressCount = messages.filter((m) => m.status === "IN_PROGRESS").length;
   const resolvedCount = messages.filter((m) => m.status === "RESOLVED").length;
+  const closedCount = messages.filter((m) => m.status === "CLOSED").length;
 
-  async function updateStatus(
-    id: string,
-    status: "OPEN" | "IN_PROGRESS" | "RESOLVED"
-  ) {
+  async function updateStatus(id: string, status: SupportStatus) {
     "use server";
 
     await prisma.supportMessage.update({
@@ -724,23 +322,26 @@ export default async function AdminSupportPage() {
 
   return (
     <main className="space-y-8 pb-8">
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-4">
         <MetricCard title="Open" value={openCount} tone="blue" />
         <MetricCard title="In Progress" value={progressCount} tone="amber" />
         <MetricCard title="Resolved" value={resolvedCount} tone="emerald" />
+        <MetricCard title="Closed" value={closedCount} tone="slate" />
       </section>
 
       <section className="rounded-[32px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-8">
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">
-              Message Queue
+              Support Ticket Queue
             </p>
+
             <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
               All Support Requests
             </h2>
+
             <p className="mt-1 text-sm text-slate-500">
-              View, track, and update support requests across the platform.
+              Track support requests using ticket references like BUP-SUP-2026-000001.
             </p>
           </div>
 
@@ -751,7 +352,7 @@ export default async function AdminSupportPage() {
 
         {messages.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
-            <p className="text-slate-600">No support messages yet.</p>
+            <p className="text-slate-600">No support tickets yet.</p>
           </div>
         ) : (
           <div className="overflow-hidden rounded-[24px] border border-slate-200">
@@ -759,24 +360,14 @@ export default async function AdminSupportPage() {
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-slate-50/80">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Subject
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      User
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Category
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Action
-                    </th>
+                    <TableHead>Ticket</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Action</TableHead>
                   </tr>
                 </thead>
 
@@ -784,10 +375,27 @@ export default async function AdminSupportPage() {
                   {messages.map((msg) => (
                     <tr key={msg.id} className="hover:bg-slate-50/70">
                       <td className="px-4 py-4 align-top">
+                        <p className="font-mono text-xs font-black text-blue-700">
+                          {msg.ticketNo || "No ticket"}
+                        </p>
+
+                        {msg.projectId ? (
+                          <p className="mt-2 font-mono text-[11px] font-semibold text-slate-500">
+                            Project: {msg.projectId}
+                          </p>
+                        ) : (
+                          <p className="mt-2 text-[11px] text-slate-400">
+                            No project linked
+                          </p>
+                        )}
+                      </td>
+
+                      <td className="max-w-[320px] px-4 py-4 align-top">
                         <p className="font-semibold text-slate-900">
                           {msg.subject}
                         </p>
-                        <p className="mt-2 line-clamp-2 text-sm text-slate-600">
+
+                        <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">
                           {msg.message}
                         </p>
                       </td>
@@ -796,6 +404,7 @@ export default async function AdminSupportPage() {
                         <p className="text-sm font-medium text-slate-800">
                           {msg.name}
                         </p>
+
                         <p className="mt-1 text-sm text-slate-500">
                           {msg.email}
                         </p>
@@ -806,17 +415,11 @@ export default async function AdminSupportPage() {
                       </td>
 
                       <td className="px-4 py-4 align-top">
-                        <span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                            msg.status === "OPEN"
-                              ? "bg-blue-50 text-blue-700"
-                              : msg.status === "IN_PROGRESS"
-                              ? "bg-amber-50 text-amber-700"
-                              : "bg-emerald-50 text-emerald-700"
-                          }`}
-                        >
-                          {msg.status.replace("_", " ")}
-                        </span>
+                        <PriorityBadge priority={msg.priority || "NORMAL"} />
+                      </td>
+
+                      <td className="px-4 py-4 align-top">
+                        <StatusBadge status={msg.status} />
                       </td>
 
                       <td className="px-4 py-4 align-top text-sm text-slate-500">
@@ -828,26 +431,42 @@ export default async function AdminSupportPage() {
                       </td>
 
                       <td className="px-4 py-4 align-top">
+                        {/* <div className="flex flex-col gap-2"> */}
+
                         <div className="flex flex-col gap-2">
-                          <form
-                            action={updateStatus.bind(null, msg.id, "IN_PROGRESS")}
-                          >
+  <Link
+    href={`/dashboard/admin/support/${msg.id}`}
+    className="text-xs font-semibold text-blue-600 hover:underline"
+  >
+    Open Ticket
+  </Link>
+                          <form action={updateStatus.bind(null, msg.id, "IN_PROGRESS")}>
                             <button
-                              className="text-xs font-semibold text-amber-600 hover:underline"
+                              className="text-xs font-semibold text-amber-600 hover:underline disabled:opacity-40"
                               type="submit"
+                              disabled={msg.status === "IN_PROGRESS"}
                             >
                               Mark In Progress
                             </button>
                           </form>
 
-                          <form
-                            action={updateStatus.bind(null, msg.id, "RESOLVED")}
-                          >
+                          <form action={updateStatus.bind(null, msg.id, "RESOLVED")}>
                             <button
-                              className="text-xs font-semibold text-emerald-600 hover:underline"
+                              className="text-xs font-semibold text-emerald-600 hover:underline disabled:opacity-40"
                               type="submit"
+                              disabled={msg.status === "RESOLVED"}
                             >
                               Mark Resolved
+                            </button>
+                          </form>
+
+                          <form action={updateStatus.bind(null, msg.id, "CLOSED")}>
+                            <button
+                              className="text-xs font-semibold text-slate-600 hover:underline disabled:opacity-40"
+                              type="submit"
+                              disabled={msg.status === "CLOSED"}
+                            >
+                              Close Ticket
                             </button>
                           </form>
                         </div>
@@ -864,6 +483,48 @@ export default async function AdminSupportPage() {
   );
 }
 
+function TableHead({ children }: { children: React.ReactNode }) {
+  return (
+    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+      {children}
+    </th>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const style =
+    status === "OPEN"
+      ? "bg-blue-50 text-blue-700"
+      : status === "IN_PROGRESS"
+      ? "bg-amber-50 text-amber-700"
+      : status === "RESOLVED"
+      ? "bg-emerald-50 text-emerald-700"
+      : "bg-slate-100 text-slate-700";
+
+  return (
+    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${style}`}>
+      {status.replaceAll("_", " ")}
+    </span>
+  );
+}
+
+function PriorityBadge({ priority }: { priority: string }) {
+  const style =
+    priority === "URGENT"
+      ? "border-rose-200 bg-rose-50 text-rose-700"
+      : priority === "HIGH"
+      ? "border-orange-200 bg-orange-50 text-orange-700"
+      : priority === "LOW"
+      ? "border-slate-200 bg-slate-50 text-slate-600"
+      : "border-blue-200 bg-blue-50 text-blue-700";
+
+  return (
+    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${style}`}>
+      {priority}
+    </span>
+  );
+}
+
 function MetricCard({
   title,
   value,
@@ -871,18 +532,17 @@ function MetricCard({
 }: {
   title: string;
   value: number;
-  tone: "blue" | "amber" | "emerald";
+  tone: "blue" | "amber" | "emerald" | "slate";
 }) {
   const toneMap = {
     blue: "from-blue-50 to-white border-blue-100",
     amber: "from-amber-50 to-white border-amber-100",
     emerald: "from-emerald-50 to-white border-emerald-100",
+    slate: "from-slate-50 to-white border-slate-200",
   };
 
   return (
-    <div
-      className={`rounded-2xl border bg-gradient-to-br p-5 shadow-sm ${toneMap[tone]}`}
-    >
+    <div className={`rounded-2xl border bg-gradient-to-br p-5 shadow-sm ${toneMap[tone]}`}>
       <p className="text-sm font-medium text-slate-500">{title}</p>
       <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
         {value}

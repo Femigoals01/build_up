@@ -88,6 +88,8 @@ export default async function PublicPortfolioPage({
       profileImageUrl: true,
       rating: true,
       ratingCount: true,
+      level: true,
+      points: true,
       isPortfolioPublic: true,
       showCountryPublicly: true,
       showBioPublicly: true,
@@ -143,6 +145,55 @@ export default async function PublicPortfolioPage({
   const nextProfileLevel = getNextProfileLevel(profileStrength.score);
 
   const totalProjects = portfolioItems.length;
+
+  const reviewItems = portfolioItems.filter(
+  (item) => item.review
+);
+
+const technicalAverage =
+  reviewItems.length > 0
+    ? (
+        reviewItems.reduce(
+          (sum, item) =>
+            sum + (item.review?.technicalSkill || 0),
+          0
+        ) / reviewItems.length
+      ).toFixed(1)
+    : "0.0";
+
+const communicationAverage =
+  reviewItems.length > 0
+    ? (
+        reviewItems.reduce(
+          (sum, item) =>
+            sum + (item.review?.communication || 0),
+          0
+        ) / reviewItems.length
+      ).toFixed(1)
+    : "0.0";
+
+const professionalismAverage =
+  reviewItems.length > 0
+    ? (
+        reviewItems.reduce(
+          (sum, item) =>
+            sum + (item.review?.professionalism || 0),
+          0
+        ) / reviewItems.length
+      ).toFixed(1)
+    : "0.0";
+
+const timelinessAverage =
+  reviewItems.length > 0
+    ? (
+        reviewItems.reduce(
+          (sum, item) =>
+            sum + (item.review?.timeliness || 0),
+          0
+        ) / reviewItems.length
+      ).toFixed(1)
+    : "0.0";
+
   const totalReviews = user.ratingCount;
   const totalBadges = badges.length;
 
@@ -333,6 +384,67 @@ export default async function PublicPortfolioPage({
           </div>
         </div>
       </section>
+
+      <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8">
+  <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+    <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
+          Reputation Dashboard
+        </p>
+
+        <h2 className="mt-2 text-3xl font-black text-slate-950">
+          Verified Performance Metrics
+        </h2>
+
+        <p className="mt-2 text-sm text-slate-500">
+          Generated from verified BuildUp reviews.
+        </p>
+      </div>
+
+      <div className="rounded-2xl bg-slate-950 px-5 py-4 text-white">
+        <p className="text-xs uppercase tracking-[0.16em] text-slate-400">
+          Volunteer Level
+        </p>
+
+        <p className="mt-1 text-2xl font-black">
+          Level {user.level}
+        </p>
+
+        <p className="text-sm text-slate-300">
+          {user.points} Points
+        </p>
+      </div>
+    </div>
+
+    <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <MetricCard
+        label="Overall Rating"
+        value={`${user.rating.toFixed(1)} ⭐`}
+      />
+
+      <MetricCard
+        label="Technical Skill"
+        value={technicalAverage}
+      />
+
+      <MetricCard
+        label="Communication"
+        value={communicationAverage}
+      />
+
+      <MetricCard
+        label="Professionalism"
+        value={professionalismAverage}
+      />
+
+      <MetricCard
+        label="Timeliness"
+        value={timelinessAverage}
+      />
+    </div>
+  </div>
+</section>
 
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
@@ -627,6 +739,29 @@ function ProofMini({ active, label }: { active: boolean; label: string }) {
       >
         {active ? "Yes" : "No"}
       </span>
+    </div>
+  );
+}
+
+
+
+
+function MetricCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+        {label}
+      </p>
+
+      <p className="mt-2 text-2xl font-black text-slate-950">
+        {value}
+      </p>
     </div>
   );
 }
