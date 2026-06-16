@@ -30,11 +30,16 @@ export default async function DashboardLayout({
         {/* BODY - fixed height area */}
         <div className="flex min-h-0 flex-1 overflow-hidden">
           {/* SIDEBAR - does not move when content scrolls */}
-          <aside className="hidden h-full shrink-0 overflow-y-auto xl:block">
+          {/* <aside className="hidden h-full shrink-0 overflow-y-auto xl:block">
             <SidebarShell>
               <SidebarContent user={session?.user || {}} />
             </SidebarShell>
-          </aside>
+          </aside> */}
+
+
+          <SidebarShell>
+  <SidebarContent user={session?.user || {}} />
+</SidebarShell>
 
           {/* MAIN CONTENT - only this scrolls */}
           <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden">

@@ -1,3 +1,7 @@
+
+
+
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -760,7 +764,7 @@ model OpportunitySponsorship {
   amount Int
   days Int
 
-  status String @default("UNPAID") // UNPAID, PAID, FAILED, DISPUTED
+  status String @default("UNPAID") // UNPAID, PAID, FAILED, DISPUTED, EXPIRED
 
   paystackReference String @unique
 
