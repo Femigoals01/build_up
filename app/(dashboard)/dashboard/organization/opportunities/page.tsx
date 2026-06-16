@@ -180,7 +180,8 @@ export default function OrganizationOpportunitiesPage() {
       setLoading(true);
       setError("");
 
-      const res = await fetch("/api/opportunities?status=");
+      // const res = await fetch("/api/opportunities?status=");
+      const res = await fetch("/api/opportunities?mine=true&status=");
       const data = await res.json();
 
       if (!res.ok) {
