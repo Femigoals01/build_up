@@ -459,10 +459,14 @@ export default function PublicNavbar() {
   Leaderboard
 </MobileNavLink>
 
-
-<MobileNavLink href="/mentors" onClick={() => setOpen(false)}>
-  Mentors
+<MobileNavLink href="/marketplace" onClick={() => setOpen(false)}>
+  Marketplace
 </MobileNavLink>
+
+
+{/* <MobileNavLink href="/mentors" onClick={() => setOpen(false)}>
+  Mentors
+</MobileNavLink> */}
 
 
           {!isSignedIn ? (
