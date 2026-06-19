@@ -1,7 +1,3 @@
-
-
-
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -104,8 +100,6 @@ model User {
   referralCount   Int   @default(0)
   referralBalance Float @default(0)
 
-  
-
   submissionComments ProjectSubmissionComment[]
 
   mentorReviewsReceived MentorReview[] @relation("MentorReviewsReceived")
@@ -118,23 +112,40 @@ model User {
 
   points Int @default(0)
 
-  mentorAvailabilities MentorAvailability[]
-mentorBookingsReceived MentorBooking[] @relation("MentorBookingsReceived")
-mentorBookingsMade MentorBooking[] @relation("MentorBookingsMade")
+  mentorAvailabilities   MentorAvailability[]
+  mentorBookingsReceived MentorBooking[]      @relation("MentorBookingsReceived")
+  mentorBookingsMade     MentorBooking[]      @relation("MentorBookingsMade")
 
-mentorCertifications MentorCertification[]
+  mentorCertifications MentorCertification[]
 
+  opportunities    Opportunity[]     @relation("OrganizationOpportunities")
+  opportunityLeads OpportunityLead[] @relation("OpportunityLeads")
 
-opportunities Opportunity[] @relation("OrganizationOpportunities")
-opportunityLeads OpportunityLead[] @relation("OpportunityLeads")
+  organizationVerified Boolean @default(false)
 
-organizationVerified Boolean @default(false)
+  organizationVerifiedAt DateTime?
 
-organizationVerifiedAt DateTime?
+  organizationVerificationStatus String @default("PENDING")
 
-organizationVerificationStatus String @default("PENDING")
+  organizationVerification OrganizationVerification?
 
-organizationVerification OrganizationVerification?
+  communityPosts    CommunityPost[]
+  communityComments CommunityComment[]
+
+  communityReactions CommunityReaction[]
+
+  communityReports CommunityReport[]
+
+  communityMessages CommunityMessage[]
+
+  communityPoints Int @default(0)
+
+  communityPollVotes CommunityPollVote[]
+
+  communityStories CommunityStory[]
+
+  communityStoryViews     CommunityStoryView[]
+  communityStoryReactions CommunityStoryReaction[]
 }
 
 /// *
@@ -591,15 +602,13 @@ model MentorReview {
   @@unique([mentorId, volunteerId, projectId])
 }
 
-
-
 model MentorAvailability {
   id        String   @id @default(cuid())
-  mentorId String
+  mentorId  String
   dayOfWeek String
   startTime String
   endTime   String
-  isActive  Boolean @default(true)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
   mentor User @relation(fields: [mentorId], references: [id], onDelete: Cascade)
@@ -607,17 +616,16 @@ model MentorAvailability {
   @@index([mentorId])
 }
 
-
 model MentorBooking {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   mentorId    String
   volunteerId String
   projectId   String?
 
-  date        DateTime
-  startTime   String
-  endTime     String
-  status      String   @default("PENDING")
+  date      DateTime
+  startTime String
+  endTime   String
+  status    String   @default("PENDING")
 
   meetingLink String?
   note        String?
@@ -634,14 +642,13 @@ model MentorBooking {
   @@index([projectId])
 }
 
-
 model MentorCertification {
-  id         String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  mentorId  String
-  mentor    User     @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  mentorId String
+  mentor   User   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
 
-  status     String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  status     String    @default("PENDING") // PENDING, APPROVED, REJECTED
   notes      String?
   reviewedBy String?
   reviewedAt DateTime?
@@ -653,7 +660,6 @@ model MentorCertification {
   @@index([mentorId])
   @@index([status])
 }
-
 
 model Opportunity {
   id String @id @default(cuid())
@@ -670,9 +676,9 @@ model Opportunity {
   workMode WorkMode?
   location String?
 
-  compensation String?
+  compensation   String?
   applicationUrl String?
-  contactEmail String?
+  contactEmail   String?
 
   imageUrl String?
 
@@ -680,7 +686,7 @@ model Opportunity {
 
   featuredUntil DateTime?
   sponsoredTier String?
-  sponsoredAt DateTime?
+  sponsoredAt   DateTime?
 
   views Int @default(0)
 
@@ -692,12 +698,12 @@ model Opportunity {
 
   leads OpportunityLead[]
 
+  sponsorships OpportunitySponsorship[]
+
   @@index([organizationId])
   @@index([type])
   @@index([status])
   @@index([featured])
-
-    sponsorships OpportunitySponsorship[]
 }
 
 model OpportunityLead {
@@ -720,29 +726,26 @@ model OpportunityLead {
 
   @@index([opportunityId])
   @@index([userId])
-
-
 }
-
 
 model OrganizationVerification {
   id String @id @default(cuid())
 
   organizationId String @unique
-  organization User @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   User   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  businessName String
+  businessName       String
   registrationNumber String?
-  websiteUrl String?
-  linkedinUrl String?
-  businessAddress String?
-  certificateUrl String?
+  websiteUrl         String?
+  linkedinUrl        String?
+  businessAddress    String?
+  certificateUrl     String?
 
-  status String @default("PENDING")
+  status     String  @default("PENDING")
   adminNotes String?
 
-  submittedAt DateTime @default(now())
-  reviewedAt DateTime?
+  submittedAt DateTime  @default(now())
+  reviewedAt  DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -750,7 +753,6 @@ model OrganizationVerification {
   @@index([organizationId])
   @@index([status])
 }
-
 
 model OpportunitySponsorship {
   id String @id @default(cuid())
@@ -760,15 +762,15 @@ model OpportunitySponsorship {
 
   organizationId String
 
-  tier String
+  tier   String
   amount Int
-  days Int
+  days   Int
 
   status String @default("UNPAID") // UNPAID, PAID, FAILED, DISPUTED, EXPIRED
 
   paystackReference String @unique
 
-  paidAt DateTime?
+  paidAt    DateTime?
   expiresAt DateTime?
 
   createdAt DateTime @default(now())
@@ -779,15 +781,14 @@ model OpportunitySponsorship {
   @@index([status])
 }
 
-
 model OpportunityAnalytics {
   id String @id @default(cuid())
 
   opportunityId String
-  eventType String // SPONSORED_VIEW, VIEW_DETAILS_CLICK, MARKETPLACE_CLICK
+  eventType     String // SPONSORED_VIEW, VIEW_DETAILS_CLICK, MARKETPLACE_CLICK
 
-  source String? // HOME_SPONSORED_SLIDER, MARKETPLACE_CARD, DETAILS_PAGE
-  userId String?
+  source    String? // HOME_SPONSORED_SLIDER, MARKETPLACE_CARD, DETAILS_PAGE
+  userId    String?
   sessionId String?
 
   createdAt DateTime @default(now())
@@ -797,6 +798,194 @@ model OpportunityAnalytics {
   @@index([createdAt])
 }
 
+model CommunityPost {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  category String
+  content  String
+  likes    Int     @default(0)
+  isPinned Boolean @default(false)
+
+  imageUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comments CommunityComment[]
+
+  reactions CommunityReaction[]
+
+  reports CommunityReport[]
+
+  poll CommunityPoll?
+
+  @@index([userId])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model CommunityComment {
+  id String @id @default(cuid())
+
+  postId String
+  userId String
+
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content String
+
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model CommunityReaction {
+  id String @id @default(cuid())
+
+  postId String
+  userId String
+
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type String @default("LIKE")
+
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model CommunityReport {
+  id String @id @default(cuid())
+
+  postId String
+  userId String
+
+  reason String
+  status String @default("PENDING")
+
+  createdAt DateTime @default(now())
+
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  resolvedAt DateTime?
+  resolvedBy String?
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+  @@index([status])
+}
+
+model CommunityMessage {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content String
+
+  createdAt DateTime @default(now())
+
+  mediaUrl  String?
+  mediaType String?
+
+  @@index([createdAt])
+}
+
+model CommunityPoll {
+  id     String        @id @default(cuid())
+  postId String        @unique
+  post   CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  question String
+  options  CommunityPollOption[]
+
+  createdAt DateTime @default(now())
+}
+
+model CommunityPollOption {
+  id     String        @id @default(cuid())
+  pollId String
+  poll   CommunityPoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  text  String
+  votes CommunityPollVote[]
+
+  createdAt DateTime @default(now())
+}
+
+model CommunityPollVote {
+  id       String              @id @default(cuid())
+  optionId String
+  option   CommunityPollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([optionId, userId])
+}
+
+model CommunityStory {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content   String?
+  mediaUrl  String?
+  mediaType String?
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  views     CommunityStoryView[]
+  reactions CommunityStoryReaction[]
+
+  @@index([createdAt])
+  @@index([expiresAt])
+}
+
+model CommunityStoryView {
+  id String @id @default(cuid())
+
+  storyId String
+  story   CommunityStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([storyId, userId])
+}
+
+model CommunityStoryReaction {
+  id String @id @default(cuid())
+
+  storyId String
+  story   CommunityStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type String
+
+  createdAt DateTime @default(now())
+
+  @@unique([storyId, userId])
+}
 
 enum WithdrawalStatus {
   PENDING
@@ -900,7 +1089,6 @@ enum WalletTransactionStatus {
   COMPLETED
   FAILED
 }
-
 
 enum OpportunityType {
   PROJECT

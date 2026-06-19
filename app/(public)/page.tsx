@@ -355,17 +355,27 @@ export default async function HomePage() {
 
           <div className="relative mx-auto max-w-7xl">
             <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch">
-              <div className="flex flex-col justify-between rounded-[32px] border border-blue-100 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-8">
+              {/* <div className="flex flex-col justify-between rounded-[32px] border border-blue-100 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-8"> */}
+                
+                
+                <div className="flex flex-col justify-between rounded-[24px] border border-blue-100 bg-white/80 p-4 shadow-sm backdrop-blur sm:p-8">
                 <div>
                   <span className="inline-flex rounded-full bg-blue-100 px-4 py-2 text-sm font-black uppercase tracking-[0.22em] text-blue-700">
                     Why BuildUp exists
                   </span>
 
-                  <h2 className="mt-5 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl lg:text-4xl">
+                  {/* <h2 className="mt-5 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl lg:text-4xl"> */}
+                    
+                    <h2 className="mt-4 text-[1.8rem] leading-tight font-black tracking-tight text-slate-950 sm:text-4xl lg:text-4xl">
                     Courses teach skills. Real projects build confidence.
                   </h2>
 
-                  <p className="mt-5 text-base leading-8 text-slate-600 sm:text-lg">
+                  {/* <p className="mt-5 text-base leading-8 text-slate-600 sm:text-lg"> */}
+
+                    <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-lg">
+
+
+
                     Many people finish courses but still struggle to prove real
                     ability. BuildUp closes that gap by connecting learning to
                     live work, mentors, organizations, stipends, and visible
@@ -373,7 +383,9 @@ export default async function HomePage() {
                   </p>
                 </div>
 
-                <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                {/* <div className="mt-6 grid gap-4 sm:grid-cols-3"> */}
+
+                <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
                   {[
                     ["🎯", "The Problem", "People learn, but lack real experience."],
                     ["🌉", "The Bridge", "Organizations post real projects at low cost."],
@@ -385,7 +397,7 @@ export default async function HomePage() {
                   ].map(([icon, title, text]) => (
                     <div
                       key={title}
-                      className="rounded-[24px] border border-blue-100 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+                      className="rounded-[20px] border border-blue-100 bg-white p-3 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
                     >
                       <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-xl">
                         {icon}
@@ -414,12 +426,6 @@ export default async function HomePage() {
                     </h3>
                   </div>
 
-                  {/* <Link
-                    href="/register/organization"
-                    className="hidden h-10 items-center justify-center rounded-2xl bg-blue-600 px-4 text-xs font-black text-white transition hover:bg-blue-700 sm:inline-flex"
-                  >
-                    Promote →
-                  </Link> */}
 
                   <Link
   href="/marketplace"
@@ -434,32 +440,19 @@ export default async function HomePage() {
                   compact
                 />
 
-                {/* <Link
-  href="/marketplace"
-  className="block rounded-[24px] border border-blue-100 bg-white/80 p-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
->
-  <p className="text-sm font-black text-slate-900">
-    Looking for real opportunities?
-  </p>
-  <p className="mt-1 text-xs font-semibold text-slate-500">
-    Browse jobs, projects, courses, events, and promotions.
-  </p>
-  <span className="mt-3 inline-flex h-9 items-center justify-center rounded-2xl bg-blue-600 px-4 text-xs font-black text-white">
-    Explore Marketplace →
-  </span>
-</Link> */}
-
 
 
 <Link
   href="/register/organization"
-  className="block rounded-[24px] border border-blue-100 bg-white/80 p-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+  className="block rounded-[24px] border border-blue-100 bg-white/80 p-4 sm:p-6 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
 >
   <p className="text-sm font-black text-slate-900">
     Grow Your Visibility on BuildUp
   </p>
 
-  <p className="mt-1 text-xs font-semibold text-slate-500">
+  {/* <p className="mt-1 text-xs font-semibold text-slate-500"> */}
+
+  <p className="mx-auto mt-1 max-w-md text-xs font-semibold text-slate-500">
     Showcase your brand, services, projects, courses, events, products, and
     opportunities to a growing community of learners, volunteers, mentors,
     and organizations.

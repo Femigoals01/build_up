@@ -92,6 +92,18 @@ function getNavItems(role: UserRole): NavItem[] {
           label: "Messages",
           href: "/dashboard/messages",
         },
+
+        {
+  icon: "💬",
+  label: "Community Chat",
+  href: "/dashboard/community/chat",
+},
+
+        {
+  icon: "🌐",
+  label: "Community",
+  href: "/dashboard/community",
+},
         {
           icon: "🔔",
           label: "Notifications",
@@ -167,6 +179,18 @@ function getNavItems(role: UserRole): NavItem[] {
   label: "Verification",
   href: "/dashboard/organization/verification",
 },
+
+{
+  icon: "💬",
+  label: "Community Chat",
+  href: "/dashboard/community/chat",
+},
+
+{
+  icon: "🌐",
+  label: "Community",
+  href: "/dashboard/community",
+},
         {
           icon: "🔔",
           label: "Notifications",
@@ -213,6 +237,12 @@ function getNavItems(role: UserRole): NavItem[] {
   label: "Opportunities",
   href: "/dashboard/admin/opportunities",
 },
+
+{
+  icon: "🌍",
+  label: "Community",
+  href: "/dashboard/admin/community",
+},
         {
           icon: "💸",
           label: "Withdrawals",
@@ -234,6 +264,18 @@ function getNavItems(role: UserRole): NavItem[] {
   icon: "🎓",
   label: "Certifications",
   href: "/dashboard/admin/certifications",
+},
+
+{
+  icon: "💬",
+  label: "Community Chat",
+  href: "/dashboard/community/chat",
+},
+
+{
+  icon: "🌐",
+  label: "Community",
+  href: "/dashboard/community",
 },
         {
           icon: "🔔",
@@ -303,6 +345,18 @@ function getNavItems(role: UserRole): NavItem[] {
           label: "Messages",
           href: "/dashboard/messages",
         },
+
+        {
+  icon: "💬",
+  label: "Community Chat",
+  href: "/dashboard/community/chat",
+},
+
+        {
+  icon: "🌐",
+  label: "Community",
+  href: "/dashboard/community",
+},
         {
           icon: "🔔",
           label: "Notifications",

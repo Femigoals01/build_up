@@ -2,7 +2,6 @@
 
 
 
-
 // "use client";
 
 // import Image from "next/image";
@@ -44,7 +43,7 @@
 //   eventType,
 // }: {
 //   opportunityId: string;
-//   eventType: "SPONSORED_VIEW" | "VIEW_DETAILS_CLICK" | "MARKETPLACE_CLICK";
+//   eventType: "SPONSORED_VIEW" | "VIEW_DETAILS_CLICK";
 // }) {
 //   try {
 //     await fetch("/api/opportunity-analytics", {
@@ -74,7 +73,8 @@
 //   const viewedItemsRef = useRef<Set<string>>(new Set());
 
 //   const active = items[activeIndex];
-//   const sliderHeight = compact ? "h-[320px] md:h-[340px]" : "h-[420px]";
+//   // const sliderHeight = compact ? "h-[320px] md:h-[320px]" : "h-[420px]";
+//   const sliderHeight = compact ? "h-[430px] md:h-[320px]" : "h-[460px]";
 
 //   useEffect(() => {
 //     if (!active?.id) return;
@@ -148,11 +148,19 @@
 //           style={{ transform: `translateX(-${activeIndex * 100}%)` }}
 //         >
 //           {items.map((item) => (
-//             <div
+//             <Link
 //               key={item.id}
-//               className="grid h-full w-full shrink-0 md:grid-cols-[35%_65%]"
+//               href={`/marketplace/${item.id}`}
+//               onClick={() =>
+//                 trackOpportunityEvent({
+//                   opportunityId: item.id,
+//                   eventType: "VIEW_DETAILS_CLICK",
+//                 })
+//               }
+//               // className="grid h-full w-full shrink-0 md:grid-cols-[35%_65%]"
+//               className="grid h-full w-full shrink-0 grid-rows-[1fr_135px] md:grid-rows-none md:grid-cols-[35%_65%]"
 //             >
-//               <div className="relative flex h-full flex-col justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 px-4 py-4 text-white sm:px-5">
+//               <div className="relative flex min-h-0 flex-col justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 px-4 py-4 text-white sm:px-5">
 //                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,.25),transparent_45%)]" />
 
 //                 <div className="relative z-30">
@@ -206,76 +214,32 @@
 //                     )}
 //                   </div>
 
-//                   <div className="relative z-40 mt-3 grid grid-cols-2 gap-2">
-//                     <Link
-//                       href={`/marketplace/${item.id}`}
-//                       onClick={() =>
-//                         trackOpportunityEvent({
-//                           opportunityId: item.id,
-//                           eventType: "VIEW_DETAILS_CLICK",
-//                         })
-//                       }
-//                       className="relative z-50 inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-white px-2 text-[10px] font-black text-blue-700 shadow-lg transition hover:bg-blue-50 sm:text-xs"
-//                     >
-//                       Details
-//                       <span>→</span>
-//                     </Link>
-
-//                     <Link
-//                       href="/marketplace"
-//                       onClick={() =>
-//                         trackOpportunityEvent({
-//                           opportunityId: item.id,
-//                           eventType: "MARKETPLACE_CLICK",
-//                         })
-//                       }
-//                       className="relative z-50 inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-white/30 bg-white/5 px-2 text-[10px] font-black text-white backdrop-blur transition hover:bg-white/10 sm:text-xs"
-//                     >
-//                       Explore
-//                       <span>→</span>
-//                     </Link>
+//                   <div className="mt-4 inline-flex h-9 items-center justify-center rounded-xl bg-white px-4 text-xs font-black text-blue-700 shadow-lg transition group-hover:bg-blue-50">
+//                     Click to view details →
 //                   </div>
 //                 </div>
 //               </div>
 
-
-
-
-//               {/* <div className="relative h-full overflow-hidden bg-white">
+//               <div className="relative min-h-0 overflow-hidden bg-slate-950">
 //                 {item.imageUrl ? (
-//                   <Image
-//                     src={item.imageUrl}
-//                     alt={item.title}
-//                     fill
-//                     className="object-cover"
-//                     sizes="(min-width:1024px) 65vw, 100vw"
-//                     priority={item.id === active.id}
-//                   /> */}
+//                   <>
+//                     <Image
+//                       src={item.imageUrl}
+//                       alt=""
+//                       fill
+//                       className="scale-110 object-cover opacity-30 blur-2xl"
+//                       sizes="(min-width:1024px) 65vw, 100vw"
+//                     />
 
-
-// <div className="relative h-full overflow-hidden bg-slate-950">
-//   {item.imageUrl ? (
-//     <>
-//       <Image
-//         src={item.imageUrl}
-//         alt=""
-//         fill
-//         className="scale-110 object-cover opacity-30 blur-2xl"
-//         sizes="(min-width:1024px) 65vw, 100vw"
-//       />
-
-//       <Image
-//         src={item.imageUrl}
-//         alt={item.title}
-//         fill
-//         className="object-contain"
-//         sizes="(min-width:1024px) 65vw, 100vw"
-//         priority={item.id === active.id}
-//       />
-//     </>
-
-
-
+//                     <Image
+//                       src={item.imageUrl}
+//                       alt={item.title}
+//                       fill
+//                       className="object-cover md:object-contain"
+//                       sizes="(min-width:1024px) 65vw, 100vw"
+//                       priority={item.id === active.id}
+//                     />
+//                   </>
 //                 ) : (
 //                   <div className="flex h-full items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-white">
 //                     <div className="text-center">
@@ -290,7 +254,7 @@
 //                   </div>
 //                 )}
 //               </div>
-//             </div>
+//             </Link>
 //           ))}
 //         </div>
 
@@ -401,9 +365,7 @@ async function trackOpportunityEvent({
         source: "HOME_SPONSORED_SLIDER",
       }),
     });
-  } catch {
-    // Analytics should never break the homepage.
-  }
+  } catch {}
 }
 
 export default function SponsoredOpportunitySlider({
@@ -418,7 +380,7 @@ export default function SponsoredOpportunitySlider({
   const viewedItemsRef = useRef<Set<string>>(new Set());
 
   const active = items[activeIndex];
-  const sliderHeight = compact ? "h-[320px] md:h-[340px]" : "h-[420px]";
+  const sliderHeight = compact ? "h-[430px] md:h-[320px]" : "h-[460px]";
 
   useEffect(() => {
     if (!active?.id) return;
@@ -492,112 +454,192 @@ export default function SponsoredOpportunitySlider({
           style={{ transform: `translateX(-${activeIndex * 100}%)` }}
         >
           {items.map((item) => (
-            <Link
-              key={item.id}
-              href={`/marketplace/${item.id}`}
-              onClick={() =>
-                trackOpportunityEvent({
-                  opportunityId: item.id,
-                  eventType: "VIEW_DETAILS_CLICK",
-                })
-              }
-              className="grid h-full w-full shrink-0 md:grid-cols-[35%_65%]"
-            >
-              <div className="relative flex h-full flex-col justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 px-4 py-4 text-white sm:px-5">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,.25),transparent_45%)]" />
+            <div key={item.id} className="relative h-full w-full shrink-0">
+              {/* MOBILE PREMIUM OVERLAY VERSION */}
+              <Link
+                href={`/marketplace/${item.id}`}
+                onClick={() =>
+                  trackOpportunityEvent({
+                    opportunityId: item.id,
+                    eventType: "VIEW_DETAILS_CLICK",
+                  })
+                }
+                className="relative block h-full w-full overflow-hidden md:hidden"
+              >
+                {item.imageUrl ? (
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.title}
+                    fill
+                    className="object-cover"
+                    sizes="100vw"
+                    priority={item.id === active.id}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center bg-gradient-to-br from-purple-700 via-blue-800 to-slate-950 text-7xl">
+                    {getOpportunityIcon(item.type)}
+                  </div>
+                )}
 
-                <div className="relative z-30">
-                  <div className="flex flex-wrap gap-1.5">
-                    <span className="rounded-full bg-purple-600 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/65 to-black/25" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,.35),transparent_45%)]" />
+
+                <div className="absolute inset-x-0 bottom-0 z-20 p-5 text-white">
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full bg-purple-600 px-3 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-white">
                       Sponsored
                     </span>
 
-                    <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-blue-700">
+                    <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black text-blue-700">
                       {getOpportunityIcon(item.type)} {formatType(item.type)}
                     </span>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <p className="line-clamp-1 text-xs font-black text-white sm:text-sm">
-                      {item.organization.name}
-                    </p>
+                  <p className="mt-4 line-clamp-1 text-sm font-black text-white">
+                    {item.organization.name}
+                  </p>
 
-                    {item.organization.organizationVerified && (
-                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black text-emerald-700">
-                        ✅ Verified
-                      </span>
-                    )}
-                  </div>
-
-                  <h2 className="mt-2 line-clamp-3 text-xl font-black leading-tight text-white sm:text-2xl">
+                  <h2 className="mt-2 line-clamp-2 text-2xl font-black leading-tight text-white">
                     {item.title}
                   </h2>
 
-                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-300">
+                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-200">
                     {item.description}
                   </p>
 
-                  <div className="mt-2 flex flex-wrap gap-1.5">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {item.workMode && (
-                      <span className="rounded-full bg-white/10 px-2.5 py-1 text-[9px] font-black backdrop-blur">
+                      <span className="rounded-full bg-white/20 px-3 py-1 text-[10px] font-black backdrop-blur">
                         {item.workMode}
                       </span>
                     )}
 
                     {item.location && (
-                      <span className="rounded-full bg-white/10 px-2.5 py-1 text-[9px] font-black backdrop-blur">
+                      <span className="rounded-full bg-white/20 px-3 py-1 text-[10px] font-black backdrop-blur">
                         📍 {item.location}
                       </span>
                     )}
 
                     {item.compensation && (
-                      <span className="rounded-full bg-white/10 px-2.5 py-1 text-[9px] font-black backdrop-blur">
+                      <span className="rounded-full bg-white/20 px-3 py-1 text-[10px] font-black backdrop-blur">
                         💰 {item.compensation}
                       </span>
                     )}
                   </div>
 
-                  <div className="mt-4 inline-flex h-9 items-center justify-center rounded-xl bg-white px-4 text-xs font-black text-blue-700 shadow-lg transition group-hover:bg-blue-50">
-                    Click to view details →
+                  <div className="mt-4 inline-flex h-10 items-center justify-center rounded-2xl bg-white px-5 text-xs font-black text-blue-700 shadow-lg">
+                    View Details →
                   </div>
                 </div>
-              </div>
+              </Link>
 
-              <div className="relative h-full overflow-hidden bg-slate-950">
-                {item.imageUrl ? (
-                  <>
-                    <Image
-                      src={item.imageUrl}
-                      alt=""
-                      fill
-                      className="scale-110 object-cover opacity-30 blur-2xl"
-                      sizes="(min-width:1024px) 65vw, 100vw"
-                    />
+              {/* DESKTOP/TABLET SPLIT VERSION */}
+              <Link
+                href={`/marketplace/${item.id}`}
+                onClick={() =>
+                  trackOpportunityEvent({
+                    opportunityId: item.id,
+                    eventType: "VIEW_DETAILS_CLICK",
+                  })
+                }
+                className="hidden h-full w-full shrink-0 md:grid md:grid-cols-[35%_65%]"
+              >
+                <div className="relative flex min-h-0 flex-col justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 px-4 py-4 text-white sm:px-5">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,.25),transparent_45%)]" />
 
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.title}
-                      fill
-                      className="object-contain"
-                      sizes="(min-width:1024px) 65vw, 100vw"
-                      priority={item.id === active.id}
-                    />
-                  </>
-                ) : (
-                  <div className="flex h-full items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-white">
-                    <div className="text-center">
-                      <div className="text-7xl">
-                        {getOpportunityIcon(item.type)}
-                      </div>
+                  <div className="relative z-30">
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className="rounded-full bg-purple-600 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-white">
+                        Sponsored
+                      </span>
 
-                      <p className="mt-4 text-sm font-black uppercase tracking-[0.18em] text-slate-400">
-                        Sponsored Opportunity
+                      <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-blue-700">
+                        {getOpportunityIcon(item.type)} {formatType(item.type)}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      <p className="line-clamp-1 text-xs font-black text-white sm:text-sm">
+                        {item.organization.name}
                       </p>
+
+                      {item.organization.organizationVerified && (
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black text-emerald-700">
+                          ✅ Verified
+                        </span>
+                      )}
+                    </div>
+
+                    <h2 className="mt-2 line-clamp-3 text-xl font-black leading-tight text-white sm:text-2xl">
+                      {item.title}
+                    </h2>
+
+                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-300">
+                      {item.description}
+                    </p>
+
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {item.workMode && (
+                        <span className="rounded-full bg-white/10 px-2.5 py-1 text-[9px] font-black backdrop-blur">
+                          {item.workMode}
+                        </span>
+                      )}
+
+                      {item.location && (
+                        <span className="rounded-full bg-white/10 px-2.5 py-1 text-[9px] font-black backdrop-blur">
+                          📍 {item.location}
+                        </span>
+                      )}
+
+                      {item.compensation && (
+                        <span className="rounded-full bg-white/10 px-2.5 py-1 text-[9px] font-black backdrop-blur">
+                          💰 {item.compensation}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mt-4 inline-flex h-9 items-center justify-center rounded-xl bg-white px-4 text-xs font-black text-blue-700 shadow-lg transition group-hover:bg-blue-50">
+                      Click to view details →
                     </div>
                   </div>
-                )}
-              </div>
-            </Link>
+                </div>
+
+                <div className="relative min-h-0 overflow-hidden bg-slate-950">
+                  {item.imageUrl ? (
+                    <>
+                      <Image
+                        src={item.imageUrl}
+                        alt=""
+                        fill
+                        className="scale-110 object-cover opacity-30 blur-2xl"
+                        sizes="(min-width:1024px) 65vw, 100vw"
+                      />
+
+                      <Image
+                        src={item.imageUrl}
+                        alt={item.title}
+                        fill
+                        className="object-contain"
+                        sizes="(min-width:1024px) 65vw, 100vw"
+                        priority={item.id === active.id}
+                      />
+                    </>
+                  ) : (
+                    <div className="flex h-full items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-white">
+                      <div className="text-center">
+                        <div className="text-7xl">
+                          {getOpportunityIcon(item.type)}
+                        </div>
+
+                        <p className="mt-4 text-sm font-black uppercase tracking-[0.18em] text-slate-400">
+                          Sponsored Opportunity
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Link>
+            </div>
           ))}
         </div>
 
