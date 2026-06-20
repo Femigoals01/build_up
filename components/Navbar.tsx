@@ -214,14 +214,12 @@ export default function PublicNavbar() {
               How it Works
             </NavLink>
 
-            <NavLink href="/leaderboard" currentPath={pathname}>
+            {/* <NavLink href="/leaderboard" currentPath={pathname}>
   Leaderboard
-</NavLink>
-
-
-{/* <NavLink href="/mentors" currentPath={pathname}>
-  Mentors
 </NavLink> */}
+
+
+
 
 
 
@@ -455,9 +453,9 @@ export default function PublicNavbar() {
             How it Works
           </MobileNavLink>
 
-          <MobileNavLink href="/leaderboard" onClick={() => setOpen(false)}>
+          {/* <MobileNavLink href="/leaderboard" onClick={() => setOpen(false)}>
   Leaderboard
-</MobileNavLink>
+</MobileNavLink> */}
 
 <MobileNavLink href="/marketplace" onClick={() => setOpen(false)}>
   Marketplace
