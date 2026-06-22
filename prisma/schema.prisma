@@ -129,6 +129,8 @@ model User {
 
   organizationVerification OrganizationVerification?
 
+  lastPlatformReviewPromptAt DateTime?
+
   communityPosts    CommunityPost[]
   communityComments CommunityComment[]
 
@@ -146,6 +148,10 @@ model User {
 
   communityStoryViews     CommunityStoryView[]
   communityStoryReactions CommunityStoryReaction[]
+
+  platformReviews PlatformReview[]
+
+  
 }
 
 /// *
@@ -987,6 +993,28 @@ model CommunityStoryReaction {
   @@unique([storyId, userId])
 }
 
+model PlatformReview {
+  id String @id @default(cuid())
+
+  userId String
+
+  easeOfUse           Int
+  opportunities       Int
+  communityExperience Int
+  overallRating       Int
+
+  review String?
+
+  status PlatformReviewStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([userId])
+}
+
 enum WithdrawalStatus {
   PENDING
   PROCESSING
@@ -1109,4 +1137,10 @@ enum WorkMode {
   REMOTE
   HYBRID
   ONSITE
+}
+
+enum PlatformReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

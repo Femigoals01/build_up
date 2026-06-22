@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import BuildUpLogo from "@/components/brand/BuildUpLogo";
 import SponsoredOpportunitySlider from "@/components/home/SponsoredOpportunitySlider";
 import AnimatedStat from "@/components/home/AnimatedStat";
+import PlatformReviewSlider from "@/components/home/PlatformReviewSlider";
 
 export const revalidate = 300;
 
@@ -172,6 +173,45 @@ export default async function HomePage() {
         organizationVerified: item.organization.organizationVerified,
       },
     }));
+
+
+
+  const approvedReviews = await prisma.platformReview.findMany({
+    where: {
+      status: "APPROVED",
+    },
+    take: 6,
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+          role: true,
+          profileImageUrl: true,
+        },
+      },
+    },
+  });
+
+  const reviewStats = await prisma.platformReview.aggregate({
+    where: {
+      status: "APPROVED",
+    },
+    _avg: {
+      overallRating: true,
+    },
+    _count: {
+      id: true,
+    },
+  });
+
+  const averageRating = reviewStats._avg.overallRating || 0;
+  const totalReviews = reviewStats._count.id;
+
+
+
 
   const featuredStats = [
     { value: 50, label: "Volunteers" },
@@ -356,23 +396,23 @@ export default async function HomePage() {
           <div className="relative mx-auto max-w-7xl">
             <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch">
               {/* <div className="flex flex-col justify-between rounded-[32px] border border-blue-100 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-8"> */}
-                
-                
-                <div className="flex flex-col justify-between rounded-[24px] border border-blue-100 bg-white/80 p-4 shadow-sm backdrop-blur sm:p-8">
+
+
+              <div className="flex flex-col justify-between rounded-[24px] border border-blue-100 bg-white/80 p-4 shadow-sm backdrop-blur sm:p-8">
                 <div>
                   <span className="inline-flex rounded-full bg-blue-100 px-4 py-2 text-sm font-black uppercase tracking-[0.22em] text-blue-700">
                     Why BuildUp exists
                   </span>
 
                   {/* <h2 className="mt-5 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl lg:text-4xl"> */}
-                    
-                    <h2 className="mt-4 text-[1.8rem] leading-tight font-black tracking-tight text-slate-950 sm:text-4xl lg:text-4xl">
+
+                  <h2 className="mt-4 text-[1.8rem] leading-tight font-black tracking-tight text-slate-950 sm:text-4xl lg:text-4xl">
                     Courses teach skills. Real projects build confidence.
                   </h2>
 
                   {/* <p className="mt-5 text-base leading-8 text-slate-600 sm:text-lg"> */}
 
-                    <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-lg">
+                  <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-lg">
 
 
 
@@ -428,11 +468,11 @@ export default async function HomePage() {
 
 
                   <Link
-  href="/marketplace"
-  className="hidden h-10 items-center justify-center rounded-2xl bg-blue-600 px-4 text-xs font-black text-white transition hover:bg-blue-700 sm:inline-flex"
->
-  Explore Marketplace →
-</Link>
+                    href="/marketplace"
+                    className="hidden h-10 items-center justify-center rounded-2xl bg-blue-600 px-4 text-xs font-black text-white transition hover:bg-blue-700 sm:inline-flex"
+                  >
+                    Explore Marketplace →
+                  </Link>
                 </div>
 
                 <SponsoredOpportunitySlider
@@ -442,26 +482,26 @@ export default async function HomePage() {
 
 
 
-<Link
-  href="/register/organization"
-  className="block rounded-[24px] border border-blue-100 bg-white/80 p-4 sm:p-6 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
->
-  <p className="text-sm font-black text-slate-900">
-    Grow Your Visibility on BuildUp
-  </p>
+                <Link
+                  href="/register/organization"
+                  className="block rounded-[24px] border border-blue-100 bg-white/80 p-4 sm:p-6 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <p className="text-sm font-black text-slate-900">
+                    Grow Your Visibility on BuildUp
+                  </p>
 
-  {/* <p className="mt-1 text-xs font-semibold text-slate-500"> */}
+                  {/* <p className="mt-1 text-xs font-semibold text-slate-500"> */}
 
-  <p className="mx-auto mt-1 max-w-md text-xs font-semibold text-slate-500">
-    Showcase your brand, services, projects, courses, events, products, and
-    opportunities to a growing community of learners, volunteers, mentors,
-    and organizations.
-  </p>
+                  <p className="mx-auto mt-1 max-w-md text-xs font-semibold text-slate-500">
+                    Showcase your brand, services, projects, courses, events, products, and
+                    opportunities to a growing community of learners, volunteers, mentors,
+                    and organizations.
+                  </p>
 
-  <span className="mt-3 inline-flex h-9 items-center justify-center rounded-2xl bg-blue-600 px-4 text-xs font-black text-white">
-    Promote on BuildUp →
-  </span>
-</Link>
+                  <span className="mt-3 inline-flex h-9 items-center justify-center rounded-2xl bg-blue-600 px-4 text-xs font-black text-white">
+                    Promote on BuildUp →
+                  </span>
+                </Link>
               </div>
             </div>
 
@@ -476,24 +516,29 @@ export default async function HomePage() {
                   </h3>
                 </div>
 
-               
 
 
-<div className="flex flex-wrap justify-end gap-2">
-  <Link
-    href="/post-opportunity"
-    className="inline-flex h-10 items-center justify-center rounded-2xl bg-blue-600 px-4 text-sm font-black text-white transition hover:bg-blue-700"
-  >
-    + Post Job Free
-  </Link>
 
-  <Link
-    href="/marketplace?type=JOB"
-    className="inline-flex h-10 items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 px-4 text-sm font-black text-blue-700 transition hover:bg-blue-100"
-  >
-    View All Jobs →
-  </Link>
-</div>
+
+
+
+
+
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Link
+                    href="/register/organization"
+                    className="inline-flex h-10 items-center justify-center rounded-2xl bg-blue-600 px-4 text-sm font-black text-white transition hover:bg-blue-700"
+                  >
+                    + Post Job Free
+                  </Link>
+
+                  <Link
+                    href="/marketplace?type=JOB"
+                    className="inline-flex h-10 items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 px-4 text-sm font-black text-blue-700 transition hover:bg-blue-100"
+                  >
+                    View All Jobs →
+                  </Link>
+                </div>
 
 
               </div>
@@ -785,7 +830,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section
+        {/* <section
           className="mx-auto max-w-6xl px-6 py-6 lg:px-8"
           aria-label="Testimonial"
         >
@@ -798,7 +843,53 @@ export default async function HomePage() {
               — Temi A., Frontend Volunteer
             </p>
           </div>
+        </section> */}
+
+
+
+        <section
+          className="mx-auto max-w-7xl px-6 py-8 lg:px-8"
+          aria-label="Platform reviews"
+        >
+          <div className="rounded-[2rem] border border-slate-200 bg-gradient-to-br from-slate-950 via-blue-950 to-blue-700 p-6 text-white shadow-xl sm:p-8">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                {/* <p className="text-xs font-black uppercase tracking-[0.22em] text-blue-200">
+                  Community Reviews
+                </p> */}
+
+                <h2 className="mt-2 text-2xl font-black sm:text-3xl">
+                  What users say about BuildUp
+                </h2>
+
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
+                  Feedback from approved BuildUp users.
+                </p>
+              </div>
+
+              <div className="rounded-3xl bg-white/10 px-5 py-4 text-center backdrop-blur">
+                <div className="text-2xl font-black text-amber-300">
+                  ★ {averageRating ? averageRating.toFixed(1) : "0.0"}/5
+                </div>
+
+                <p className="mt-1 text-xs font-bold text-blue-100">
+                  {totalReviews} Reviews
+                </p>
+              </div>
+            </div>
+
+            
+
+
+
+
+            <PlatformReviewSlider reviews={approvedReviews} />
+
+
+
+          </div>
         </section>
+
 
         <section
           id="how-it-works"
@@ -831,9 +922,8 @@ export default async function HomePage() {
                 {workflowSteps.map((item, index) => (
                   <div
                     key={item.title}
-                    className={`relative flex items-start gap-4 rounded-[28px] border border-white/80 bg-white/90 p-5 shadow-sm backdrop-blur transition hover:-translate-y-1 hover:shadow-xl ${
-                      index % 2 === 0 ? "lg:mr-16" : "lg:ml-16"
-                    }`}
+                    className={`relative flex items-start gap-4 rounded-[28px] border border-white/80 bg-white/90 p-5 shadow-sm backdrop-blur transition hover:-translate-y-1 hover:shadow-xl ${index % 2 === 0 ? "lg:mr-16" : "lg:ml-16"
+                      }`}
                   >
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-2xl text-white shadow-lg shadow-blue-200">
                       {item.icon}

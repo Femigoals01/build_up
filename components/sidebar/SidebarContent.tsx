@@ -67,11 +67,11 @@ function getNavItems(role: UserRole): NavItem[] {
           label: "Bookings",
           href: "/dashboard/mentor/bookings",
         },
-    {
-  icon: "🏆",
-  label: "Leaderboard",
-  href: "/leaderboard?type=mentors",
-},
+        {
+          icon: "🏆",
+          label: "Leaderboard",
+          href: "/leaderboard?type=mentors",
+        },
         {
           icon: "🕒",
           label: "Availability",
@@ -93,33 +93,39 @@ function getNavItems(role: UserRole): NavItem[] {
           href: "/dashboard/messages",
         },
 
-        {
-  icon: "💬",
-  label: "Community Chat",
-  href: "/dashboard/community/chat",
-},
 
         {
-  icon: "🌐",
-  label: "Community",
-  href: "/dashboard/community",
+  href: "/dashboard/platform-review",
+  label: "Rate BuildUp",
+  icon: "⭐",
 },
+        {
+          icon: "💬",
+          label: "Community Chat",
+          href: "/dashboard/community/chat",
+        },
+
+        {
+          icon: "🌐",
+          label: "Community",
+          href: "/dashboard/community",
+        },
         {
           icon: "🔔",
           label: "Notifications",
           href: "/dashboard/notifications",
         },
         {
-  icon: "📈",
-  label: "Analytics",
-  href: "/dashboard/mentor/analytics",
-},
+          icon: "📈",
+          label: "Analytics",
+          href: "/dashboard/mentor/analytics",
+        },
 
-{
-  icon: "🎓",
-  label: "Certification",
-  href: "/dashboard/mentor/certification",
-},
+        {
+          icon: "🎓",
+          label: "Certification",
+          href: "/dashboard/mentor/certification",
+        },
         {
           icon: "⚙️",
           label: "Settings",
@@ -163,34 +169,40 @@ function getNavItems(role: UserRole): NavItem[] {
         },
 
         {
-  icon: "📢",
-  label: "Opportunities",
-  href: "/dashboard/organization/opportunities",
+          icon: "📢",
+          label: "Opportunities",
+          href: "/dashboard/organization/opportunities",
+        },
+
+        {
+          icon: "📈",
+          label: "Analytics",
+          href: "/dashboard/organization/analytics",
+        },
+
+        {
+          icon: "✅",
+          label: "Verification",
+          href: "/dashboard/organization/verification",
+        },
+
+        {
+  href: "/dashboard/platform-review",
+  label: "Rate BuildUp",
+  icon: "⭐",
 },
 
-{
-  icon: "📈",
-  label: "Analytics",
-  href: "/dashboard/organization/analytics",
-},
+        {
+          icon: "💬",
+          label: "Community Chat",
+          href: "/dashboard/community/chat",
+        },
 
-{
-  icon: "✅",
-  label: "Verification",
-  href: "/dashboard/organization/verification",
-},
-
-{
-  icon: "💬",
-  label: "Community Chat",
-  href: "/dashboard/community/chat",
-},
-
-{
-  icon: "🌐",
-  label: "Community",
-  href: "/dashboard/community",
-},
+        {
+          icon: "🌐",
+          label: "Community",
+          href: "/dashboard/community",
+        },
         {
           icon: "🔔",
           label: "Notifications",
@@ -227,22 +239,22 @@ function getNavItems(role: UserRole): NavItem[] {
           href: "/projects",
         },
         {
-  icon: "📢",
-  label: "Sponsorships",
-  href: "/dashboard/admin/sponsorships",
-},
+          icon: "📢",
+          label: "Sponsorships",
+          href: "/dashboard/admin/sponsorships",
+        },
 
-{
-  icon: "📢",
-  label: "Opportunities",
-  href: "/dashboard/admin/opportunities",
-},
+        {
+          icon: "📢",
+          label: "Opportunities",
+          href: "/dashboard/admin/opportunities",
+        },
 
-{
-  icon: "🌍",
-  label: "Community",
-  href: "/dashboard/admin/community",
-},
+        {
+          icon: "🌍",
+          label: "Community",
+          href: "/dashboard/admin/community",
+        },
         {
           icon: "💸",
           label: "Withdrawals",
@@ -255,28 +267,34 @@ function getNavItems(role: UserRole): NavItem[] {
         },
 
         {
-  icon: "🏢",
-  label: "Org Verifications",
-  href: "/dashboard/admin/organization-verifications",
-},
+          icon: "🏢",
+          label: "Org Verifications",
+          href: "/dashboard/admin/organization-verifications",
+        },
 
         {
-  icon: "🎓",
-  label: "Certifications",
-  href: "/dashboard/admin/certifications",
+          icon: "🎓",
+          label: "Certifications",
+          href: "/dashboard/admin/certifications",
+        },
+
+        {
+  href: "/dashboard/admin/platform-reviews",
+  label: "Platform Reviews",
+  icon: "⭐",
 },
 
-{
-  icon: "💬",
-  label: "Community Chat",
-  href: "/dashboard/community/chat",
-},
+        // {
+        //   icon: "💬",
+        //   label: "Community Chat",
+        //   href: "/dashboard/community/chat",
+        // },
 
-{
-  icon: "🌐",
-  label: "Community",
-  href: "/dashboard/community",
-},
+        // {
+        //   icon: "🌐",
+        //   label: "Community",
+        //   href: "/dashboard/community",
+        // },
         {
           icon: "🔔",
           label: "Notifications",
@@ -309,17 +327,17 @@ function getNavItems(role: UserRole): NavItem[] {
           href: "/dashboard/volunteer/mentors",
         },
 
-   {
-  icon: "🏆",
-  label: "Leaderboard",
-  href: "/leaderboard",
-},
+        {
+          icon: "🏆",
+          label: "Leaderboard",
+          href: "/leaderboard",
+        },
 
-{
-  icon: "🤖",
-  label: "AI Mentor Match",
-  href: "/dashboard/volunteer/mentor-match",
-},
+        {
+          icon: "🤖",
+          label: "AI Mentor Match",
+          href: "/dashboard/volunteer/mentor-match",
+        },
         {
           icon: "📅",
           label: "My Bookings",
@@ -347,16 +365,22 @@ function getNavItems(role: UserRole): NavItem[] {
         },
 
         {
-  icon: "💬",
-  label: "Community Chat",
-  href: "/dashboard/community/chat",
+  href: "/dashboard/platform-review",
+  label: "Rate BuildUp",
+  icon: "⭐",
 },
 
         {
-  icon: "🌐",
-  label: "Community",
-  href: "/dashboard/community",
-},
+          icon: "💬",
+          label: "Community Chat",
+          href: "/dashboard/community/chat",
+        },
+
+        {
+          icon: "🌐",
+          label: "Community",
+          href: "/dashboard/community",
+        },
         {
           icon: "🔔",
           label: "Notifications",

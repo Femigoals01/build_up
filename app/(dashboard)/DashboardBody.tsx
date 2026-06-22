@@ -1,9 +1,15 @@
+
+
+
+
+
 "use client";
 
 import { usePathname } from "next/navigation";
 import SidebarShell from "@/components/sidebar/SidebarShell";
 import SidebarContent from "@/components/sidebar/SidebarContent";
 import Footer from "@/components/Footer";
+import PlatformReviewPrompt from "@/components/reviews/PlatformReviewPrompt";
 
 export default function DashboardBody({
   children,
@@ -28,6 +34,7 @@ export default function DashboardBody({
         {children}
 
         {!isCommunityPage && <Footer />}
+        {!isCommunityPage && <PlatformReviewPrompt />}
       </main>
     </div>
   );
