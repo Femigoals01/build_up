@@ -61,7 +61,7 @@ export async function POST(req: Request) {
       await tx.wallet.update({
         where: { userId: session.user.id },
         data: {
-          balance: { decrement: amountKobo },
+          available: { decrement: amountKobo },
           pending: { increment: amountKobo },
         },
       });

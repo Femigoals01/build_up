@@ -171,12 +171,12 @@ export async function POST(req: Request) {
         },
         create: {
           userId: referrer.id,
-          balance: REFERRAL_REWARD_KOBO,
+          available: REFERRAL_REWARD_KOBO,
           pending: 0,
           withdrawn: 0,
         },
         update: {
-          balance: {
+          available: {
             increment: REFERRAL_REWARD_KOBO,
           },
         },

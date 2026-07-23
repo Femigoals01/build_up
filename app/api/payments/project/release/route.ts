@@ -93,13 +93,13 @@ export async function POST(req: Request) {
           userId: acceptedApplication.volunteerId,
         },
         update: {
-          balance: {
+          available: {
             increment: funding.volunteerAmount,
           },
         },
         create: {
           userId: acceptedApplication.volunteerId,
-          balance: funding.volunteerAmount,
+          available: funding.volunteerAmount,
           pending: 0,
           withdrawn: 0,
         },

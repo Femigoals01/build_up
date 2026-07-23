@@ -531,7 +531,7 @@ export async function POST(req: Request) {
         await prisma.wallet.create({
           data: {
             userId: referrer.id,
-            balance: 0,
+            available: 0,
           },
         });
       }
