@@ -6,6 +6,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(req: Request) {
+
+  console.log("========== VERIFY ROUTE HIT ==========");
+console.log("URL:", req.url);
+
   const url = new URL(req.url);
   const reference = url.searchParams.get("reference");
 
@@ -28,6 +32,8 @@ export async function GET(req: Request) {
 
     const data = await response.json();
 
+    console.log("Paystack verify response:", data);
+
     if (!data.status || data.data?.status !== "success") {
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/organization?payment=failed`
@@ -37,6 +43,8 @@ export async function GET(req: Request) {
     const funding = await prisma.projectFunding.findUnique({
       where: { paystackReference: reference },
     });
+
+    console.log("Funding found:", funding);
 
     if (!funding) {
       return NextResponse.redirect(
@@ -71,7 +79,11 @@ export async function GET(req: Request) {
       },
     });
 
+    console.log("Awaiting application:", awaitingApplication);
+
     await prisma.$transaction(async (tx) => {
+
+      console.log("About to update funding...");
       await tx.projectFunding.update({
         where: { id: funding.id },
         data: {
@@ -80,6 +92,8 @@ export async function GET(req: Request) {
           volunteerId: awaitingApplication?.volunteerId ?? funding.volunteerId,
         },
       });
+
+      console.log("Funding updated successfully.");
 
       if (awaitingApplication) {
         await tx.application.update({

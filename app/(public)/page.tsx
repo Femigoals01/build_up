@@ -297,7 +297,7 @@ export default async function HomePage() {
                     builds your future.
                   </p>
 
-                  <h1>Testing Preview Deployment</h1>
+                  
                 </div>
 
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center lg:justify-start">
