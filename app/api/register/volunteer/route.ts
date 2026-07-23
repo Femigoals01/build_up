@@ -282,6 +282,8 @@
 
 
 
+
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
@@ -473,6 +475,16 @@ export async function POST(req: Request) {
         emailVerified: false,
         referralCode,
         referredByCode: referredByCode || null,
+
+           wallet: {
+      create: {
+        available: 0,
+        pending: 0,
+        withdrawn: 0,
+        totalEarned: 0,
+      },
+    },
+        
       },
     });
 
@@ -521,7 +533,7 @@ export async function POST(req: Request) {
           userId: referrer.id,
         },
         data: {
-          balance: {
+          available: {
             increment: REFERRAL_REWARD,
           },
         },

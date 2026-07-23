@@ -194,6 +194,9 @@
 // }
 
 
+
+
+
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -229,8 +232,18 @@ export default async function AdminWithdrawalsPage() {
     redirect("/login");
   }
 
+  // const withdrawals = await prisma.withdrawalRequest.findMany({
+  //   orderBy: { createdAt: "desc" },
+  //   take: 100,
+  // });
+
   const withdrawals = await prisma.withdrawalRequest.findMany({
-    orderBy: { createdAt: "desc" },
+    include: {
+      transfer: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
     take: 100,
   });
 
@@ -352,8 +365,41 @@ export default async function AdminWithdrawalsPage() {
                   </div>
 
                   <div className="flex items-start justify-end">
-                    {withdrawal.status === "PENDING" ? (
+                    {/* {withdrawal.status === "PENDING" ? (
                       <ProcessWithdrawalButton withdrawalId={withdrawal.id} />
+                    ) : (
+                      <span className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 px-5 text-sm font-semibold text-slate-500">
+                        {withdrawal.status === "COMPLETED"
+                          ? "Processed"
+                          : withdrawal.status}
+                      </span>
+                    )} */}
+
+
+
+                    {/* {withdrawal.status === "PENDING" && !withdrawal.transfer ? (
+
+
+                      <ProcessWithdrawalButton
+                        withdrawalId={withdrawal.id}
+                        mode="start"
+                      />
+                    )  */}
+                    
+                    
+                    {withdrawal.status === "PENDING" ? (
+  <ProcessWithdrawalButton
+    withdrawalId={withdrawal.id}
+    mode="start"
+  />
+): withdrawal.status === "PROCESSING" &&
+                      withdrawal.transfer?.paystackTransferCode ? (
+                      <ProcessWithdrawalButton
+                        withdrawalId={withdrawal.id}
+                        transferId={withdrawal.transfer.id}
+                        transferCode={withdrawal.transfer.paystackTransferCode}
+                        mode="otp"
+                      />
                     ) : (
                       <span className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 px-5 text-sm font-semibold text-slate-500">
                         {withdrawal.status === "COMPLETED"

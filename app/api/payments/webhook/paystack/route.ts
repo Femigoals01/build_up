@@ -283,6 +283,9 @@
 
 
 
+
+
+
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
@@ -521,9 +524,8 @@ async function handleProjectFundingPayment({
       await tx.chatMessage.create({
         data: {
           chatId: chat.id,
-          content: `✅ Project funded. Volunteer accepted and project is now in progress. Delivery countdown has started for ${deliveryDays} day${
-            deliveryDays === 1 ? "" : "s"
-          }.`,
+          content: `✅ Project funded. Volunteer accepted and project is now in progress. Delivery countdown has started for ${deliveryDays} day${deliveryDays === 1 ? "" : "s"
+            }.`,
           isSystem: true,
         },
       });
@@ -543,9 +545,8 @@ async function handleProjectFundingPayment({
           userId: volunteerId,
           type: "PROJECT",
           title: "Delivery countdown started",
-          message: `You have ${deliveryDays} day${
-            deliveryDays === 1 ? "" : "s"
-          } to deliver "${project.title}".`,
+          message: `You have ${deliveryDays} day${deliveryDays === 1 ? "" : "s"
+            } to deliver "${project.title}".`,
           link: `/dashboard/volunteer/projects/${project.id}`,
         },
       });
@@ -553,84 +554,179 @@ async function handleProjectFundingPayment({
   });
 }
 
+
+
 async function handleTransferSuccess(event: any) {
   const transferCode = event.data?.transfer_code;
   const reference = event.data?.reference;
 
   if (!transferCode && !reference) return;
 
-  const withdrawal = await prisma.withdrawalRequest.findFirst({
+  const transfer = await prisma.transfer.findFirst({
     where: {
       OR: [
-        transferCode ? { paystackTransferCode: transferCode } : {},
-        reference ? { paystackTransferCode: reference } : {},
+        transferCode
+          ? { paystackTransferCode: transferCode }
+          : {},
+        reference
+          ? { paystackReference: reference }
+          : {},
       ],
+    },
+    include: {
+      funding: true,
     },
   });
 
-  if (!withdrawal || withdrawal.status === "COMPLETED") return;
+  if (!transfer) return;
+
+  if (transfer.status === "SUCCESS") return;
 
   await prisma.$transaction(async (tx) => {
-    await tx.withdrawalRequest.update({
-      where: { id: withdrawal.id },
+
+    // await tx.transfer.update({
+    //   where: {
+    //     id: transfer.id,
+    //   },
+    //   data: {
+    //     status: "SUCCESS",
+    //     processedAt: new Date(),
+    //   },
+    // });
+
+
+    const updatedTransfer = await tx.transfer.updateMany({
+    where:{
+        id: transfer.id,
+        status:{
+            not:"SUCCESS",
+        },
+    },
+    data:{
+        status:"SUCCESS",
+        processedAt:new Date(),
+    },
+});
+
+if(updatedTransfer.count===0){
+    return;
+}
+
+     const withdrawal =
+    await tx.withdrawalRequest.findFirst({
+        where:{
+            transferId: transfer.id,
+        },
+    });
+
+    await tx.withdrawalRequest.updateMany({
+  where: {
+    transferId: transfer.id,
+  },
+  data: {
+    status: "COMPLETED",
+    processedAt: new Date(),
+  },
+});
+
+    await tx.projectFunding.update({
+      where: {
+        id: transfer.fundingId,
+      },
       data: {
-        status: "COMPLETED",
-        processedAt: new Date(),
+        status: "RELEASED",
+        releasedAt: new Date(),
       },
     });
 
     await tx.wallet.update({
-      where: { userId: withdrawal.userId },
+      where: {
+        userId: transfer.volunteerId,
+      },
       data: {
-        pending: { decrement: withdrawal.amount },
-        withdrawn: { increment: withdrawal.amount },
+        pending: {
+          decrement: transfer.amount,
+        },
+        withdrawn: {
+          increment: transfer.amount,
+        },
       },
     });
 
-    if (withdrawal.walletTransactionId) {
-      await tx.walletTransaction.update({
-        where: { id: withdrawal.walletTransactionId },
-        data: { status: "COMPLETED" },
-      });
-    }
+
+
+
+
+
+if (
+    withdrawal?.walletTransactionId
+) {
+    await tx.walletTransaction.update({
+        where:{
+            id: withdrawal.walletTransactionId,
+        },
+        data:{
+            status:"COMPLETED",
+        },
+    });
+}
 
     await tx.notification.create({
       data: {
-        userId: withdrawal.userId,
-        title: "Withdrawal completed",
-        message: "Your BuildUp wallet withdrawal has been completed.",
-        type: "SYSTEM",
+        userId: transfer.volunteerId,
+        title: "Payment completed",
+        message:
+          "Your BuildUp payment has been successfully transferred to your bank account",
+        type: "PAYMENT",
         link: "/dashboard/wallet",
       },
     });
+
   });
 }
 
+
+
+
 async function handleTransferFailedOrReversed(event: any) {
+
   const transferCode = event.data?.transfer_code;
   const reference = event.data?.reference;
+
+  if (!transferCode && !reference) return;
+
+  const transfer = await prisma.transfer.findFirst({
+    where: {
+      OR: [
+        transferCode
+          ? { paystackTransferCode: transferCode }
+          : {},
+        reference
+          ? { paystackReference: reference }
+          : {},
+      ],
+    },
+    include: {
+      funding: true,
+    },
+  });
+
+  if (!transfer) return;
+
+  if (transfer.status === "FAILED") return;
+
   const reason =
     event.data?.failure_reason ||
     event.data?.reason ||
     event.data?.gateway_response ||
-    "Transfer failed or was reversed by Paystack.";
-
-  if (!transferCode && !reference) return;
-
-  const withdrawal = await prisma.withdrawalRequest.findFirst({
-    where: {
-      OR: [
-        transferCode ? { paystackTransferCode: transferCode } : {},
-        reference ? { paystackTransferCode: reference } : {},
-      ],
-    },
-  });
-
-  if (!withdrawal || withdrawal.status === "FAILED") return;
+    "Transfer failed.";
 
   await prisma.$transaction(async (tx) => {
-    await tx.withdrawalRequest.update({
-      where: { id: withdrawal.id },
+
+    await tx.transfer.update({
+      where: {
+        id: transfer.id,
+      },
       data: {
         status: "FAILED",
         failureReason: reason,
@@ -638,30 +734,78 @@ async function handleTransferFailedOrReversed(event: any) {
       },
     });
 
-    await tx.wallet.update({
-      where: { userId: withdrawal.userId },
+
+      const withdrawal =
+    await tx.withdrawalRequest.findFirst({
+        where:{
+            transferId: transfer.id,
+        },
+    });
+
+
+    await tx.withdrawalRequest.updateMany({
+  where: {
+    transferId: transfer.id,
+  },
+  data: {
+    status: "FAILED",
+    processedAt: new Date(),
+    failureReason: reason,
+  },
+});
+
+    await tx.projectFunding.update({
+      where: {
+        id: transfer.fundingId,
+      },
       data: {
-        pending: { decrement: withdrawal.amount },
-        balance: { increment: withdrawal.amount },
+        status: "HELD",
       },
     });
 
-    if (withdrawal.walletTransactionId) {
-      await tx.walletTransaction.update({
-        where: { id: withdrawal.walletTransactionId },
-        data: { status: "FAILED" },
-      });
-    }
+    await tx.wallet.update({
+      where: {
+        userId: transfer.volunteerId,
+      },
+      data: {
+        pending: {
+          decrement: transfer.amount,
+        },
+        available: {
+          increment: transfer.amount,
+        },
+      },
+    });
+
+  
+
+
+  
+
+if (
+    withdrawal?.walletTransactionId
+){
+    await tx.walletTransaction.update({
+        where:{
+            id: withdrawal.walletTransactionId,
+        },
+        data:{
+            status:"FAILED",
+        },
+    });
+}
 
     await tx.notification.create({
       data: {
-        userId: withdrawal.userId,
-        title: "Withdrawal failed",
+        userId: transfer.volunteerId,
+        title: "Payment failed",
         message:
-          "Your BuildUp wallet withdrawal failed or was reversed. The amount has been returned to your wallet balance.",
-        type: "SYSTEM",
+          "Your bank transfer failed. BuildUp has returned the funds to your wallet.",
+        type: "PAYMENT",
         link: "/dashboard/wallet",
       },
     });
+
   });
+
 }

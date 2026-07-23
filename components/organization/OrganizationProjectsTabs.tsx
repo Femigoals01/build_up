@@ -238,77 +238,77 @@ function getSubmissionLabel(status: string) {
   }
 }
 
-// function FundProjectButton({ projectId }: { projectId: string }) {
-//   const [loading, setLoading] = useState(false);
+function FundProjectButton({ projectId }: { projectId: string }) {
+  const [loading, setLoading] = useState(false);
 
-//   async function handleFundProject() {
-//     try {
-//       setLoading(true);
+  async function handleFundProject() {
+    try {
+      setLoading(true);
 
-//       const res = await fetch("/api/payments/project/initiate", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({ projectId }),
-//       });
+      const res = await fetch("/api/payments/project/initiate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ projectId }),
+      });
 
-//       const data = await res.json();
+      const data = await res.json();
 
-//       if (!res.ok) {
-//         throw new Error(data?.error || "Payment failed");
-//       }
+      if (!res.ok) {
+        throw new Error(data?.error || "Payment failed");
+      }
 
-//       if (data.authorizationUrl) {
-//         window.location.href = data.authorizationUrl;
-//         return;
-//       }
+      if (data.authorizationUrl) {
+        window.location.href = data.authorizationUrl;
+        return;
+      }
 
-//       throw new Error("Payment link was not returned.");
-//     } catch (error: any) {
-//       alert(error?.message || "Unable to start payment.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   }
+      throw new Error("Payment link was not returned.");
+    } catch (error: any) {
+      alert(error?.message || "Unable to start payment.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-//   return (
-//     <button
-//       type="button"
-//       onClick={handleFundProject}
-//       disabled={loading}
-//       className="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-//     >
-//       {loading ? "Starting..." : "Fund Project"}
-//     </button>
-//   );
-// }
+  return (
+    <button
+      type="button"
+      onClick={handleFundProject}
+      disabled={loading}
+      className="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {loading ? "Starting..." : "Fund Project"}
+    </button>
+  );
+}
 
 
 // To be deleted latter and use the above once pastack is fully integrated and tested.
 
 
-function FundProjectButton({ projectId }: { projectId: string }) {
-  /*
-  =========================================================
-  TEMPORARY FUNDING PAUSED UI
-  To enable funding again, replace this return block with
-  the old Paystack funding button logic.
-  =========================================================
-  */
+// function FundProjectButton({ projectId }: { projectId: string }) {
+//   /*
+//   =========================================================
+//   TEMPORARY FUNDING PAUSED UI
+//   To enable funding again, replace this return block with
+//   the old Paystack funding button logic.
+//   =========================================================
+//   */
 
-  return (
-    <div className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-amber-200 bg-amber-50 px-4 text-center text-sm font-semibold text-amber-700">
-      Funding Opens Soon
-    </div>
-  );
+//   return (
+//     <div className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-amber-200 bg-amber-50 px-4 text-center text-sm font-semibold text-amber-700">
+//       Funding Opens Soon
+//     </div>
+//   );
 
-  /*
-  =========================================================
-  END TEMPORARY FUNDING PAUSED UI
-  =========================================================
-  */
-}
+//   /*
+//   =========================================================
+//   END TEMPORARY FUNDING PAUSED UI
+//   =========================================================
+//   */
+// }
 
 
 

@@ -269,6 +269,11 @@
 
 
 
+
+
+
+
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
@@ -289,6 +294,14 @@ type RegisterOrgBody = {
   mobileNumber?: string;
   ref?: string;
   referralCode?: string;
+     wallet: {
+      create: {
+        available: 0,
+        pending: 0,
+        withdrawn: 0,
+        totalEarned: 0,
+      },
+    },
 };
 
 function generateUsername(name: string, email: string) {
@@ -502,7 +515,7 @@ export async function POST(req: Request) {
           userId: referrer.id,
         },
         data: {
-          balance: {
+          available: {
             increment: REFERRAL_REWARD,
           },
         },

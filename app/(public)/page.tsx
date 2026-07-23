@@ -367,6 +367,10 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
+
+
+
+          
         </section>
 
         <section
@@ -515,15 +519,6 @@ export default async function HomePage() {
                     Latest Jobs
                   </h3>
                 </div>
-
-
-
-
-
-
-
-
-
                 <div className="flex flex-wrap justify-end gap-2">
                   <Link
                     href="/register/organization"
@@ -878,7 +873,7 @@ export default async function HomePage() {
               </div>
             </div>
 
-            
+
 
 
 

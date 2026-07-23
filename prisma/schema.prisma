@@ -1,3 +1,5 @@
+
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -151,7 +153,13 @@ model User {
 
   platformReviews PlatformReview[]
 
-  
+  transfers Transfer[]
+
+  organizationFundings ProjectFunding[] @relation("FundingOrganization")
+
+volunteerFundings ProjectFunding[] @relation("FundingVolunteer")
+
+wallet Wallet?
 }
 
 /// *
@@ -194,6 +202,8 @@ model Project {
   supportMessages SupportMessage[]
 
   mentorBookings MentorBooking[]
+
+  funding ProjectFunding?
 }
 
 /// *
@@ -487,40 +497,77 @@ model ProjectSubmissionComment {
 }
 
 model ProjectFunding {
-  id                String        @id @default(cuid())
-  projectId         String        @unique
-  organizationId    String
-  volunteerId       String?
-  stipendAmount     Int
-  platformFee       Int
-  volunteerAmount   Int
-  status            FundingStatus @default(UNPAID)
-  paystackReference String?       @unique
-  paidAt            DateTime?
-  releasedAt        DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id String @id @default(cuid())
+
+  projectId String @unique
+  project Project @relation(fields: [projectId], references: [id])
+
+  organizationId String
+organization User @relation("FundingOrganization", fields: [organizationId], references: [id])
+
+volunteerId String?
+volunteer User? @relation("FundingVolunteer", fields: [volunteerId], references: [id])
+
+  stipendAmount Int
+  platformFee Int
+  volunteerAmount Int
+
+  status FundingStatus @default(UNPAID)
+
+  paystackReference String? @unique
+  paystackPaymentId String?
+
+  paidAt DateTime?
+  releasedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transfers Transfer[]
 }
 
 model Wallet {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  balance   Int      @default(0)
-  pending   Int      @default(0)
-  withdrawn Int      @default(0)
+
+  id String @id @default(cuid())
+
+  userId String @unique
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  available Int @default(0)
+
+  pending Int @default(0)
+
+  withdrawn Int @default(0)
+
+  totalEarned Int @default(0)
+
   createdAt DateTime @default(now())
+
   updatedAt DateTime @updatedAt
+
 }
 
 model WalletTransaction {
   id          String                  @id @default(cuid())
+
   userId      String
+
   projectId   String?
+
+  transferId  String?
+
+  transfer    Transfer? @relation(fields: [transferId], references: [id])
+
   type        WalletTransactionType
+
   amount      Int
+
   status      WalletTransactionStatus
+
   description String?
-  createdAt   DateTime                @default(now())
+
+  createdAt   DateTime @default(now())
 }
 
 model BankAccount {
@@ -536,21 +583,30 @@ model BankAccount {
 }
 
 model WithdrawalRequest {
-  id     String           @id @default(cuid())
+  id String @id @default(cuid())
+
   userId String
   amount Int
+
   status WithdrawalStatus @default(PENDING)
 
-  bankName              String
-  accountNumber         String
-  accountName           String
+  bankName      String
+  accountNumber String
+  accountName   String
+
   paystackRecipientCode String?
 
-  walletTransactionId  String?
-  paystackTransferCode String?
-  failureReason        String?
+  transferId String?   @unique
+  transfer   Transfer? @relation(fields: [transferId], references: [id])
 
-  createdAt   DateTime  @default(now())
+  walletTransactionId String?
+
+  paystackTransferCode String?
+
+  failureReason String?
+
+  createdAt DateTime @default(now())
+
   processedAt DateTime?
 }
 
@@ -1015,11 +1071,53 @@ model PlatformReview {
   @@index([userId])
 }
 
+model Transfer {
+  id String @id @default(cuid())
+
+  fundingId String
+  funding ProjectFunding @relation(fields: [fundingId], references: [id])
+
+  volunteerId String
+  volunteer User @relation(fields: [volunteerId], references: [id])
+
+  amount Int
+
+  failureReason String?
+  processedAt DateTime?
+
+  paystackTransferCode String?
+  paystackReference String?
+
+  status TransferStatus
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  withdrawalRequest WithdrawalRequest?
+
+  walletTransactions WalletTransaction[]
+}
+
+
+model PaymentAudit {
+  id String @id @default(cuid())
+
+  fundingId String?
+
+  event String
+
+  payload Json?
+
+  createdAt DateTime @default(now())
+}
+
 enum WithdrawalStatus {
   PENDING
   PROCESSING
   COMPLETED
   FAILED
+  REVERSED
 }
 
 enum SubmissionStatus {
@@ -1097,25 +1195,28 @@ enum DirectConversationKind {
   DIRECT
 }
 
-enum FundingStatus {
-  UNPAID
-  HELD
-  RELEASED
-  REFUNDED
-  DISPUTED
-}
 
 enum WalletTransactionType {
   PROJECT_EARNING
+  PROJECT_HELD
+  PROJECT_RELEASED
   WITHDRAWAL
   REFUND
+  REFERRAL_BONUS
   PLATFORM_FEE
+  MANUAL_ADJUSTMENT
 }
 
 enum WalletTransactionStatus {
   PENDING
+
+  PROCESSING
+
   COMPLETED
+
   FAILED
+
+  CANCELLED
 }
 
 enum OpportunityType {
@@ -1143,4 +1244,32 @@ enum PlatformReviewStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum TransferStatus {
+  PENDING
+
+  PROCESSING
+
+  SUCCESS
+
+  FAILED
+
+  REVERSED
+}
+
+enum FundingStatus {
+  UNPAID
+
+  HELD
+
+   APPROVED
+
+  TRANSFER_PENDING
+
+  RELEASED
+
+  REFUNDED
+
+  DISPUTED
 }

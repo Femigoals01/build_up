@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!wallet || wallet.balance < amountKobo) {
+    if (!wallet || wallet.available < amountKobo) {
       return NextResponse.json(
         { error: "Insufficient available balance." },
         { status: 400 }

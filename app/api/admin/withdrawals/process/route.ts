@@ -23,9 +23,19 @@ export async function POST(req: Request) {
       );
     }
 
-    const withdrawal = await prisma.withdrawalRequest.findUnique({
-      where: { id: withdrawalId },
-    });
+    // const withdrawal = await prisma.withdrawalRequest.findUnique({
+    //   where: { id: withdrawalId },
+    // });
+
+    const withdrawal =
+      await prisma.withdrawalRequest.findUnique({
+        where: {
+          id: withdrawalId,
+        },
+        include: {
+          transfer: true,
+        },
+      });
 
     if (!withdrawal) {
       return NextResponse.json(
@@ -33,6 +43,36 @@ export async function POST(req: Request) {
         { status: 404 }
       );
     }
+
+
+    if (!withdrawal.transfer) {
+      return NextResponse.json(
+        {
+          error: "Transfer record not found.",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+
+    const transfer = withdrawal.transfer;
+
+
+    if (
+    transfer.status === "PROCESSING" ||
+    transfer.status === "SUCCESS"
+) {
+    return NextResponse.json(
+        {
+            error: "Transfer has already been initiated.",
+        },
+        {
+            status: 400,
+        }
+    );
+}
 
     if (withdrawal.status !== "PENDING") {
       return NextResponse.json(
@@ -48,15 +88,17 @@ export async function POST(req: Request) {
       );
     }
 
-    const payoutReference = `buildup_withdrawal_${withdrawal.id}_${Date.now()}`;
+    // const payoutReference = `buildup_withdrawal_${withdrawal.id}_${Date.now()}`;
 
-    await prisma.withdrawalRequest.update({
-      where: { id: withdrawal.id },
-      data: {
-        status: "PROCESSING",
-        paystackTransferCode: payoutReference,
-      },
-    });
+    // await prisma.withdrawalRequest.update({
+    //   where: { id: withdrawal.id },
+    //   data: {
+    //     status: "PROCESSING",
+    //     paystackTransferCode: payoutReference,
+    //   },
+    // });
+
+    
 
     const response = await fetch(`${process.env.PAYSTACK_BASE_URL}/transfer`, {
       method: "POST",
@@ -68,8 +110,8 @@ export async function POST(req: Request) {
         source: "balance",
         amount: withdrawal.amount,
         recipient: withdrawal.paystackRecipientCode,
-        reason: "BuildUp wallet withdrawal",
-        reference: payoutReference,
+        reason: "BuildUp Project Payment",
+        reference: transfer.id,
       }),
     });
 
@@ -86,11 +128,23 @@ export async function POST(req: Request) {
           },
         });
 
+
+        await tx.transfer.update({
+    where: {
+        id: transfer.id,
+    },
+    data: {
+        status: "FAILED",
+        failureReason: data?.message || "Paystack transfer failed.",
+        processedAt: new Date(),
+    },
+});
+
         await tx.wallet.update({
           where: { userId: withdrawal.userId },
           data: {
             pending: { decrement: withdrawal.amount },
-            balance: { increment: withdrawal.amount },
+            available: { increment: withdrawal.amount },
           },
         });
 
@@ -121,20 +175,56 @@ export async function POST(req: Request) {
       );
     }
 
-    await prisma.withdrawalRequest.update({
-      where: { id: withdrawal.id },
-      data: {
-        status: "PROCESSING",
-        paystackTransferCode:
-          data.data?.transfer_code || data.data?.reference || payoutReference,
-      },
+    // await prisma.withdrawalRequest.update({
+    //   where: { id: withdrawal.id },
+    //   data: {
+    //     status: "PROCESSING",
+    //     paystackTransferCode:
+    //       data.data?.transfer_code || data.data?.reference || payoutReference,
+    //   },
+    // });
+
+
+    await prisma.$transaction(async (tx) => {
+
+    await tx.withdrawalRequest.update({
+        where: {
+            id: withdrawal.id,
+        },
+        data: {
+            status: "PROCESSING",
+            paystackTransferCode: data.data.transfer_code,
+        },
     });
 
-    return NextResponse.json({
-      success: true,
-      message:
-        "Payout has been sent to Paystack and is now processing. Final status will be updated by webhook.",
+    await tx.transfer.update({
+        where: {
+            id: transfer.id,
+        },
+        data: {
+            status: "PROCESSING",
+            paystackTransferCode: data.data.transfer_code,
+            paystackReference: data.data.reference,
+        },
     });
+
+});
+
+    // return NextResponse.json({
+    //   success: true,
+    //    transferCode: data.data.transfer_code,
+    // requiresOtp: true,
+    //   message:
+    //     "Transfer initiated. Waiting for OTP confirmation.",
+    // });
+
+    return NextResponse.json({
+  success: true,
+  requiresOtp: true,
+  transferId: transfer.id,
+  transferCode: data.data.transfer_code,
+  message: "Transfer initiated. Waiting for OTP confirmation.",
+});
   } catch (error) {
     console.error("PROCESS WITHDRAWAL ERROR:", error);
 

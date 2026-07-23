@@ -307,6 +307,15 @@ type MentorRegisterBody = {
   mobileNumber?: string;
   ref?: string;
   referralCode?: string;
+
+     wallet: {
+      create: {
+        available: 0,
+        pending: 0,
+        withdrawn: 0,
+        totalEarned: 0,
+      },
+    },
 };
 
 function generateUsername(name: string, email: string) {
@@ -532,7 +541,7 @@ export async function POST(req: Request) {
           userId: referrer.id,
         },
         data: {
-          balance: {
+          available: {
             increment: REFERRAL_REWARD,
           },
         },
