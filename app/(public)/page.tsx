@@ -296,6 +296,8 @@ export default async function HomePage() {
                     Live projects, mentor guidance, and proof of work that
                     builds your future.
                   </p>
+
+                  <h1>Testing Preview Deployment</h1>
                 </div>
 
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center lg:justify-start">
