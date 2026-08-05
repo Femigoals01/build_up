@@ -13,6 +13,8 @@ console.log("URL:", req.url);
   const url = new URL(req.url);
   const reference = url.searchParams.get("reference");
 
+  console.log("Reference:", reference);
+
   if (!reference) {
     return NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/organization?payment=missing-reference`
@@ -32,7 +34,8 @@ console.log("URL:", req.url);
 
     const data = await response.json();
 
-    console.log("Paystack verify response:", data);
+    console.log("Paystack returned:");
+console.log(JSON.stringify(data, null, 2));
 
     if (!data.status || data.data?.status !== "success") {
       return NextResponse.redirect(
@@ -41,10 +44,13 @@ console.log("URL:", req.url);
     }
 
     const funding = await prisma.projectFunding.findUnique({
+
+      
       where: { paystackReference: reference },
     });
 
-    console.log("Funding found:", funding);
+    console.log("Funding record:");
+console.log(funding);
 
     if (!funding) {
       return NextResponse.redirect(
@@ -79,11 +85,14 @@ console.log("URL:", req.url);
       },
     });
 
-    console.log("Awaiting application:", awaitingApplication);
+    console.log("Awaiting application:");
+console.log(awaitingApplication);
+
+console.log("About to update funding...");
 
     await prisma.$transaction(async (tx) => {
 
-      console.log("About to update funding...");
+    
       await tx.projectFunding.update({
         where: { id: funding.id },
         data: {
