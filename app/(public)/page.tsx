@@ -41,14 +41,14 @@ export const metadata: Metadata = {
     "real experience",
   ],
   alternates: {
-    canonical: "https://www.buildup.com",
+    canonical: "https://www.builduponline.com",
   },
   openGraph: {
     title:
       "BuildUp | Real-World Experience Platform for Volunteers, Mentors, and Organizations",
     description:
       "Gain real-world experience through live projects, mentor guidance, and portfolio-ready proof of work.",
-    url: "https://www.buildup.com",
+    url: "https://www.builduponline.com",
     siteName: "BuildUp",
     type: "website",
   },
@@ -251,12 +251,12 @@ export default async function HomePage() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "BuildUp",
-    url: "https://www.buildup.com",
+    url: "https://www.builduponline.com",
     description:
       "BuildUp helps volunteers gain real-world experience through live projects, mentor guidance, and portfolio-ready proof of work.",
     potentialAction: {
       "@type": "SearchAction",
-      target: "https://www.buildup.com/projects?query={search_term_string}",
+      target: "https://www.builduponline.com/projects?query={search_term_string}",
       "query-input": "required name=search_term_string",
     },
   };
