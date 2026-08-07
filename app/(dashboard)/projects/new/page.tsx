@@ -262,7 +262,7 @@ export default function CreateProjectPage() {
                     <input
                       id="stipendAmount"
                       type="number"
-                      min="5000"
+                      min="500"
                       step="500"
                       placeholder="5000"
                       className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pl-9 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
