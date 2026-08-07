@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    if (!project.stipendAmount || project.stipendAmount < 500000) {
+    if (!project.stipendAmount || project.stipendAmount < 50000) {
       return NextResponse.json(
         { error: "This project does not have a valid stipend amount." },
         { status: 400 }
@@ -204,7 +204,7 @@ export async function POST(req: Request) {
 //       return NextResponse.json({ error: "Project not found" }, { status: 404 });
 //     }
 
-//     if (!project.stipendAmount || project.stipendAmount < 500000) {
+//     if (!project.stipendAmount || project.stipendAmount < 50000) {
 //       return NextResponse.json(
 //         { error: "This project does not have a valid stipend amount." },
 //         { status: 400 }

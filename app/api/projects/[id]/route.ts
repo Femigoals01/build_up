@@ -136,7 +136,7 @@ export async function PATCH(
       );
     }
 
-    if (!stipendAmount || stipendAmount < 5000) {
+    if (!stipendAmount || stipendAmount < 500) {
       return NextResponse.json(
         { error: "Minimum stipend is ₦5,000." },
         { status: 400 }

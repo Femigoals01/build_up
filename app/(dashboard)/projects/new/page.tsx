@@ -73,8 +73,8 @@ export default function CreateProjectPage() {
     const stipend = Number(stipendAmount);
     const selectedDeliveryDays = Number(deliveryDays);
 
-    if (!stipend || stipend < 5000) {
-      setError("Minimum volunteer stipend is ₦5,000.");
+    if (!stipend || stipend < 500) {
+      setError("Minimum volunteer stipend is ₦500.");
       setLoading(false);
       return;
     }
