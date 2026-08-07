@@ -99,8 +99,8 @@ export default function WithdrawForm({ balance }: { balance: number }) {
             <input
               id="amount"
               type="number"
-              min="20000"
-              step="500"
+              min="400"
+              step="400"
               placeholder="20000"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}

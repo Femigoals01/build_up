@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 
     if (!amountNaira || amountKobo < MIN_WITHDRAWAL_KOBO) {
       return NextResponse.json(
-        { error: "Minimum withdrawal amount is ₦20,000." },
+        { error: "Minimum withdrawal amount is ₦400." },
         { status: 400 }
       );
     }
